@@ -1,0 +1,115 @@
+use std::path::PathBuf;
+use std::sync::Arc;
+
+use anyhow::Result;
+use tevec::dtype::Cast;
+use tevec::prelude::DateTime;
+
+use crate::prelude::{Frame, Frames};
+
+#[derive(Clone)]
+pub struct DataLoader {
+    pub typ: Arc<str>,
+    pub dfs: Frames,
+    pub symbols: Option<Vec<String>>,
+    pub freq: Option<Arc<str>>,
+    pub start: Option<DateTime>,
+    pub end: Option<DateTime>,
+    pub kline_path: Option<PathBuf>,
+}
+
+impl Default for DataLoader {
+    #[inline]
+    fn default() -> Self {
+        DataLoader {
+            typ: "future".into(),
+            dfs: Default::default(),
+            symbols: None,
+            freq: None,
+            start: None,
+            end: None,
+            kline_path: None,
+        }
+    }
+}
+
+impl DataLoader {
+    #[inline]
+    pub fn new(typ: &str) -> Self {
+        DataLoader {
+            typ: typ.into(),
+            ..Default::default()
+        }
+    }
+
+    #[inline]
+    pub fn new_with_symbols<S: IntoIterator<Item = A>, A: Into<String>>(
+        typ: &str,
+        symbols: S,
+    ) -> Self {
+        DataLoader {
+            typ: typ.into(),
+            symbols: Some(symbols.into_iter().map(Into::into).collect()),
+            ..Default::default()
+        }
+    }
+
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.dfs.len()
+    }
+
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.dfs.is_empty()
+    }
+
+    #[inline]
+    pub fn with_start<DT: Cast<DateTime>>(mut self, start: DT) -> Self {
+        self.start = Some(start.cast());
+        self
+    }
+
+    #[inline]
+    pub fn with_end<DT: Cast<DateTime>>(mut self, end: DT) -> Self {
+        self.end = Some(end.cast());
+        self
+    }
+
+    #[inline]
+    pub fn with_symbols<S: IntoIterator<Item = A>, A: Into<String>>(mut self, symbols: S) -> Self {
+        self.symbols = Some(symbols.into_iter().map(Into::into).collect());
+        self
+    }
+
+    #[inline]
+    pub fn collect(mut self, par: bool) -> Result<Self> {
+        self.dfs = self.dfs.collect(par)?;
+        Ok(self)
+    }
+
+    #[inline]
+    pub fn lazy(mut self) -> Self {
+        self.dfs = self.dfs.lazy();
+        self
+    }
+
+    #[inline]
+    pub fn copy_with_dfs(&self, dfs: Frames) -> Self {
+        DataLoader {
+            typ: self.typ.clone(),
+            dfs,
+            symbols: self.symbols.clone(),
+            freq: self.freq.clone(),
+            start: self.start,
+            end: self.end,
+            kline_path: self.kline_path.clone(),
+        }
+    }
+
+    #[inline]
+    pub fn empty_copy(&self) -> Self {
+        let dfs: Vec<Frame> = Vec::with_capacity(self.len());
+        self.copy_with_dfs(dfs.into())
+    }
+}

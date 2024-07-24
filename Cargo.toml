@@ -1,0 +1,15 @@
+[package]
+name = "tea-data-loader"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tevec = { version = "0.2", features = ["pl", "time"] }
+toml = "0.8"
+glob = "0.3"
+once_cell = { version = "1.19" }
+serde = { version = "1.0", features = ["derive"] }
+polars = { version = "0.41", features = ["polars-io", "ipc", "lazy"] }
+derive_more = { version = "0.99", features = ["from"] }
+anyhow = "1.0"
+rayon = "1.10"

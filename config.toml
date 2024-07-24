@@ -1,0 +1,35 @@
+[path_finder.main_path]
+rq = "C://working/data"
+coin = "C:/coin/data"
+
+[path_finder.type_source]
+future = "rq"
+stock_index = "rq"
+national_debt = "rq"
+rf = "rq"
+coin_future = "coin"
+coin_spot = "coin"
+
+[loader.rename.future]
+info = { underlying_symbol = "symbol" }
+compose = { datetime = "time", total_turnover = "amt" }
+
+[loader.rename.future.min]
+underlying_symbol = "symbol"
+datetime = "time"
+total_turnover = "amt"
+
+[loader.rename.future.daily]
+underlying_symbol = "symbol"
+date = "time"
+total_turnover = "amt"
+
+[loader.rename.future.min.subhot]
+datetime = "time"
+total_turnover = "amt"
+order_book_id = "dominant_id"
+
+[loader.rename.future.daily.subhot]
+date = "time"
+total_turnover = "amt"
+order_book_id = "dominant_id"
