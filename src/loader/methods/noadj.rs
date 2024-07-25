@@ -1,7 +1,7 @@
 use polars::lazy::dsl::cols;
 use polars::prelude::*;
 
-use super::utils::get_preprocess_exprs;
+use super::super::utils::get_preprocess_exprs;
 use crate::path_finder::{PathConfig, PathFinder};
 use crate::prelude::*;
 

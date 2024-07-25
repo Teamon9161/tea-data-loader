@@ -112,4 +112,14 @@ impl DataLoader {
         let dfs: Vec<Frame> = Vec::with_capacity(self.len());
         self.copy_with_dfs(dfs.into())
     }
+
+    #[inline]
+    pub fn daily_col(&self) -> &str {
+        if let Some(freq) = self.freq.as_deref() {
+            if freq == "daily" {
+                return "time";
+            }
+        }
+        "trading_date"
+    }
 }

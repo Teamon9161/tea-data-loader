@@ -1,7 +1,6 @@
 mod data_loader;
 mod impls;
-mod kline;
-mod noadj;
+mod methods;
 
 pub(super) mod utils;
 

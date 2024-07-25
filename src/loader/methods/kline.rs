@@ -5,8 +5,7 @@ use glob::glob;
 use polars::prelude::*;
 use toml::{Table, Value};
 
-use super::utils::{get_filter_cond, get_preprocess_exprs};
-use super::DataLoader;
+use super::super::utils::{get_filter_cond, get_preprocess_exprs};
 use crate::path_finder::{PathConfig, PathFinder};
 use crate::prelude::*;
 

@@ -2,8 +2,6 @@ use std::path::PathBuf;
 
 use anyhow::{bail, Result};
 
-// use serde::Deserialize;
-// use toml::Table;
 use super::enums::{Adjust, Tier};
 use crate::configs::MainPathConfig;
 
