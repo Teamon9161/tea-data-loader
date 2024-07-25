@@ -122,4 +122,13 @@ impl DataLoader {
         }
         "trading_date"
     }
+
+    #[inline]
+    pub fn contains(&mut self, name: &str) -> bool {
+        if self.dfs.is_empty() {
+            false
+        } else {
+            self[0].schema().unwrap().contains(name)
+        }
+    }
 }

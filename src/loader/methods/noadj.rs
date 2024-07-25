@@ -10,7 +10,7 @@ const NOADJ_COLS: [&str; 4] = ["open", "high", "low", "close"];
 impl DataLoader {
     /// join no-adjusted kline data for kline data
     pub fn with_noadj(mut self, freq: Option<&str>, memory_map: bool, flag: bool) -> Result<Self> {
-        if !flag || self[0].schema()?.contains("close_noadj") || (self.typ.as_ref() != "future") {
+        if !flag || self.contains("close_noadj") || (self.typ.as_ref() != "future") {
             return Ok(self);
         }
         let new_freq = if let Some(freq) = freq {

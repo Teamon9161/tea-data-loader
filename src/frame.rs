@@ -2,11 +2,11 @@ use std::fmt::Debug;
 use std::ops::{Deref, DerefMut};
 
 use anyhow::Result;
-use derive_more::From;
+use derive_more::{From, IsVariant};
 use polars::prelude::*;
 use tevec::prelude::{terr, CollectTrustedToVec, TryCollectTrustedToVec};
 
-#[derive(From, Clone)]
+#[derive(From, Clone, IsVariant)]
 pub enum Frame {
     Eager(DataFrame),
     Lazy(LazyFrame),
@@ -28,6 +28,17 @@ impl Frame {
         match self {
             Frame::Eager(df) => Ok(df.schema().into()),
             Frame::Lazy(df) => Ok(df.schema()?),
+        }
+    }
+
+    #[inline]
+    fn impl_by_lazy<F>(self, f: F) -> Result<Frame>
+    where
+        F: FnOnce(LazyFrame) -> LazyFrame,
+    {
+        match self {
+            Frame::Eager(df) => Ok(f(df.lazy()).collect()?.into()),
+            Frame::Lazy(df) => Ok(f(df).into()),
         }
     }
 
@@ -67,34 +78,84 @@ impl Frame {
     }
 
     #[inline]
-    pub fn select<E: AsRef<[Expr]>>(self, exprs: E) -> Self {
-        match self {
-            Frame::Eager(df) => df.lazy().select(exprs).into(),
-            Frame::Lazy(df) => df.select(exprs).into(),
+    pub fn select<E: AsRef<[Expr]>>(self, exprs: E) -> Result<Self> {
+        self.impl_by_lazy(|df| df.select(exprs))
+    }
+
+    #[inline]
+    pub fn with_column(self, expr: Expr) -> Result<Self> {
+        self.impl_by_lazy(|df| df.with_column(expr))
+    }
+
+    #[inline]
+    pub fn with_columns<E: AsRef<[Expr]>>(self, exprs: E) -> Result<Self> {
+        self.impl_by_lazy(|df| df.with_columns(exprs))
+    }
+
+    #[inline]
+    pub fn filter(self, predicate: Expr) -> Result<Self> {
+        self.impl_by_lazy(|df| df.filter(predicate))
+    }
+
+    #[inline]
+    pub fn drop<I, T>(mut self, columns: I) -> Result<Self>
+    where
+        I: IntoIterator<Item = T>,
+        T: AsRef<str>,
+    {
+        // ignore exists columns
+        let schema = self.schema()?;
+        let columns = columns.into_iter().filter(|c| schema.contains(c.as_ref()));
+        self.impl_by_lazy(|df| df.drop(columns))
+    }
+
+    #[inline]
+    pub fn left_join<E: Into<Expr>>(self, other: Self, left_on: E, right_on: E) -> Result<Self> {
+        let lazy_flag = self.is_lazy() || other.is_lazy();
+        let lf = self.lazy().left_join(other.lazy(), left_on, right_on);
+        if lazy_flag {
+            Ok(lf.into())
+        } else {
+            Ok(lf.collect()?.into())
         }
     }
 
     #[inline]
-    pub fn with_column(self, expr: Expr) -> Self {
-        match self {
-            Frame::Eager(df) => df.lazy().with_column(expr).into(),
-            Frame::Lazy(df) => df.with_column(expr).into(),
+    pub fn full_join<E: Into<Expr>>(self, other: Self, left_on: E, right_on: E) -> Result<Self> {
+        let lazy_flag = self.is_lazy() || other.is_lazy();
+        let lf = self.lazy().full_join(other.lazy(), left_on, right_on);
+        if lazy_flag {
+            Ok(lf.into())
+        } else {
+            Ok(lf.collect()?.into())
         }
     }
 
     #[inline]
-    pub fn with_columns<E: AsRef<[Expr]>>(self, exprs: E) -> Self {
-        match self {
-            Frame::Eager(df) => df.lazy().with_columns(exprs).into(),
-            Frame::Lazy(df) => df.with_columns(exprs).into(),
+    pub fn inner_join<E: Into<Expr>>(self, other: Self, left_on: E, right_on: E) -> Result<Self> {
+        let lazy_flag = self.is_lazy() || other.is_lazy();
+        let lf = self.lazy().inner_join(other.lazy(), left_on, right_on);
+        if lazy_flag {
+            Ok(lf.into())
+        } else {
+            Ok(lf.collect()?.into())
         }
     }
 
     #[inline]
-    pub fn filter(self, predicate: Expr) -> Self {
-        match self {
-            Frame::Eager(df) => df.lazy().filter(predicate).into(),
-            Frame::Lazy(df) => df.filter(predicate).into(),
+    pub fn join<E: AsRef<[Expr]>>(
+        self,
+        other: Self,
+        left_on: E,
+        right_on: E,
+        args: JoinArgs,
+    ) -> Result<Self> {
+        let lazy_flag = self.is_lazy() || other.is_lazy();
+        let lf = self.lazy().join(other.lazy(), left_on, right_on, args);
+        if lazy_flag {
+            Ok(lf.into())
+        } else {
+            Ok(lf.collect()?.into())
         }
     }
 }

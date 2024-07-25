@@ -5,3 +5,4 @@ mod methods;
 pub(super) mod utils;
 
 pub use data_loader::DataLoader;
+pub use methods::*;

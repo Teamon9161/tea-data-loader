@@ -67,6 +67,11 @@ impl PathFinder {
                 "ticksize" | "tick_size" => {
                     self.main_path.join(self.get_typ()).join("ticksize.feather")
                 },
+                "tick_spread" => self
+                    .main_path
+                    .join("processed")
+                    .join(self.get_typ())
+                    .join("tick_to_min/base"),
                 "spot" => self.main_path.join(self.get_typ()).join("future_spot.csv"),
                 // 库存
                 "st_stock" => self
