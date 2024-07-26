@@ -1,10 +1,12 @@
 pub(super) mod export;
 pub mod map;
 mod param;
+mod parse;
 mod register;
 
 use anyhow::Result;
 pub use param::Param;
+pub use parse::parse_pl_fac;
 use polars::prelude::*;
 pub use register::*;
 
