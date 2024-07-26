@@ -1,7 +1,7 @@
 mod calc_fac;
-mod frame;
+mod frame_core;
 mod frames;
 mod join;
 
-pub use frame::Frame;
+pub use frame_core::Frame;
 pub use frames::Frames;

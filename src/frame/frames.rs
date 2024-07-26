@@ -6,7 +6,7 @@ use derive_more::From;
 use polars::prelude::*;
 use tevec::prelude::{terr, CollectTrustedToVec, TryCollectTrustedToVec};
 
-use super::frame::Frame;
+use super::frame_core::Frame;
 
 #[derive(Debug, From, Default, Clone)]
 pub struct Frames(pub Vec<Frame>);

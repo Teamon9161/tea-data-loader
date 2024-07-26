@@ -17,7 +17,7 @@ impl DataLoader {
     }
 
     #[inline]
-    pub fn with_pl_fac<'a, F: PlFactor>(self, fac: F) -> Result<Self> {
+    pub fn with_pl_fac<F: PlFactor>(self, fac: F) -> Result<Self> {
         self.with_column(fac.try_expr()?.alias(&fac.name()))
     }
 
@@ -46,7 +46,7 @@ impl DataLoader {
     }
 
     #[inline]
-    pub fn with_tp_fac<'a, F: TFactor>(self, fac: F) -> Result<Self> {
+    pub fn with_tp_fac<F: TFactor>(self, fac: F) -> Result<Self> {
         self.with_tp_facs([&fac as &dyn TFactor])
     }
 }
