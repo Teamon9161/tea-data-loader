@@ -6,6 +6,7 @@ mod frame;
 mod loader;
 mod path_finder;
 
+pub mod factors;
 pub mod prelude;
 
 #[cfg(test)]

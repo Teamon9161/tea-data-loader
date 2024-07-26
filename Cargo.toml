@@ -13,3 +13,6 @@ polars = { version = "0.41", features = ["polars-io", "ipc", "lazy"] }
 derive_more = { version = "0.99", features = ["from", "is_variant"] }
 anyhow = "1.0"
 rayon = "1.10"
+ctor = "0.2"
+parking_lot = "0.12"
+factor-macro = { path = "./factor-macro" }
