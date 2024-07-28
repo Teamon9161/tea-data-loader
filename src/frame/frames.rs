@@ -4,7 +4,7 @@ use std::ops::{Deref, DerefMut};
 use anyhow::Result;
 use derive_more::From;
 use polars::prelude::*;
-use tevec::prelude::{terr, CollectTrustedToVec, TryCollectTrustedToVec};
+use tea_strategy::tevec::prelude::{terr, CollectTrustedToVec, TryCollectTrustedToVec};
 
 use super::frame_core::Frame;
 

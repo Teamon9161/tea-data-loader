@@ -1,6 +1,6 @@
 use super::super::export::*;
 
-#[derive(FactorBase, Default)]
+#[derive(FactorBase, Default, Debug)]
 pub struct Typ(pub Param);
 
 impl PlFactor for Typ {
@@ -28,5 +28,5 @@ impl TFactor for Typ {
 
 #[ctor::ctor]
 fn register() {
-    register_factor::<Typ>().unwrap()
+    register_fac::<Typ>().unwrap()
 }

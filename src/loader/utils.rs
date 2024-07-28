@@ -1,6 +1,6 @@
 use polars::lazy::dsl::{cols, when};
 use polars::prelude::*;
-use tevec::prelude::{Cast, DateTime};
+use tea_strategy::tevec::prelude::{Cast, DateTime};
 
 fn get_preprocess_exprs_impl(typ: &str) -> Vec<Expr> {
     match typ {

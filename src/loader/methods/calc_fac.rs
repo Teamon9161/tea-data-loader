@@ -1,15 +1,31 @@
+use std::sync::Arc;
+
 use polars::series::Series;
 use rayon::prelude::*;
-use tevec::prelude::CollectTrustedToVec;
+use tea_strategy::tevec::prelude::CollectTrustedToVec;
 
 use crate::prelude::*;
 
 impl DataLoader {
     #[inline]
-    pub fn with_pl_facs<'a, F: AsRef<[&'a dyn PlFactor]>>(self, facs: F) -> Result<Self> {
-        let facs = facs.as_ref();
+    pub fn with_facs<'a, F: AsRef<[&'a str]>>(mut self, facs: F, backend: Backend) -> Result<Self> {
+        use crate::factors::parse_pl_fac;
+        let schema = self.schema()?;
+        let facs = facs.as_ref().into_iter().filter(|n| !schema.contains(n));
+        match backend {
+            Backend::Polars => {
+                let facs = facs.map(|f| parse_pl_fac(f)).try_collect::<Vec<_>>()?;
+                self.with_pl_facs(&facs)
+            },
+            Backend::Tevec => todo!(),
+        }
+    }
+
+    #[inline]
+    pub fn with_pl_facs<F: AsRef<dyn PlFactor>>(self, facs: &[F]) -> Result<Self> {
         let mut exprs = Vec::with_capacity(facs.len());
         for f in facs {
+            let f = f.as_ref();
             let expr = f.try_expr()?.alias(&f.name());
             exprs.push(expr);
         }
@@ -22,9 +38,12 @@ impl DataLoader {
     }
 
     #[inline]
-    pub fn with_tp_facs<'a, F: AsRef<[&'a dyn TFactor]>>(self, facs: F) -> Result<Self> {
+    pub fn with_tp_facs<F: AsRef<dyn TFactor>>(self, facs: &[F]) -> Result<Self> {
         let mut out = self.collect(true)?;
-        let facs = facs.as_ref();
+        let facs = facs
+            .into_iter()
+            .map(|f| f.as_ref())
+            .collect_trusted_to_vec();
         let fac_names = facs.iter().map(|f| f.name()).collect_trusted_to_vec();
         let dfs: Vec<Frame> = out
             .dfs
@@ -47,6 +66,7 @@ impl DataLoader {
 
     #[inline]
     pub fn with_tp_fac<F: TFactor>(self, fac: F) -> Result<Self> {
-        self.with_tp_facs([&fac as &dyn TFactor])
+        let facs: Vec<Arc<dyn TFactor>> = vec![Arc::new(fac)];
+        self.with_tp_facs(&facs)
     }
 }

@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-tevec = { version = "0.2", features = ["pl", "time"] }
+# tevec = { version = "0.2", features = ["pl", "time"] }
 toml = "0.8"
 glob = "0.3"
 once_cell = { version = "1.19" }
@@ -14,5 +14,12 @@ derive_more = { version = "0.99", features = ["from", "is_variant"] }
 anyhow = "1.0"
 rayon = "1.10"
 ctor = "0.2"
+regex = "1.10"
 parking_lot = "0.12"
 factor-macro = { path = "./factor-macro" }
+
+[dependencies.tea_strategy]
+git = "https://github.com/Teamon9161/tea_strategy.git"
+branch = "master"
+default-features = false
+features = ['pl', "time"]

@@ -2,8 +2,9 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use anyhow::Result;
-use tevec::dtype::Cast;
-use tevec::prelude::DateTime;
+use polars::prelude::SchemaRef;
+use tea_strategy::tevec::dtype::Cast;
+use tea_strategy::tevec::prelude::DateTime;
 
 use crate::prelude::{Frame, Frames};
 
@@ -129,6 +130,15 @@ impl DataLoader {
             false
         } else {
             self[0].schema().unwrap().contains(name)
+        }
+    }
+
+    #[inline]
+    pub fn schema(&mut self) -> Result<SchemaRef> {
+        if self.is_empty() {
+            Ok(SchemaRef::default())
+        } else {
+            self[0].schema()
         }
     }
 }
