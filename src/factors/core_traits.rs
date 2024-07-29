@@ -9,11 +9,11 @@ pub trait FactorBase: Sized {
     fn new<P: Into<Param>>(param: P) -> Self;
 }
 
-pub trait GetFacName {
+pub trait GetName {
     fn name(&self) -> String;
 }
 
-pub trait PlFactor: GetFacName + Send + Sync + 'static {
+pub trait PlFactor: GetName + Send + Sync + 'static {
     fn try_expr(&self) -> Result<Expr>;
 
     #[inline]
@@ -22,6 +22,6 @@ pub trait PlFactor: GetFacName + Send + Sync + 'static {
     }
 }
 
-pub trait TFactor: GetFacName + Send + Sync + 'static {
+pub trait TFactor: GetName + Send + Sync + 'static {
     fn eval(&self, df: &DataFrame) -> Result<Series>;
 }

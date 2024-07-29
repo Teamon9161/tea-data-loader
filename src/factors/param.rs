@@ -2,7 +2,7 @@ use std::fmt::Debug;
 use std::str::FromStr;
 
 use anyhow::{bail, Result};
-use derive_more::From;
+use derive_more::{Deref, DerefMut, From};
 
 #[derive(Default, From, Clone, Copy, PartialEq)]
 pub enum Param {
@@ -20,7 +20,7 @@ impl FromStr for Param {
             Ok(Param::I32(v))
         } else if let Ok(v) = s.parse::<f64>() {
             Ok(Param::F64(v))
-        } else if (s == "") || (s.to_lowercase().as_str() == "none") {
+        } else if s.is_empty() || (s.to_lowercase().as_str() == "none") {
             Ok(Param::None)
         } else {
             bail!("Invalid param: {}", s)
@@ -41,7 +41,32 @@ impl Debug for Param {
 unsafe impl Send for Param {}
 unsafe impl Sync for Param {}
 
-#[derive(Default, Clone, From, PartialEq)]
+impl Param {
+    #[inline]
+    pub fn as_i32(&self) -> i32 {
+        if let Param::I32(v) = self {
+            *v
+        } else {
+            panic!("param is not i32")
+        }
+    }
+
+    #[inline]
+    pub fn as_f64(&self) -> f64 {
+        if let Param::F64(v) = self {
+            *v
+        } else {
+            panic!("param is not f64")
+        }
+    }
+
+    #[inline]
+    pub fn is_none(&self) -> bool {
+        matches!(self, Param::None)
+    }
+}
+
+#[derive(Default, Clone, From, PartialEq, Deref, DerefMut)]
 #[repr(transparent)]
 pub struct Params(pub Vec<Param>);
 

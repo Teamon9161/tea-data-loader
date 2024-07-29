@@ -1,8 +1,9 @@
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
+
 use serde::Deserialize;
 use toml::Table;
 
-pub static CONFIG: Lazy<Config> = Lazy::new(|| {
+pub static CONFIG: LazyLock<Config> = LazyLock::new(|| {
     let config_str = std::fs::read_to_string("config.toml").unwrap();
     toml::from_str(&config_str).unwrap()
 });

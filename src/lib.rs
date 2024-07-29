@@ -5,7 +5,6 @@ mod enums;
 mod frame;
 mod loader;
 mod path_finder;
-mod strategy_work;
 
 pub mod factors;
 pub mod prelude;
