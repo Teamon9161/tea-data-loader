@@ -82,14 +82,20 @@ impl FutureRetOpt<'_> {
 }
 
 impl DataLoader {
-    pub fn calc_future_ret<'a, F: AsRef<[&'a str]>>(self, facs: F, opt: &FutureRetOpt) -> Self {
+    pub fn calc_future_ret<'a, F: AsRef<[&'a str]>>(
+        self,
+        facs: F,
+        opt: &FutureRetOpt,
+    ) -> Result<Self> {
         let facs = facs.as_ref();
         let mut out = self.empty_copy();
+        if self.multiplier.is_none() {
+            out = out.with_multiplier()?;
+        }
+        let multiplier_map = out.multiplier.as_ref().unwrap();
         let dfs: Vec<Frame> = self
-            .dfs
-            .0
             .into_par_iter()
-            .map(|df| {
+            .map(|(symbol, df)| {
                 let df = df.collect().unwrap();
                 let ecs: Vec<Series> = facs
                     .par_iter()
@@ -104,6 +110,7 @@ impl DataLoader {
                         let contract_chg_signal_vec = auto_cast!(Boolean(contract_chg_signal_vec));
                         let (pos, open_vec, close_vec) =
                             auto_cast!(Float64(pos, open_vec, close_vec));
+                        let multiplier = *multiplier_map.get(symbol.as_str()).unwrap();
                         let out: Float64Chunked = if opt.slippage_flag {
                             let slippage = df.column("twap_spread").unwrap() * 0.5;
                             let slippage_vec = auto_cast!(Float64(slippage));
@@ -114,7 +121,7 @@ impl DataLoader {
                                 slippage_vec.f64().unwrap(),
                                 Some(contract_chg_signal_vec.bool().unwrap()),
                                 // TODO(teamon): should be a correct multiplier
-                                &opt.to_future_ret_spread_kwargs(1.),
+                                &opt.to_future_ret_spread_kwargs(multiplier),
                             )
                         } else {
                             tea_strategy::equity::calc_future_ret(
@@ -123,7 +130,7 @@ impl DataLoader {
                                 close_vec.f64().unwrap(),
                                 Some(contract_chg_signal_vec.bool().unwrap()),
                                 // TODO(teamon): should be a correct multiplier
-                                &opt.to_future_ret_kwargs(1.),
+                                &opt.to_future_ret_kwargs(multiplier),
                             )
                         };
                         out.with_name(&(f.to_string() + opt.suffix)).into_series()
@@ -134,6 +141,6 @@ impl DataLoader {
             })
             .collect();
         out.dfs = dfs.into();
-        out
+        Ok(out)
     }
 }

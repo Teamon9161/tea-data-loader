@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -17,6 +18,7 @@ pub struct DataLoader {
     pub start: Option<DateTime>,
     pub end: Option<DateTime>,
     pub kline_path: Option<PathBuf>,
+    pub multiplier: Option<HashMap<Arc<str>, f64>>,
 }
 
 impl Default for DataLoader {
@@ -30,6 +32,7 @@ impl Default for DataLoader {
             start: None,
             end: None,
             kline_path: None,
+            multiplier: None,
         }
     }
 }
@@ -105,6 +108,7 @@ impl DataLoader {
             start: self.start,
             end: self.end,
             kline_path: self.kline_path.clone(),
+            multiplier: self.multiplier.clone(),
         }
     }
 

@@ -3,6 +3,7 @@ mod equity_curve;
 mod factors;
 mod join;
 mod kline;
+mod multiplier;
 mod noadj;
 mod spread;
 mod strategy;
