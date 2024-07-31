@@ -99,6 +99,12 @@ impl DataLoader {
     }
 
     #[inline]
+    pub fn with_dfs(mut self, dfs: Frames) -> Self {
+        self.dfs = dfs;
+        self
+    }
+
+    #[inline]
     pub fn copy_with_dfs(&self, dfs: Frames) -> Self {
         DataLoader {
             typ: self.typ.clone(),

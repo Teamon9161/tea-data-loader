@@ -4,10 +4,18 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+polars = { version = "0.41", features = [
+    "polars-io",
+    "ipc",
+    "lazy",
+    "rolling_window",
+    "dynamic_group_by",
+    "simd",
+    "meta",
+] }
 toml = "0.8"
 glob = "0.3"
 serde = { version = "1.0", features = ["derive"] }
-polars = { version = "0.41", features = ["polars-io", "ipc", "lazy"] }
 derive_more = { version = "0.99", features = ["from", "is_variant"] }
 anyhow = "1.0"
 rayon = "1.10"
