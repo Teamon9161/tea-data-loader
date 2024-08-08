@@ -3,6 +3,13 @@ name = "tea-data-loader"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+default = ["plot"]
+
+plot = ["plotly"]
+poloto = ["dep:poloto", "poloto-chrono"]
+
+
 [dependencies]
 polars = { version = "0.41", features = [
     "polars-io",
@@ -10,6 +17,9 @@ polars = { version = "0.41", features = [
     "lazy",
     "rolling_window",
     "dynamic_group_by",
+    "abs",
+    "cum_agg",
+    "cumulative_eval",
     "simd",
     "meta",
 ] }
@@ -24,6 +34,14 @@ regex = "1.10"
 parking_lot = "0.12"
 itertools = "0.13"
 factor-macro = { path = "./factor-macro" }
+
+# plot
+plotly = { version = "0.9", features = ["kaleido"], optional = true }
+poloto = { version = "19.1", optional = true }
+poloto-chrono = { version = "0.4", optional = true }
+
+
+# lgbm = { version = "0.0", optional = true }
 
 [dependencies.tea_strategy]
 git = "https://github.com/Teamon9161/tea_strategy.git"

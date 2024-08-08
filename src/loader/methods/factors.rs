@@ -10,9 +10,9 @@ use crate::prelude::*;
 
 impl DataLoader {
     #[inline]
-    pub fn with_facs<'a, F: AsRef<[&'a str]>>(mut self, facs: F, backend: Backend) -> Result<Self> {
+    pub fn with_facs<F: AsRef<str>>(mut self, facs: &[F], backend: Backend) -> Result<Self> {
         use crate::factors::parse_pl_fac;
-        let facs = facs.as_ref().iter();
+        let facs = facs.iter().map(|v| v.as_ref());
         let schema = self.schema()?;
         match backend {
             Backend::Polars => {

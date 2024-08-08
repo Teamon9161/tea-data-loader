@@ -38,6 +38,22 @@ impl Frame {
     }
 
     #[inline]
+    pub fn as_eager(&self) -> Option<&DataFrame> {
+        if let Frame::Eager(df) = self {
+            return Some(df);
+        }
+        None
+    }
+
+    #[inline]
+    pub fn as_lazy(&self) -> Option<&LazyFrame> {
+        if let Frame::Lazy(df) = self {
+            return Some(df);
+        }
+        None
+    }
+
+    #[inline]
     pub fn schema(&mut self) -> Result<SchemaRef> {
         match self {
             Frame::Eager(df) => Ok(df.schema().into()),
@@ -121,5 +137,23 @@ impl Frame {
         let schema = self.schema()?;
         let columns = columns.into_iter().filter(|c| schema.contains(c.as_ref()));
         self.impl_by_lazy(|df| df.drop(columns))
+    }
+}
+
+pub trait IntoFrame {
+    fn into_frame(self) -> Frame;
+}
+
+impl IntoFrame for DataFrame {
+    #[inline]
+    fn into_frame(self) -> Frame {
+        Frame::Eager(self)
+    }
+}
+
+impl IntoFrame for LazyFrame {
+    #[inline]
+    fn into_frame(self) -> Frame {
+        Frame::Lazy(self)
     }
 }

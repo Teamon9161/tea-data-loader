@@ -18,11 +18,10 @@ impl PlFactor for Typ {
 impl TFactor for Typ {
     #[inline]
     fn eval(&self, df: &DataFrame) -> Result<Series> {
-        let mut expr = df.column("open")?.clone();
-        for col in &["high", "close", "low"] {
-            expr = (expr + df.column(col)?.clone())?;
-        }
-        Ok(expr / 4.)
+        use polars::frame::NullStrategy;
+        df.select(["close", "open", "high", "low"])?
+            .mean_horizontal(NullStrategy::Ignore)?
+            .ok_or_else(|| anyhow::Error::msg("Can not find data columns"))
     }
 }
 

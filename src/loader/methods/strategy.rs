@@ -6,9 +6,16 @@ use tea_strategy::tevec::prelude::CollectTrustedToVec;
 use crate::prelude::*;
 
 impl DataLoader {
-    pub fn with_strategies<'a, S: AsRef<[&'a str]>>(mut self, strategies: S) -> Result<Self> {
+    pub fn with_strategies<S: AsRef<str>>(mut self, strategies: &[S]) -> Result<Self> {
         let schema = self.schema()?;
-        let strategies = strategies.as_ref().iter().filter(|n| !schema.contains(n));
+        let strategies = strategies.iter().filter_map(|n| {
+            let n = n.as_ref();
+            if !schema.contains(n) {
+                Some(n)
+            } else {
+                None
+            }
+        });
         let works = strategies
             .map(|s| s.parse())
             .try_collect::<Vec<StrategyWork>>()?;

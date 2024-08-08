@@ -25,7 +25,7 @@ mod tests {
             .kline("min", None, None, true)?
             .with_noadj(None, false, true)?
             .with_pl_facs(&facs)?
-            .with_facs(["typ_1"], Backend::Polars)?
+            .with_facs(&["typ_1"], Backend::Polars)?
             .collect(true)?;
         dbg!("{:#?}", &dl["A"]);
         let dl = DataLoader::new("future")

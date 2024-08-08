@@ -3,6 +3,7 @@ use std::str::FromStr;
 
 use anyhow::{bail, Result};
 use derive_more::{Deref, DerefMut, From};
+use polars::prelude::RollingOptionsFixedWindow;
 
 #[derive(Default, From, Clone, Copy, PartialEq)]
 pub enum Param {
@@ -61,8 +62,26 @@ impl Param {
     }
 
     #[inline]
+    pub fn rolling_opt(&self) -> RollingOptionsFixedWindow {
+        let n = self.as_i32() as usize;
+        let min_periods = n / 2;
+        RollingOptionsFixedWindow {
+            window_size: n,
+            min_periods,
+            ..Default::default()
+        }
+    }
+
+    #[inline]
     pub fn is_none(&self) -> bool {
         matches!(self, Param::None)
+    }
+}
+
+impl From<Param> for RollingOptionsFixedWindow {
+    #[inline]
+    fn from(param: Param) -> Self {
+        param.rolling_opt()
     }
 }
 
