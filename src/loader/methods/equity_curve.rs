@@ -82,12 +82,8 @@ impl FutureRetOpt<'_> {
 }
 
 impl DataLoader {
-    pub fn calc_future_ret<'a, F: AsRef<[&'a str]>>(
-        self,
-        facs: F,
-        opt: &FutureRetOpt,
-    ) -> Result<Self> {
-        let facs = facs.as_ref();
+    pub fn calc_future_ret<F: AsRef<str>>(self, facs: &[F], opt: &FutureRetOpt) -> Result<Self> {
+        let facs = facs.iter().map(|f| f.as_ref()).collect::<Vec<_>>();
         let mut out = self.empty_copy();
         if self.multiplier.is_none() {
             out = out.with_multiplier()?;
