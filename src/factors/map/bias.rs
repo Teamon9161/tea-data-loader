@@ -1,13 +1,15 @@
 use super::super::export::*;
 
-#[derive(FactorBase, Default, Debug)]
+/// 乖离率反转因子, 价格偏离均线的比例。
+#[derive(FactorBase, Default, Debug, Clone)]
 pub struct Bias(pub Param);
 
 impl PlFactor for Bias {
     #[inline]
     fn try_expr(&self) -> Result<Expr> {
-        let ma = col("close").rolling_mean(self.0.into());
-        let bias = col("close") / ma - lit(1.);
+        let close = CLOSE.try_expr()?;
+        let ma = close.clone().rolling_mean(self.0.into());
+        let bias = close / ma - lit(1.);
         Ok(bias)
     }
 }

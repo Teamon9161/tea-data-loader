@@ -1,4 +1,5 @@
 use anyhow::Result;
+use polars::lazy::dsl::Expr;
 use polars::prelude::*;
 
 use super::param::Param;

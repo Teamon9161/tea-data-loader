@@ -4,8 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-default = ["plot"]
+default = ["plot", "fac_ext"]
 
+fac_ext = []
 plot = ["plotly"]
 poloto = ["dep:poloto", "poloto-chrono"]
 
@@ -15,11 +16,15 @@ polars = { version = "0.41", features = [
     "polars-io",
     "ipc",
     "lazy",
+    "cov",
     "rolling_window",
     "dynamic_group_by",
     "abs",
     "cum_agg",
     "cumulative_eval",
+    "diff",
+    "log",
+    "pct_change",
     "simd",
     "meta",
 ] }

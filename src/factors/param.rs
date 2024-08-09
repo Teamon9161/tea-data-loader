@@ -3,7 +3,7 @@ use std::str::FromStr;
 
 use anyhow::{bail, Result};
 use derive_more::{Deref, DerefMut, From};
-use polars::prelude::RollingOptionsFixedWindow;
+use polars::prelude::{RollingCovOptions, RollingOptionsFixedWindow};
 
 #[derive(Default, From, Clone, Copy, PartialEq)]
 pub enum Param {
@@ -29,6 +29,27 @@ impl FromStr for Param {
     }
 }
 
+impl From<usize> for Param {
+    #[inline]
+    fn from(v: usize) -> Self {
+        Param::I32(v as i32)
+    }
+}
+
+impl From<Param> for usize {
+    #[inline]
+    fn from(p: Param) -> Self {
+        p.as_usize()
+    }
+}
+
+impl From<Param> for i64 {
+    #[inline]
+    fn from(p: Param) -> Self {
+        p.as_i32() as i64
+    }
+}
+
 impl Debug for Param {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -45,10 +66,10 @@ unsafe impl Sync for Param {}
 impl Param {
     #[inline]
     pub fn as_i32(&self) -> i32 {
-        if let Param::I32(v) = self {
-            *v
-        } else {
-            panic!("param is not i32")
+        match self {
+            Param::I32(v) => *v,
+            Param::None => 1, // special case
+            _ => panic!("param is not i32"),
         }
     }
 
@@ -62,13 +83,34 @@ impl Param {
     }
 
     #[inline]
+    pub fn as_u32(&self) -> u32 {
+        self.as_i32() as u32
+    }
+
+    #[inline]
+    pub fn as_usize(&self) -> usize {
+        self.as_i32() as usize
+    }
+
+    #[inline]
     pub fn rolling_opt(&self) -> RollingOptionsFixedWindow {
-        let n = self.as_i32() as usize;
+        let n = self.as_usize();
         let min_periods = n / 2;
         RollingOptionsFixedWindow {
             window_size: n,
             min_periods,
             ..Default::default()
+        }
+    }
+
+    #[inline]
+    pub fn rolling_cov_opt(&self) -> RollingCovOptions {
+        let n = self.as_u32();
+        let min_periods = n / 2;
+        RollingCovOptions {
+            window_size: self.as_u32(),
+            min_periods,
+            ddof: 1,
         }
     }
 
@@ -82,6 +124,13 @@ impl From<Param> for RollingOptionsFixedWindow {
     #[inline]
     fn from(param: Param) -> Self {
         param.rolling_opt()
+    }
+}
+
+impl From<Param> for RollingCovOptions {
+    #[inline]
+    fn from(param: Param) -> Self {
+        param.rolling_cov_opt()
     }
 }
 

@@ -1,6 +1,7 @@
 use super::super::export::*;
 
-#[derive(FactorBase, Default, Debug)]
+/// 典型价格指标
+#[derive(FactorBase, Default, Debug, Clone)]
 pub struct Typ(pub Param);
 
 impl PlFactor for Typ {

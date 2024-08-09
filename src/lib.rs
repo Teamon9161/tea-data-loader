@@ -5,11 +5,12 @@ mod enums;
 mod frame;
 mod loader;
 mod path_finder;
+mod polars_ext;
 
+pub(crate) use tea_strategy::tevec;
 pub mod factors;
 pub mod prelude;
 pub mod strategy;
-
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
