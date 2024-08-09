@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use rayon::prelude::*;
 
 use crate::prelude::*;
@@ -23,18 +25,20 @@ impl IntoParallelIterator for Frames {
 }
 
 impl IntoIterator for DataLoader {
-    type Item = (String, Frame);
-    type IntoIter = std::iter::Zip<std::vec::IntoIter<String>, std::vec::IntoIter<Frame>>;
+    type Item = (Arc<str>, Frame);
+    type IntoIter = std::iter::Zip<std::vec::IntoIter<Arc<str>>, std::vec::IntoIter<Frame>>;
 
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
-        self.symbols.unwrap().into_iter().zip(self.dfs)
+        let len = self.len();
+        let symbols = self.symbols.unwrap_or_else(|| vec!["".into(); len]);
+        symbols.into_iter().zip(self.dfs)
     }
 }
 
 impl IntoParallelIterator for DataLoader {
-    type Item = (String, Frame);
-    type Iter = rayon::iter::Zip<rayon::vec::IntoIter<String>, rayon::vec::IntoIter<Frame>>;
+    type Item = (Arc<str>, Frame);
+    type Iter = rayon::iter::Zip<rayon::vec::IntoIter<Arc<str>>, rayon::vec::IntoIter<Frame>>;
 
     #[inline]
     fn into_par_iter(self) -> Self::Iter {

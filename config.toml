@@ -1,6 +1,7 @@
 [path_finder.main_path]
 rq = "C://working/data"
 coin = "C:/coin/data"
+xbond = "C:/working/ttrd/output"
 
 [path_finder.type_source]
 future = "rq"
@@ -9,6 +10,7 @@ national_debt = "rq"
 rf = "rq"
 coin_future = "coin"
 coin_spot = "coin"
+xbond = "xbond"
 
 [loader.rename.future]
 info = { underlying_symbol = "symbol" }

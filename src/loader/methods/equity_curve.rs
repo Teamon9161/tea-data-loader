@@ -106,7 +106,7 @@ impl DataLoader {
                         let contract_chg_signal_vec = auto_cast!(Boolean(contract_chg_signal_vec));
                         let (pos, open_vec, close_vec) =
                             auto_cast!(Float64(pos, open_vec, close_vec));
-                        let multiplier = *multiplier_map.get(symbol.as_str()).unwrap();
+                        let multiplier = *multiplier_map.get(&*symbol).unwrap();
                         let out: Float64Chunked = if opt.slippage_flag {
                             let slippage = df.column("twap_spread").unwrap() * 0.5;
                             let slippage_vec = auto_cast!(Float64(slippage));

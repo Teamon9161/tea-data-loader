@@ -1,5 +1,5 @@
 pub use anyhow::Result;
-pub use polars::lazy::dsl::Expr;
+pub use polars::lazy::dsl::{self, Expr};
 
 pub(crate) use super::configs::CONFIG;
 pub use super::enums::{Adjust, Tier};

@@ -13,7 +13,7 @@ use crate::prelude::{Frame, Frames};
 pub struct DataLoader {
     pub typ: Arc<str>,
     pub dfs: Frames,
-    pub symbols: Option<Vec<String>>,
+    pub symbols: Option<Vec<Arc<str>>>,
     pub freq: Option<Arc<str>>,
     pub start: Option<DateTime>,
     pub end: Option<DateTime>,
@@ -47,7 +47,7 @@ impl DataLoader {
     }
 
     #[inline]
-    pub fn new_with_symbols<S: IntoIterator<Item = A>, A: Into<String>>(
+    pub fn new_with_symbols<S: IntoIterator<Item = A>, A: Into<Arc<str>>>(
         typ: &str,
         symbols: S,
     ) -> Self {
@@ -81,7 +81,10 @@ impl DataLoader {
     }
 
     #[inline]
-    pub fn with_symbols<S: IntoIterator<Item = A>, A: Into<String>>(mut self, symbols: S) -> Self {
+    pub fn with_symbols<S: IntoIterator<Item = A>, A: Into<Arc<str>>>(
+        mut self,
+        symbols: S,
+    ) -> Self {
         self.symbols = Some(symbols.into_iter().map(Into::into).collect());
         self
     }

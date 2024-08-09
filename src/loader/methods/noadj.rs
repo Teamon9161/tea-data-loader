@@ -32,7 +32,7 @@ impl DataLoader {
         let path = PathFinder::new(finder_config)?.path()?;
         let mut out = self.empty_copy();
         for (symbol, df) in self {
-            let file_path = path.join(symbol.clone() + ".feather");
+            let file_path = path.join(symbol.to_string() + ".feather");
             if file_path.exists() {
                 let mut df_noadj = LazyFrame::scan_ipc(
                     &file_path,

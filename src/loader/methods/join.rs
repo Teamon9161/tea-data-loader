@@ -63,7 +63,7 @@ impl DataLoader {
             JoinCoalesce::JoinSpecific
         };
         for (symbol, df) in self.into_iter() {
-            let other_path = option.path.as_ref().join(symbol + suffix);
+            let other_path = option.path.as_ref().join(symbol.to_string() + suffix);
             let other = LazyFrame::scan_ipc(&other_path, Default::default())?;
             let df = df.join(
                 other.into(),

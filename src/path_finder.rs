@@ -29,14 +29,16 @@ impl PathFinder {
         let source = path_config
             .type_source
             .get(&config.typ)
-            .unwrap()
+            .ok_or_else(|| anyhow::Error::msg(format!("Unknown type: {}", config.typ)))?
             .as_str()
             .unwrap();
         // get main path by source type
         let main_path = path_config
             .main_path
             .get(source)
-            .unwrap()
+            .ok_or_else(|| {
+                anyhow::Error::msg(format!("Source: {} don't have a main path", config.typ))
+            })?
             .as_str()
             .unwrap()
             .to_owned();
@@ -104,6 +106,10 @@ impl PathFinder {
                 },
             },
             "rf" => self.main_path.join("rf.feather"),
+            "xbond" => match self.get_freq() {
+                "tick" => self.main_path.join("tick"),
+                _ => bail!("Unknown freq: {} for xbond", self.get_freq()),
+            },
             typ => {
                 if typ.starts_with("coin_") {
                     self.main_path
