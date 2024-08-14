@@ -89,9 +89,8 @@ impl DataLoader {
             out = out.with_multiplier()?;
         }
         let multiplier_map = out.multiplier.as_ref().unwrap();
-        let dfs: Vec<Frame> = self
-            .into_par_iter()
-            .map(|(symbol, df)| {
+        let dfs = self
+            .par_apply_with_symbol(|(symbol, df)| {
                 let df = df.collect().unwrap();
                 let ecs: Vec<Series> = facs
                     .par_iter()
@@ -106,7 +105,7 @@ impl DataLoader {
                         let contract_chg_signal_vec = auto_cast!(Boolean(contract_chg_signal_vec));
                         let (pos, open_vec, close_vec) =
                             auto_cast!(Float64(pos, open_vec, close_vec));
-                        let multiplier = *multiplier_map.get(&*symbol).unwrap();
+                        let multiplier = *multiplier_map.get(symbol).unwrap();
                         let out: Float64Chunked = if opt.slippage_flag {
                             let slippage = df.column("twap_spread").unwrap() * 0.5;
                             let slippage_vec = auto_cast!(Float64(slippage));
@@ -135,8 +134,8 @@ impl DataLoader {
                 let ecs: Vec<_> = ecs.into_iter().map(lit).collect();
                 Frame::Eager(df).with_columns(&ecs).unwrap()
             })
-            .collect();
-        out.dfs = dfs.into();
+            .dfs;
+        out.dfs = dfs;
         Ok(out)
     }
 }

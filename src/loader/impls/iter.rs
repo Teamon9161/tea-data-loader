@@ -48,3 +48,15 @@ impl IntoParallelIterator for DataLoader {
             .zip(self.dfs.into_par_iter())
     }
 }
+
+impl DataLoader {
+    pub fn par_iter(
+        &self,
+    ) -> rayon::iter::Zip<rayon::slice::Iter<Arc<str>>, rayon::slice::Iter<Frame>> {
+        self.symbols
+            .as_ref()
+            .unwrap()
+            .par_iter()
+            .zip(self.dfs.par_iter())
+    }
+}

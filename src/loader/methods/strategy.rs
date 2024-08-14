@@ -24,31 +24,23 @@ impl DataLoader {
             .iter()
             .map(|w| w.fac.as_ref())
             .collect_trusted_to_vec();
-        let mut dl = self.with_facs(&facs, Default::default())?;
-        // calculate strategies
-        let frames: Vec<Frame> = dl
-            .dfs
-            .0
-            .into_par_iter()
-            .map(|f| {
-                let mut df = f.collect().unwrap();
-                let series = works
-                    .par_iter()
-                    .map(|w| {
-                        let mut res = w.eval(&df).unwrap();
-                        if res.name() == "" {
-                            res.rename(w.name.as_ref().unwrap());
-                            res
-                        } else {
-                            res
-                        }
-                    })
-                    .collect::<Vec<Series>>();
-                df.hstack_mut(&series).unwrap();
-                df.lazy().into()
-            })
-            .collect();
-        dl.dfs = frames.into();
+        let dl = self.with_facs(&facs, Default::default())?.par_apply(|f| {
+            let mut df = f.collect().unwrap();
+            let series = works
+                .par_iter()
+                .map(|w| {
+                    let mut res = w.eval(&df).unwrap();
+                    if res.name() == "" {
+                        res.rename(w.name.as_ref().unwrap());
+                        res
+                    } else {
+                        res
+                    }
+                })
+                .collect::<Vec<Series>>();
+            df.hstack_mut(&series).unwrap();
+            df.lazy()
+        });
         Ok(dl)
     }
 }

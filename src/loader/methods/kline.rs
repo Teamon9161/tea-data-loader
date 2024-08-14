@@ -9,6 +9,89 @@ use super::super::utils::{get_filter_cond, get_preprocess_exprs};
 use crate::path_finder::{PathConfig, PathFinder};
 use crate::prelude::*;
 
+#[derive(Clone, Debug, Copy)]
+pub struct KlineOpt<'a> {
+    freq: &'a str,
+    tier: Option<Tier>,
+    adjust: Option<Adjust>,
+    memory_map: bool,
+    concat_tick_df: bool,
+}
+
+impl Default for KlineOpt<'_> {
+    fn default() -> Self {
+        Self {
+            freq: "daily",
+            tier: None,
+            adjust: None,
+            memory_map: true,
+            concat_tick_df: false,
+        }
+    }
+}
+
+impl<'a> KlineOpt<'a> {
+    fn with_default_tier(mut self, typ: &str) -> Self {
+        if self.tier.is_none() {
+            let tier = match typ {
+                "future" => Tier::Lead,
+                _ => Tier::None,
+            };
+            self.tier = Some(tier);
+        }
+        self
+    }
+
+    fn with_default_adjust(mut self, typ: &str) -> Self {
+        if self.adjust.is_none() {
+            let adjust = match typ {
+                "future" => {
+                    if self.tier.is_none() {
+                        self = self.with_default_adjust(typ);
+                    }
+                    let tier = self.tier.unwrap();
+                    if tier != Tier::SubLead {
+                        Adjust::Pre
+                    } else {
+                        Adjust::None
+                    }
+                },
+                _ => Adjust::None,
+            };
+            self.adjust = Some(adjust);
+        }
+        self
+    }
+
+    #[inline]
+    pub fn path_config(&self, typ: &str) -> PathConfig {
+        let opt = self.with_default_tier(typ).with_default_adjust(typ);
+        PathConfig {
+            config: CONFIG.path_finder.clone(),
+            typ: typ.to_string(),
+            freq: self.freq.into(),
+            tier: opt.tier.unwrap(),
+            adjust: opt.adjust.unwrap(),
+        }
+    }
+
+    #[inline]
+    pub fn new(freq: &'a str) -> Self {
+        Self {
+            freq,
+            ..Default::default()
+        }
+    }
+
+    #[inline]
+    pub fn freq(freq: &'a str) -> Self {
+        Self {
+            freq,
+            ..Default::default()
+        }
+    }
+}
+
 impl DataLoader {
     #[inline]
     pub fn time_filter_cond(&self, freq: &str) -> Result<Option<Expr>> {
@@ -34,7 +117,12 @@ impl DataLoader {
         )
     }
 
-    fn load_xbond_kline(mut self, path_config: PathConfig, memory_map: bool) -> Result<Self> {
+    fn load_xbond_kline(
+        mut self,
+        path_config: PathConfig,
+        memory_map: bool,
+        concat: bool,
+    ) -> Result<Self> {
         let finder = PathFinder::new(path_config)?;
         self.kline_path = Some(finder.path()?);
         if let Some(freq) = self.freq.as_deref() {
@@ -56,6 +144,10 @@ impl DataLoader {
                 let rename_table = self.rename_table(finder.tier);
                 let preprocess_exprs = get_preprocess_exprs(&self.typ);
                 let mut columns: Option<Vec<_>> = None;
+                let dates: Vec<Arc<str>> = all_files
+                    .iter()
+                    .map(|x| x.file_stem().unwrap().to_str().unwrap().into())
+                    .collect::<Vec<_>>();
                 let dfs: Vec<_> = all_files
                     .into_iter()
                     .map(|path| -> Result<_> {
@@ -84,23 +176,45 @@ impl DataLoader {
                         Ok(ldf)
                     })
                     .try_collect()?;
-                let mut df = dsl::concat(
-                    dfs,
-                    UnionArgs {
-                        rechunk: true,
-                        ..Default::default()
-                    },
-                )?
-                .sort(["time", "SECURITYID"], Default::default());
-                // apply rename condition
-                if let Some(table) = &rename_table {
-                    df = df.rename(table.keys(), table.values().map(|v| v.as_str().unwrap()));
-                };
-                // apply filter condition
-                if let Some(cond) = filter_cond.clone() {
-                    df = df.filter(cond)
-                };
-                self.dfs = vec![df.with_columns(&preprocess_exprs)].into();
+                if concat {
+                    let mut df = dsl::concat(
+                        dfs,
+                        UnionArgs {
+                            rechunk: true,
+                            ..Default::default()
+                        },
+                    )?
+                    .sort(["time", "SECURITYID"], Default::default());
+                    // apply rename condition
+                    if let Some(table) = &rename_table {
+                        df = df.rename(table.keys(), table.values().map(|v| v.as_str().unwrap()));
+                    };
+                    // apply filter condition
+                    if let Some(cond) = filter_cond.clone() {
+                        df = df.filter(cond)
+                    };
+                    self.dfs = vec![df.with_columns(&preprocess_exprs)].into();
+                } else {
+                    self.dfs = dfs
+                        .into_iter()
+                        .map(|mut df| {
+                            // apply rename condition
+                            if let Some(table) = &rename_table {
+                                df = df.rename(
+                                    table.keys(),
+                                    table.values().map(|v| v.as_str().unwrap()),
+                                );
+                            };
+                            // apply filter condition
+                            if let Some(cond) = filter_cond.clone() {
+                                df = df.filter(cond)
+                            };
+                            df.with_columns(&preprocess_exprs)
+                        })
+                        .collect::<Vec<_>>()
+                        .into();
+                    self.symbols = Some(dates);
+                }
                 return Ok(self);
             }
         }
@@ -180,45 +294,14 @@ impl DataLoader {
         Ok(self)
     }
 
-    pub fn kline(
-        mut self,
-        freq: &str,
-        tier: Option<Tier>,
-        adjust: Option<Adjust>,
-        memory_map: bool,
-    ) -> Result<Self> {
-        if self.typ.as_ref() == "future" {
-            let tier = tier.unwrap_or(Tier::Lead);
-            let adjust = adjust.unwrap_or_else(|| {
-                if tier != Tier::SubLead {
-                    Adjust::Pre
-                } else {
-                    Adjust::None
-                }
-            });
-            let path_config = PathConfig {
-                config: CONFIG.path_finder.clone(),
-                typ: self.typ.to_string(),
-                freq: freq.into(),
-                tier,
-                adjust,
-            };
-            self.freq = Some(freq.into());
-            return self.load_future_kline(path_config, memory_map);
-        } else if self.typ.as_ref() == "xbond" {
-            let tier = tier.unwrap_or(Tier::None);
-            let adjust = adjust.unwrap_or(Adjust::None);
-            let path_config = PathConfig {
-                config: CONFIG.path_finder.clone(),
-                typ: self.typ.to_string(),
-                freq: freq.into(),
-                tier,
-                adjust,
-            };
-            self.freq = Some(freq.into());
-            return self.load_xbond_kline(path_config, memory_map);
+    pub fn kline(mut self, opt: KlineOpt) -> Result<Self> {
+        let path_config = opt.path_config(&self.typ);
+        self.freq = Some(opt.freq.into());
+        match self.typ.as_ref() {
+            "future" => self.load_future_kline(path_config, opt.memory_map),
+            "xbond" => self.load_xbond_kline(path_config, opt.memory_map, opt.concat_tick_df),
+            _ => bail!("Load Unsupported typ: {:?} kline", self.typ),
         }
-        unimplemented!("Only support future data for now")
     }
 }
 

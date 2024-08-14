@@ -31,7 +31,12 @@ polars = { version = "0.41", features = [
 toml = "0.8"
 glob = "0.3"
 serde = { version = "1.0", features = ["derive"] }
-derive_more = { version = "0.99", features = ["from", "is_variant"] }
+derive_more = { version = "1", features = [
+    "from",
+    "is_variant",
+    "deref",
+    "deref_mut",
+] }
 anyhow = "1.0"
 rayon = "1.10"
 ctor = "0.2"

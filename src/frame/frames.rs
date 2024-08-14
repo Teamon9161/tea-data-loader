@@ -107,10 +107,12 @@ impl Frames {
         F: Fn(Frame) -> DF + Send + Sync,
     {
         use rayon::prelude::*;
-        self.0
-            .into_par_iter()
-            .map(|df| f(df).into())
-            .collect::<Vec<_>>()
-            .into()
+        crate::POOL.install(|| {
+            self.0
+                .into_par_iter()
+                .map(|df| f(df).into())
+                .collect::<Vec<_>>()
+                .into()
+        })
     }
 }

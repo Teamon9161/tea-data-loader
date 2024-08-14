@@ -12,3 +12,4 @@ mod strategy;
 pub use equity_curve::FutureRetOpt;
 pub use group_by::{DataLoaderGroupBy, GroupByTimeOpt};
 pub use join::*;
+pub use kline::KlineOpt;

@@ -6,7 +6,7 @@ use super::enums::{Adjust, Tier};
 use crate::configs::MainPathConfig;
 
 pub struct PathConfig {
-    pub config: MainPathConfig,
+    pub(crate) config: MainPathConfig,
     pub typ: String,
     pub freq: String,
     pub tier: Tier,

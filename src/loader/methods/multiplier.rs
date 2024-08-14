@@ -9,6 +9,9 @@ use crate::prelude::*;
 
 impl DataLoader {
     pub fn with_multiplier(mut self) -> Result<Self> {
+        if self.multiplier.is_some() {
+            return Ok(self);
+        }
         match self.typ.as_ref() {
             "future" => {
                 let path_config = PathConfig {

@@ -85,21 +85,22 @@ impl DataLoader {
             .unique_by(|f| f.name())
             .collect_vec();
         let fac_names = facs.iter().map(|f| f.name()).collect_trusted_to_vec();
-        let dfs: Vec<Frame> = out
-            .dfs
-            .0
-            .into_par_iter()
-            .map(|df| {
-                let mut df = df.unwrap_eager();
-                let series_vec: Vec<Series> = facs
-                    .par_iter()
-                    .zip(&fac_names)
-                    .map(|(fac, name)| fac.eval(&df).unwrap().with_name(name))
-                    .collect();
-                df.hstack_mut(&series_vec).unwrap();
-                df.lazy().into()
-            })
-            .collect();
+        let dfs: Vec<Frame> = crate::POOL.install(|| {
+            out.dfs
+                .0
+                .into_par_iter()
+                .map(|df| {
+                    let mut df = df.unwrap_eager();
+                    let series_vec: Vec<Series> = facs
+                        .par_iter()
+                        .zip(&fac_names)
+                        .map(|(fac, name)| fac.eval(&df).unwrap().with_name(name))
+                        .collect();
+                    df.hstack_mut(&series_vec).unwrap();
+                    df.lazy().into()
+                })
+                .collect()
+        });
         out.dfs = dfs.into();
         Ok(out)
     }
