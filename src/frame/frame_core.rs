@@ -3,11 +3,39 @@ use std::fmt::Debug;
 use anyhow::Result;
 use derive_more::{From, IsVariant};
 use polars::prelude::*;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 #[derive(From, Clone, IsVariant)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Frame {
     Eager(DataFrame),
+    #[cfg_attr(
+        feature = "serde",
+        serde(
+            serialize_with = "Frame::serialize_lf",
+            deserialize_with = "Frame::deserialize_lf"
+        )
+    )]
     Lazy(LazyFrame),
+}
+
+impl Frame {
+    fn serialize_lf<S>(lf: &LazyFrame, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let dsl_plan = lf.logical_plan.clone();
+        dsl_plan.serialize(serializer)
+    }
+
+    fn deserialize_lf<'de, D>(deserializer: D) -> Result<LazyFrame, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let dsl_plan = DslPlan::deserialize(deserializer)?;
+        Ok(dsl_plan.into())
+    }
 }
 
 impl Debug for Frame {

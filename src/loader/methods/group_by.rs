@@ -194,6 +194,6 @@ impl DataLoaderGroupBy {
                 .map(|lgb| lgb.agg(aggs))
                 .collect_trusted_to_vec()
         };
-        self.dl.with_dfs(dfs.into())
+        self.dl.with_dfs(dfs)
     }
 }

@@ -50,6 +50,10 @@ impl IntoParallelIterator for DataLoader {
 }
 
 impl DataLoader {
+    pub fn iter(&self) -> std::iter::Zip<std::slice::Iter<Arc<str>>, std::slice::Iter<Frame>> {
+        self.symbols.as_ref().unwrap().iter().zip(self.dfs.iter())
+    }
+
     pub fn par_iter(
         &self,
     ) -> rayon::iter::Zip<rayon::slice::Iter<Arc<str>>, rayon::slice::Iter<Frame>> {

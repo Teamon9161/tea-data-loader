@@ -8,7 +8,9 @@ use tea_strategy::tevec::prelude::{terr, CollectTrustedToVec, TryCollectTrustedT
 
 use super::frame_core::Frame;
 
+// TODO: parallelize serialization & deserialization
 #[derive(Debug, From, Default, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Frames(pub Vec<Frame>);
 
 impl Deref for Frames {

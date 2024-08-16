@@ -3,13 +3,15 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use anyhow::Result;
-use polars::prelude::SchemaRef;
+use polars::prelude::{NamedFrom, SchemaRef};
+use polars::series::Series;
 use tea_strategy::tevec::dtype::Cast;
 use tea_strategy::tevec::prelude::DateTime;
 
 use crate::prelude::{Frame, Frames};
 
 #[derive(Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DataLoader {
     pub typ: Arc<str>,
     pub dfs: Frames,
@@ -90,6 +92,20 @@ impl DataLoader {
     }
 
     #[inline]
+    pub fn get_symbol_series(&self) -> Series {
+        self.symbols
+            .as_ref()
+            .map(|symbols| {
+                symbols
+                    .iter()
+                    .map(|s| s.as_ref())
+                    .collect::<Series>()
+                    .with_name("symbol")
+            })
+            .unwrap_or_else(|| Series::new("symbol", &vec![None::<&str>; 0]))
+    }
+
+    #[inline]
     pub fn collect(mut self, par: bool) -> Result<Self> {
         self.dfs = self.dfs.collect(par)?;
         Ok(self)
@@ -102,16 +118,16 @@ impl DataLoader {
     }
 
     #[inline]
-    pub fn with_dfs(mut self, dfs: Frames) -> Self {
-        self.dfs = dfs;
+    pub fn with_dfs<F: Into<Frames>>(mut self, dfs: F) -> Self {
+        self.dfs = dfs.into();
         self
     }
 
     #[inline]
-    pub fn copy_with_dfs(&self, dfs: Frames) -> Self {
+    pub fn copy_with_dfs<F: Into<Frames>>(&self, dfs: F) -> Self {
         DataLoader {
             typ: self.typ.clone(),
-            dfs,
+            dfs: dfs.into(),
             symbols: self.symbols.clone(),
             freq: self.freq.clone(),
             start: self.start,
@@ -124,7 +140,7 @@ impl DataLoader {
     #[inline]
     pub fn empty_copy(&self) -> Self {
         let dfs: Vec<Frame> = Vec::with_capacity(self.len());
-        self.copy_with_dfs(dfs.into())
+        self.copy_with_dfs(dfs)
     }
 
     #[inline]

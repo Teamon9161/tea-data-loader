@@ -1,5 +1,7 @@
 mod data_loader;
 mod impls;
+#[cfg(feature = "io")]
+pub(crate) mod io;
 mod methods;
 
 pub(super) mod utils;
