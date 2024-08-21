@@ -27,7 +27,7 @@ impl Default for DataLoader {
     #[inline]
     fn default() -> Self {
         DataLoader {
-            typ: "future".into(),
+            typ: "".into(),
             dfs: Default::default(),
             symbols: None,
             freq: None,
@@ -55,6 +55,26 @@ impl DataLoader {
     ) -> Self {
         DataLoader {
             typ: typ.into(),
+            symbols: Some(symbols.into_iter().map(Into::into).collect()),
+            ..Default::default()
+        }
+    }
+
+    #[inline]
+    pub fn new_from_dfs<F: Into<Frames>>(dfs: F) -> Self {
+        DataLoader {
+            dfs: dfs.into(),
+            ..Default::default()
+        }
+    }
+
+    #[inline]
+    pub fn new_from_symbol_dfs<F: Into<Frames>, S: IntoIterator<Item = A>, A: Into<Arc<str>>>(
+        symbols: S,
+        dfs: F,
+    ) -> Self {
+        DataLoader {
+            dfs: dfs.into(),
             symbols: Some(symbols.into_iter().map(Into::into).collect()),
             ..Default::default()
         }
@@ -120,6 +140,18 @@ impl DataLoader {
     #[inline]
     pub fn with_dfs<F: Into<Frames>>(mut self, dfs: F) -> Self {
         self.dfs = dfs.into();
+        self
+    }
+
+    #[inline]
+    pub fn with_type(mut self, typ: &str) -> Self {
+        self.typ = typ.into();
+        self
+    }
+
+    #[inline]
+    pub fn with_freq(mut self, freq: &str) -> Self {
+        self.freq = Some(freq.into());
         self
     }
 

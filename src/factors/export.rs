@@ -8,6 +8,7 @@ pub(super) use super::map::base::*;
 pub(super) use super::{
     register_fac, register_pl_fac, FactorBase, GetName, Param, PlFactor, TFactor,
 };
+pub(super) use crate::export::tevec::prelude::EPS;
 #[cfg(feature = "fac_ext")]
 pub(super) use crate::factors::PlFactorExt;
 pub(super) use crate::polars_ext::ExprExt;

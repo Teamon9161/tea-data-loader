@@ -1,7 +1,7 @@
 use polars::lazy::dsl::{Expr, GetOutput};
 use polars::prelude::{DataType, *};
 
-use crate::tevec::prelude::*;
+use crate::export::tevec::prelude::*;
 
 pub trait SeriesExt {
     fn cast_f64(&self) -> Result<Series>;
@@ -11,6 +11,7 @@ pub trait SeriesExt {
     fn ts_skew(&self, window: usize, min_periods: Option<usize>) -> Self;
     fn ts_kurt(&self, window: usize, min_periods: Option<usize>) -> Self;
     fn ts_rank(&self, window: usize, min_periods: Option<usize>, pct: bool, rev: bool) -> Self;
+    fn ts_zscore(&self, window: usize, min_periods: Option<usize>) -> Self;
     fn ts_regx_beta(&self, x: &Series, window: usize, min_periods: Option<usize>) -> Self;
 }
 
@@ -138,6 +139,29 @@ impl SeriesExt for Series {
         res
     }
 
+    fn ts_zscore(&self, window: usize, min_periods: Option<usize>) -> Self {
+        let res: Series = match self.dtype() {
+            DataType::Float64 => {
+                let ca: Float64Chunked = self.f64().unwrap().ts_vzscore(window, min_periods);
+                ca.into_series()
+            },
+            DataType::Float32 => {
+                let ca: Float32Chunked = self.f32().unwrap().ts_vzscore(window, min_periods);
+                ca.into_series()
+            },
+            DataType::Int64 => {
+                let ca: Float64Chunked = self.i64().unwrap().ts_vzscore(window, min_periods);
+                ca.into_series()
+            },
+            DataType::Int32 => {
+                let ca: Float64Chunked = self.i32().unwrap().ts_vzscore(window, min_periods);
+                ca.into_series()
+            },
+            _ => panic!("unsupported data type"),
+        };
+        res
+    }
+
     fn ts_regx_beta(&self, x: &Series, window: usize, min_periods: Option<usize>) -> Self {
         let res: Series = match self.dtype() {
             DataType::Float64 => {
@@ -183,6 +207,7 @@ pub trait ExprExt {
     fn ts_skew(self, window: usize, min_periods: Option<usize>) -> Self;
     fn ts_kurt(self, window: usize, min_periods: Option<usize>) -> Self;
     fn ts_rank(self, window: usize, min_periods: Option<usize>, pct: bool, rev: bool) -> Self;
+    fn ts_zscore(self, window: usize, min_periods: Option<usize>) -> Self;
     fn ts_regx_beta(self, x: Expr, window: usize, min_periods: Option<usize>) -> Self;
 }
 
@@ -211,6 +236,13 @@ impl ExprExt for Expr {
     fn ts_rank(self, window: usize, min_periods: Option<usize>, pct: bool, rev: bool) -> Self {
         self.apply(
             move |s| Ok(Some(s.ts_rank(window, min_periods, pct, rev))),
+            GetOutput::float_type(),
+        )
+    }
+
+    fn ts_zscore(self, window: usize, min_periods: Option<usize>) -> Self {
+        self.apply(
+            move |s| Ok(Some(s.ts_zscore(window, min_periods))),
             GetOutput::float_type(),
         )
     }

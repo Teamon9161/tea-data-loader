@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{bail, Result};
 use polars::prelude::*;
 
 use crate::prelude::{GetName, Params};
@@ -10,7 +10,9 @@ pub trait StrategyBase: Sized {
 }
 
 pub trait Strategy: GetName + Send + Sync + 'static {
-    fn eval_to_fac(&self, fac: &Series, filters: Option<DataFrame>) -> Result<Series>;
+    fn eval_to_fac(&self, _fac: &Series, _filters: Option<DataFrame>) -> Result<Series> {
+        bail!("eval_to_fac is not implemented for {}", self.name())
+    }
 
     fn eval(&self, fac: &str, df: &DataFrame, filters: Option<[Expr; 4]>) -> Result<Series> {
         let fac = df.column(fac)?.clone();

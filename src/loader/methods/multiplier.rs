@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use anyhow::bail;
 use polars::prelude::LazyFrame;
 
 use crate::path_finder::{PathConfig, PathFinder};
@@ -32,9 +31,12 @@ impl DataLoader {
                     .map(|(s, m)| (s.unwrap().into(), m.unwrap_or(f64::NAN)))
                     .collect();
                 self.multiplier = Some(map);
-                Ok(self)
             },
-            _ => bail!("unsupported type in multiplier: {}", self.typ),
+            _ => {
+                eprintln!("unsupported type in multiplier: {}", self.typ);
+                self.multiplier = Some(HashMap::with_capacity(0));
+            },
         }
+        Ok(self)
     }
 }

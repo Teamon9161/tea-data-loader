@@ -55,7 +55,7 @@ fn get_filter_cond_impl(
 }
 
 #[inline]
-pub fn get_filter_cond<A: Cast<DateTime>, B: Cast<DateTime>, T: AsRef<str>>(
+pub fn get_time_filter_cond<A: Cast<DateTime>, B: Cast<DateTime>, T: AsRef<str>>(
     start: Option<A>,
     end: Option<B>,
     time: T,

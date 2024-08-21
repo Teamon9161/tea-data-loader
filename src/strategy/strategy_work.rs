@@ -26,15 +26,28 @@ impl GetName for StrategyWork {
         if let Some(name) = &self.name {
             name.to_string()
         } else {
-            format!("{}__{}", self.fac, self.strategy.name())
+            if !self.is_null_fac() {
+                format!("{}__{}", self.fac, self.strategy.name())
+            } else {
+                self.strategy.name()
+            }
         }
     }
 }
 
 impl StrategyWork {
     #[inline]
-    pub fn pl_fac(&self) -> Result<Arc<dyn PlFactor>> {
-        parse_pl_fac(self.fac.as_ref())
+    pub fn is_null_fac(&self) -> bool {
+        &*self.fac == ""
+    }
+
+    #[inline]
+    pub fn pl_fac(&self) -> Result<Option<Arc<dyn PlFactor>>> {
+        if !self.is_null_fac() {
+            parse_pl_fac(self.fac.as_ref()).map(|v| Some(v))
+        } else {
+            Ok(None)
+        }
     }
 
     #[inline]
@@ -56,7 +69,12 @@ impl FromStr for StrategyWork {
     type Err = anyhow::Error;
     fn from_str(strategy_name: &str) -> Result<Self> {
         let full_name = strategy_name;
-        let (fac, mut strategy_name) = strategy_name.split_once("__").unwrap();
+        let (fac, mut strategy_name) =
+            if let Some((fac, strategy_name)) = strategy_name.split_once("__") {
+                (fac, strategy_name)
+            } else {
+                ("", strategy_name)
+            };
         // parse open pos filter
         let filters = if strategy_name.contains(FILTER_SYMBOL) {
             let (name, filters) = strategy_name.split_once(FILTER_SYMBOL).unwrap();

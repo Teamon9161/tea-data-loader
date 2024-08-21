@@ -4,7 +4,7 @@ mod impls;
 pub(crate) mod io;
 mod methods;
 
-pub(super) mod utils;
+pub mod utils;
 
 pub use data_loader::DataLoader;
 pub use methods::*;

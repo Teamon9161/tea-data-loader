@@ -7,13 +7,15 @@ mod loader;
 mod path_finder;
 mod polars_ext;
 
-pub(crate) use tea_strategy::tevec;
+pub mod export;
 pub mod factors;
 pub mod prelude;
 pub mod strategy;
 
 use std::sync::LazyLock;
 
+pub use factor_macro as macros;
+pub use loader::utils;
 use rayon::{ThreadPool, ThreadPoolBuilder};
 
 pub static POOL: LazyLock<ThreadPool> = LazyLock::new(|| {

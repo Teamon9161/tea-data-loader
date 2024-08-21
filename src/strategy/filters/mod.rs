@@ -27,31 +27,33 @@ impl FromStr for Filter {
 impl Filter {
     pub fn expr(&self) -> Result<[Expr; 2]> {
         match self.name.as_ref() {
-            "trend" => Ok(self.trend(false)),
-            "trend_rev" => Ok(self.trend(true)),
+            "trend" => Ok(self.trend(false, "close")),
+            "trend_rev" => Ok(self.trend(true, "close")),
+            "mid_trend" => Ok(self.trend(false, "mid")),
+            "mid_trend_rev" => Ok(self.trend(true, "mid")),
             _ => bail!("unsupported filter: {}", self.name),
         }
     }
 
     /// return long open & short_open conditions
-    pub fn trend(&self, rev: bool) -> [Expr; 2] {
+    pub fn trend(&self, rev: bool, fac: &str) -> [Expr; 2] {
         let n = self.params[0].as_i32() as usize;
         let m = if self.params.len() > 1 {
             self.params[1].as_f64()
         } else {
             0.
         };
-        let middle = col("close").rolling_mean(RollingOptionsFixedWindow {
+        let middle = col(fac).rolling_mean(RollingOptionsFixedWindow {
             window_size: n,
             min_periods: n / 2,
             ..Default::default()
         });
-        let width = col("close").rolling_std(RollingOptionsFixedWindow {
+        let width = col(fac).rolling_std(RollingOptionsFixedWindow {
             window_size: n,
             min_periods: n / 2,
             ..Default::default()
         });
-        let fac = (col("close") - middle) / width;
+        let fac = (col(fac) - middle) / width;
         if !rev {
             [fac.clone().gt_eq(m), fac.lt_eq(-m)]
         } else {

@@ -5,7 +5,7 @@ use glob::glob;
 use polars::prelude::*;
 use toml::{Table, Value};
 
-use super::super::utils::{get_filter_cond, get_preprocess_exprs};
+use super::super::utils::{get_preprocess_exprs, get_time_filter_cond};
 use crate::path_finder::{PathConfig, PathFinder};
 use crate::prelude::*;
 
@@ -96,11 +96,11 @@ impl DataLoader {
     #[inline]
     pub fn time_filter_cond(&self, freq: &str) -> Result<Option<Expr>> {
         if freq == "min" || freq.contains("compose_") {
-            Ok(get_filter_cond(self.start, self.end, "trading_date"))
+            Ok(get_time_filter_cond(self.start, self.end, "trading_date"))
         } else if freq == "daily" {
-            Ok(get_filter_cond(self.start, self.end, "date"))
+            Ok(get_time_filter_cond(self.start, self.end, "date"))
         } else if freq == "tick" {
-            Ok(get_filter_cond(self.start, self.end, "time"))
+            Ok(get_time_filter_cond(self.start, self.end, "time"))
         } else {
             bail!("Unsupported freq: {}", freq)
         }

@@ -1,5 +1,5 @@
 mod base;
-mod equity_curve;
+mod equity;
 mod factors;
 mod group_by;
 mod join;
@@ -9,7 +9,7 @@ mod noadj;
 mod spread;
 mod strategy;
 
-pub use equity_curve::FutureRetOpt;
+pub use equity::{FutureRetOpt, TickFutureRetOpt};
 pub use group_by::{DataLoaderGroupBy, GroupByTimeOpt};
 pub use join::*;
 pub use kline::KlineOpt;

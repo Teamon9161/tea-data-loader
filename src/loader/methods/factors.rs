@@ -13,12 +13,14 @@ impl DataLoader {
     pub fn with_facs<F: AsRef<str>>(mut self, facs: &[F], backend: Backend) -> Result<Self> {
         use crate::factors::parse_pl_fac;
         let facs = facs.iter().map(|v| v.as_ref());
+        let len = facs.len();
         let schema = self.schema()?;
+        let filtered_facs = facs.filter(|f| (!schema.contains(f)) && (*f != ""));
         match backend {
             Backend::Polars => {
-                let mut pl_facs = Vec::with_capacity(facs.len());
+                let mut pl_facs = Vec::with_capacity(len);
                 let mut t_facs = Vec::new();
-                for f in facs.filter(|f| !schema.contains(f)) {
+                for f in filtered_facs {
                     if let Ok(fac) = parse_pl_fac(f) {
                         pl_facs.push(fac);
                     } else {
@@ -33,9 +35,9 @@ impl DataLoader {
                 }
             },
             Backend::Tevec => {
-                let mut pl_facs = Vec::with_capacity(facs.len());
-                let mut t_facs = Vec::new();
-                for f in facs.filter(|f| !schema.contains(f)) {
+                let mut pl_facs = Vec::new();
+                let mut t_facs = Vec::with_capacity(len);
+                for f in filtered_facs {
                     if let Ok(fac) = parse_t_fac(f) {
                         t_facs.push(fac);
                     } else {
@@ -59,7 +61,7 @@ impl DataLoader {
         let fac_names = facs.iter().map(|f| f.as_ref().name());
         facs.iter()
             .zip(fac_names)
-            .filter(|(_, n)| !schema.contains(n))
+            .filter(|(_, n)| (!schema.contains(n)) && (*n != ""))
             .unique_by(|(_, n)| n.clone())
             .try_for_each::<_, Result<()>>(|(f, n)| {
                 let expr = f.as_ref().try_expr()?.alias(&n);
@@ -81,7 +83,7 @@ impl DataLoader {
         let facs = facs
             .iter()
             .map(|f| f.as_ref())
-            .filter(|f| !schema.contains(&f.name()))
+            .filter(|f| (!schema.contains(&f.name())) && (f.name() != ""))
             .unique_by(|f| f.name())
             .collect_vec();
         let fac_names = facs.iter().map(|f| f.name()).collect_trusted_to_vec();

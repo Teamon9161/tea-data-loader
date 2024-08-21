@@ -5,14 +5,6 @@ use tea_strategy::equity::{CommissionType, FutureRetKwargs, FutureRetSpreadKwarg
 use crate::prelude::*;
 
 macro_rules! auto_cast {
-    // for one expression
-    ($arm: ident ($se: expr)) => {
-        if let DataType::$arm = $se.dtype() {
-            $se.clone()
-        } else {
-            $se.cast(&DataType::$arm).unwrap()
-        }
-    };
     // for multiple expressions
     ($arm: ident ($($se: expr),*)) => {
         ($(
@@ -26,15 +18,16 @@ macro_rules! auto_cast {
 }
 
 pub struct FutureRetOpt<'a> {
-    c_rate: f64,
-    is_signal: bool,
-    init_cash: usize,
-    opening_cost: &'a str,
-    closing_cost: &'a str,
-    contract_chg_signal: &'a str,
-    commission_type: CommissionType,
-    slippage_flag: bool,
-    suffix: &'a str,
+    pub c_rate: f64,
+    pub is_signal: bool,
+    pub init_cash: usize,
+    pub opening_cost: &'a str,
+    pub closing_cost: &'a str,
+    pub contract_chg_signal: &'a str,
+    pub multiplier: Option<f64>,
+    pub commission_type: CommissionType,
+    pub slippage_flag: bool,
+    pub suffix: &'a str,
 }
 
 impl Default for FutureRetOpt<'_> {
@@ -47,6 +40,7 @@ impl Default for FutureRetOpt<'_> {
             opening_cost: "open_noadj",
             closing_cost: "close_noadj",
             contract_chg_signal: "contract_chg_signal",
+            multiplier: None,
             commission_type: CommissionType::Percent,
             slippage_flag: true,
             suffix: "",
@@ -56,7 +50,12 @@ impl Default for FutureRetOpt<'_> {
 
 impl FutureRetOpt<'_> {
     #[inline]
-    fn to_future_ret_kwargs(&self, multiplier: f64) -> FutureRetKwargs {
+    fn to_future_ret_kwargs(&self, multiplier: Option<f64>) -> FutureRetKwargs {
+        let multiplier = if let Some(opt_multiplier) = self.multiplier {
+            opt_multiplier
+        } else {
+            multiplier.unwrap_or(1.)
+        };
         FutureRetKwargs {
             init_cash: self.init_cash,
             leverage: 1.,
@@ -69,7 +68,12 @@ impl FutureRetOpt<'_> {
     }
 
     #[inline]
-    fn to_future_ret_spread_kwargs(&self, multiplier: f64) -> FutureRetSpreadKwargs {
+    fn to_future_ret_spread_kwargs(&self, multiplier: Option<f64>) -> FutureRetSpreadKwargs {
+        let multiplier = if let Some(opt_multiplier) = self.multiplier {
+            opt_multiplier
+        } else {
+            multiplier.unwrap_or(1.)
+        };
         FutureRetSpreadKwargs {
             init_cash: self.init_cash,
             leverage: 1.,
@@ -102,13 +106,13 @@ impl DataLoader {
                         let open_vec = df.column(opt.opening_cost).unwrap();
                         let close_vec = df.column(opt.closing_cost).unwrap();
                         let contract_chg_signal_vec = df.column(opt.contract_chg_signal).unwrap();
-                        let contract_chg_signal_vec = auto_cast!(Boolean(contract_chg_signal_vec));
+                        let contract_chg_signal_vec = contract_chg_signal_vec.cast_bool().unwrap();
                         let (pos, open_vec, close_vec) =
                             auto_cast!(Float64(pos, open_vec, close_vec));
-                        let multiplier = *multiplier_map.get(symbol).unwrap();
+                        let multiplier = multiplier_map.get(symbol).cloned();
                         let out: Float64Chunked = if opt.slippage_flag {
                             let slippage = df.column("twap_spread").unwrap() * 0.5;
-                            let slippage_vec = auto_cast!(Float64(slippage));
+                            let slippage_vec = slippage.cast_f64().unwrap();
                             tea_strategy::equity::calc_future_ret_with_spread(
                                 pos.f64().unwrap(),
                                 open_vec.f64().unwrap(),

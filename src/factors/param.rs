@@ -65,6 +65,16 @@ unsafe impl Sync for Param {}
 
 impl Param {
     #[inline]
+    pub fn is_int(&self) -> bool {
+        matches!(self, Param::I32(_))
+    }
+
+    #[inline]
+    pub fn is_float(&self) -> bool {
+        matches!(self, Param::F64(_))
+    }
+
+    #[inline]
     pub fn as_i32(&self) -> i32 {
         match self {
             Param::I32(v) => *v,

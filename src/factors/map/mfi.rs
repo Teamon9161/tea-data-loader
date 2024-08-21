@@ -1,6 +1,4 @@
 use super::super::export::*;
-use crate::tevec::prelude::EPS;
-
 /// 资金流不平衡指标
 #[derive(FactorBase, Default, Debug, Clone)]
 pub struct Mfi(pub Param);

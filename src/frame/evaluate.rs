@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use anyhow::Result;
 use polars::lazy::dsl::{cols, ExprEvalExtension};
 use polars::prelude::*;
@@ -9,6 +11,9 @@ pub struct EvaluateOpt<'a> {
     pub time: &'a str,
     pub freq: &'a str,
     pub rf: f64,
+    pub sort: bool,
+    pub save: bool,
+    pub save_name: Option<&'a Path>,
     pub plot: bool,
     pub plot_opt: PlotOpt<'a>,
 }
@@ -20,6 +25,9 @@ impl Default for EvaluateOpt<'_> {
             time: "time",
             freq: "1d",
             rf: 0.0,
+            sort: true,
+            save: true,
+            save_name: None,
             plot: false,
             plot_opt: PlotOpt {
                 x: "time",
@@ -120,6 +128,18 @@ impl Frame {
             "最大回撤结束时间" => &ret_df.clone().lazy().select(drawdown_end_date_idx_df.get_columns().iter().map(|s| col(opt.time).gather(lit(s.clone())).alias(s.name())).collect::<Vec<_>>()).collect()?[0],
         )?;
         result.hstack_mut(res_expand.get_columns())?;
+        if opt.sort {
+            result.sort_in_place(
+                ["夏普比率"],
+                SortMultipleOptions::new().with_order_descending(true),
+            )?;
+        }
+        if opt.save {
+            let save_path = opt
+                .save_name
+                .unwrap_or_else(|| Path::new("equity_curve.csv"));
+            CsvWriter::new(std::fs::File::create(save_path)?).finish(&mut result)?;
+        }
         Ok(result.into())
     }
 
@@ -143,8 +163,8 @@ impl Frame {
                     })
                     .collect::<Vec<_>>()
             });
-        let df =
-            self.with_column(cols(&strategies) / cols(&strategies).shift(lit(1.)) - lit(1.))?;
+        let df = self.with_column(cols(&strategies).pct_change(lit(1)))?;
+        // self.with_column(cols(&strategies) / cols(&strategies).shift(lit(1.)) - lit(1.))?;
         df.ret_evaluate(Some(&strategies), opt)
     }
 }

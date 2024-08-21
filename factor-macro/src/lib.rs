@@ -1,8 +1,10 @@
 extern crate proc_macro;
+mod utils;
 
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, DeriveInput};
+use utils::to_snake_case;
 
 #[proc_macro_derive(FactorBase)]
 pub fn derive_factor_base(input: TokenStream) -> TokenStream {
@@ -12,12 +14,14 @@ pub fn derive_factor_base(input: TokenStream) -> TokenStream {
     // Get the name of the struct
     let name = input.ident;
 
+    let snake_name = to_snake_case(&name.to_string());
+
     // Generate the implementation of the FactorBase trait
     let expanded = quote! {
         impl FactorBase for #name {
             #[inline]
             fn fac_name() -> ::std::sync::Arc<str> {
-                stringify!(#name).to_lowercase().into()
+                #snake_name.into()
             }
 
             #[inline]
@@ -49,12 +53,14 @@ pub fn derive_strategy_base(input: TokenStream) -> TokenStream {
     // Get the name of the struct
     let name = input.ident;
 
+    let snake_name = to_snake_case(&name.to_string());
+
     // Generate the implementation of the FactorBase trait
     let expanded = quote! {
         impl StrategyBase for #name {
             #[inline]
             fn strategy_name() -> ::std::sync::Arc<str> {
-                stringify!(#name).to_lowercase().into()
+                #snake_name.into()
             }
 
             #[inline]
