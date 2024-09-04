@@ -1,7 +1,17 @@
 use polars::lazy::dsl::{cols, when};
 use polars::prelude::*;
 use tea_strategy::tevec::prelude::{Cast, DateTime};
+/// Utility functions for preprocessing and filtering data in the DataLoader.
 
+/// Returns preprocessing expressions based on the given data type.
+///
+/// # Arguments
+///
+/// * `typ` - A string slice representing the data type.
+///
+/// # Returns
+///
+/// A vector of `Expr` objects containing the preprocessing expressions.
 fn get_preprocess_exprs_impl(typ: &str) -> Vec<Expr> {
     match typ {
         "__base__" => {
@@ -35,6 +45,17 @@ fn get_preprocess_exprs_impl(typ: &str) -> Vec<Expr> {
     }
 }
 
+/// Generates a filter condition based on start and end dates.
+///
+/// # Arguments
+///
+/// * `start` - An optional start DateTime.
+/// * `end` - An optional end DateTime.
+/// * `time` - A string slice representing the time column name.
+///
+/// # Returns
+///
+/// An optional `Expr` representing the filter condition.
 fn get_filter_cond_impl(
     start: Option<DateTime>,
     end: Option<DateTime>,
@@ -58,6 +79,17 @@ fn get_filter_cond_impl(
     }
 }
 
+/// Creates a time filter condition based on start and end dates.
+///
+/// # Arguments
+///
+/// * `start` - An optional start date that can be cast to DateTime.
+/// * `end` - An optional end date that can be cast to DateTime.
+/// * `time` - A string slice representing the time column name.
+///
+/// # Returns
+///
+/// An optional `Expr` representing the time filter condition.
 #[inline]
 pub fn get_time_filter_cond<A: Cast<DateTime>, B: Cast<DateTime>, T: AsRef<str>>(
     start: Option<A>,
@@ -67,6 +99,15 @@ pub fn get_time_filter_cond<A: Cast<DateTime>, B: Cast<DateTime>, T: AsRef<str>>
     get_filter_cond_impl(start.map(Cast::cast), end.map(Cast::cast), time.as_ref())
 }
 
+/// Returns preprocessing expressions for a given data type.
+///
+/// # Arguments
+///
+/// * `typ` - A string slice representing the data type.
+///
+/// # Returns
+///
+/// A vector of `Expr` objects containing the preprocessing expressions.
 #[inline]
 pub fn get_preprocess_exprs<S: AsRef<str>>(typ: S) -> Vec<Expr> {
     get_preprocess_exprs_impl(typ.as_ref())

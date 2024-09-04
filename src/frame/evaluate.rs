@@ -6,15 +6,24 @@ use polars::prelude::*;
 
 use crate::prelude::*;
 
+/// Options for evaluating strategies.
 #[derive(Debug, Clone)]
 pub struct EvaluateOpt<'a> {
+    /// The name of the time column.
     pub time: &'a str,
+    /// The frequency of the data (e.g., "1d" for daily).
     pub freq: &'a str,
+    /// The risk-free rate used in calculations.
     pub rf: f64,
+    /// Whether to sort the results.
     pub sort: bool,
+    /// Whether to save the results.
     pub save: bool,
+    /// The path to save the results, if saving.
     pub save_name: Option<&'a Path>,
+    /// Whether to plot the results.
     pub plot: bool,
+    /// Options for plotting.
     pub plot_opt: PlotOpt<'a>,
 }
 
@@ -38,6 +47,34 @@ impl Default for EvaluateOpt<'_> {
 }
 
 impl Frame {
+    /// Evaluates strategies based on return rates.
+    ///
+    /// This function calculates various performance metrics for strategies using their return rates.
+    ///
+    /// # Arguments
+    ///
+    /// * `eval_cols` - Optional slice of column names representing strategies to evaluate.
+    ///                 If None, all columns except the time column will be evaluated.
+    /// * `opt` - Evaluation options including time column, frequency, risk-free rate, and output preferences.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the evaluated `Frame` with performance metrics for each strategy.
+    ///
+    /// # Performance Metrics
+    ///
+    /// - Annual Return
+    /// - Annual Standard Deviation
+    /// - Sharpe Ratio
+    /// - Win Rate
+    /// - Maximum Drawdown
+    /// - Maximum Drawdown Start Time
+    /// - Maximum Drawdown End Time
+    ///
+    /// # Note
+    ///
+    /// This function assumes that the input data represents return rates of strategies.
+    /// For equity-based evaluation, use the `equity_evaluate` function instead.
     pub fn ret_evaluate<S: AsRef<str>>(
         mut self,
         eval_cols: Option<&[S]>,
@@ -143,6 +180,30 @@ impl Frame {
         Ok(result.into())
     }
 
+    /// Evaluates equity-based strategies.
+    ///
+    /// # Arguments
+    ///
+    /// * `eval_cols` - Optional slice of column names to evaluate.
+    /// * `opt` - Evaluation options.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the evaluated `Frame` with performance metrics for each strategy.
+    ///
+    /// # Performance Metrics
+    ///
+    /// - Annual Return
+    /// - Annual Standard Deviation
+    /// - Sharpe Ratio
+    /// - Win Rate
+    /// - Maximum Drawdown
+    /// - Maximum Drawdown Start Time
+    /// - Maximum Drawdown End Time
+    ///
+    /// # See also
+    ///
+    /// [`ret_evaluate`](Self::ret_evaluate)
     pub fn equity_evaluate<S: AsRef<str>>(
         mut self,
         eval_cols: Option<&[S]>,

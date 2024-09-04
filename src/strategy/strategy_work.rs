@@ -13,14 +13,23 @@ use crate::strategy::Filter;
 const FILTER_SYMBOL: char = '~';
 // const weight_func_symbol: &str = "@";
 
+/// Represents a strategy work unit that combines a factor, strategy, and optional filters.
 pub struct StrategyWork {
+    /// The factor used in the strategy, represented as an `Arc<str>`.
     pub fac: Arc<str>,
+    /// The strategy to be applied, represented as an `Arc<dyn Strategy>`.
     pub strategy: Arc<dyn Strategy>,
-    pub filters: Option<Filter>, // params: Params,
+    /// Optional filters to be applied to the strategy, represented as `Option<Filter>`.
+    pub filters: Option<Filter>,
+    /// Optional name for the strategy work, represented as `Option<Arc<str>>`.
     pub name: Option<Arc<str>>,
 }
 
 impl GetName for StrategyWork {
+    /// Returns the name of the strategy work.
+    ///
+    /// If a custom name is set, it returns that name.
+    /// Otherwise, it combines the factor and strategy names, or just returns the strategy name if there's no factor.
     #[inline]
     fn name(&self) -> String {
         if let Some(name) = &self.name {
@@ -34,11 +43,13 @@ impl GetName for StrategyWork {
 }
 
 impl StrategyWork {
+    /// Checks if the factor is null (empty).
     #[inline]
     pub fn is_null_fac(&self) -> bool {
         (*self.fac).is_empty()
     }
 
+    /// Parses the factor into a `PlFactor` if it's not null.
     #[inline]
     pub fn pl_fac(&self) -> Result<Option<Arc<dyn PlFactor>>> {
         if !self.is_null_fac() {
@@ -48,6 +59,9 @@ impl StrategyWork {
         }
     }
 
+    /// Evaluates the strategy on the given DataFrame.
+    ///
+    /// This method applies the strategy, considering any filters, to the input DataFrame.
     #[inline]
     pub fn eval(&self, df: &DataFrame) -> Result<Series> {
         let open_filter_expr = self.filters.as_ref().map(|f| f.expr()).transpose()?;
@@ -65,6 +79,11 @@ impl StrategyWork {
 
 impl FromStr for StrategyWork {
     type Err = anyhow::Error;
+
+    /// Parses a string into a `StrategyWork` instance.
+    ///
+    /// The string should be in the format: "factor__strategy_name_(params)~filters".
+    /// Each component is optional except for the strategy name and params.
     fn from_str(strategy_name: &str) -> Result<Self> {
         let full_name = strategy_name;
         let (fac, mut strategy_name) =

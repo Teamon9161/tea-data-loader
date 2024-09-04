@@ -11,7 +11,17 @@ use crate::prelude::Frame;
 
 pub(crate) static BINCODE_OPTIONS: LazyLock<DefaultOptions> = LazyLock::new(options);
 
+/// Implementation of I/O operations for the `DataLoader` struct.
 impl DataLoader {
+    /// Saves the `DataLoader` data to a file or directory.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The path where the data should be saved.
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(())` if the save operation is successful, otherwise returns an error.
     pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         let path = path.as_ref();
         if path.extension().is_none() {
@@ -26,6 +36,17 @@ impl DataLoader {
         Ok(())
     }
 
+    /// Loads `DataLoader` data from a file or directory.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The path from where the data should be loaded.
+    /// * `lazy` - Whether to load the data lazily.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Result` containing the loaded `DataLoader` if successful, otherwise returns an error.
+    #[inline]
     pub fn load<P: AsRef<Path>>(path: P, lazy: bool) -> Result<Self> {
         let path = path.as_ref();
         if path.is_dir() {
@@ -37,6 +58,18 @@ impl DataLoader {
         Ok(BINCODE_OPTIONS.deserialize(&buf)?)
     }
 
+    /// Loads specific symbols from a `DataLoader` file or directory.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The path from where the data should be loaded.
+    /// * `symbols` - A slice of symbols to load.
+    /// * `lazy` - Whether to load the data lazily.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Result` containing the loaded `DataLoader` if successful, otherwise returns an error.
+    #[inline]
     pub fn load_symbols<P: AsRef<Path>, S: AsRef<str>>(
         path: P,
         symbols: &[S],
@@ -49,6 +82,15 @@ impl DataLoader {
         DataLoader::load(path, lazy)
     }
 
+    /// Saves the `DataLoader` data to a directory in IPC (Arrow IPC) format.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The directory path where the data should be saved.
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(())` if the save operation is successful, otherwise returns an error.
     pub fn save_ipcs<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         use std::fs::File;
 
@@ -80,6 +122,18 @@ impl DataLoader {
         Ok(())
     }
 
+    /// Reads `DataLoader` data from a directory in IPC (Arrow IPC) format.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The directory path from where the data should be read.
+    /// * `symbols` - Optional slice of symbols to read.
+    /// * `memory_map` - Whether to use memory mapping when reading the files.
+    /// * `lazy` - Whether to load the data lazily.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Result` containing the loaded `DataLoader` if successful, otherwise returns an error.
     pub fn read_ipcs<P: AsRef<Path>>(
         path: P,
         symbols: Option<&[&str]>,
@@ -122,6 +176,15 @@ impl DataLoader {
     }
 }
 
+/// Extracts the file stem from a given path.
+///
+/// # Arguments
+///
+/// * `path` - The path from which to extract the file stem.
+///
+/// # Returns
+///
+/// Returns an `Option<&str>` containing the file stem if it exists and is valid UTF-8, otherwise `None`.
 #[inline]
 fn get_file_stem(path: &Path) -> Option<&str> {
     if let Some(stem) = path.file_stem() {
@@ -135,6 +198,18 @@ fn get_file_stem(path: &Path) -> Option<&str> {
     }
 }
 
+/// Attempts to read an IPC file from the given path.
+///
+/// # Arguments
+///
+/// * `file_path` - The path of the IPC file to read.
+/// * `memory_map` - Whether to use memory mapping when reading the file.
+/// * `lazy` - Whether to load the data lazily.
+///
+/// # Returns
+///
+/// Returns a `Result` containing an `Option` with the file stem and the loaded data frame if successful,
+/// otherwise returns an error.
 fn try_read_ipc_path<P: AsRef<Path>>(
     file_path: P,
     memory_map: bool,

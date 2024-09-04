@@ -16,17 +16,30 @@ macro_rules! auto_cast {
         ),*)
     };
 }
-
+/// Options for calculating future returns based on strategy signals and futures market data.
+///
+/// This struct contains various parameters used in the calculation of strategy returns
+/// for futures trading, combining strategy signals with futures price data.
 pub struct FutureRetOpt<'a> {
+    /// Commission rate for trades.
     pub c_rate: f64,
+    /// Flag indicating whether the input is a next-period signal (true) or current-period position (false).
     pub is_signal: bool,
+    /// Initial cash amount for the trading strategy.
     pub init_cash: usize,
+    /// Column name for the opening price in the futures data.
     pub opening_cost: &'a str,
+    /// Column name for the closing price in the futures data.
     pub closing_cost: &'a str,
+    /// Column name for the contract change signal in the strategy data.
     pub contract_chg_signal: &'a str,
+    /// Optional multiplier for contract size.
     pub multiplier: Option<f64>,
+    /// Type of commission calculation for the futures trades.
     pub commission_type: CommissionType,
+    /// Flag indicating whether to apply slippage in the return calculation.
     pub slippage_flag: bool,
+    /// Suffix for output column names in the resulting DataFrame.
     pub suffix: &'a str,
 }
 
@@ -49,6 +62,18 @@ impl Default for FutureRetOpt<'_> {
 }
 
 impl FutureRetOpt<'_> {
+    /// Converts the `FutureRetOpt` instance to `FutureRetKwargs` for tea-strategy.
+    ///
+    /// This method creates a `FutureRetKwargs` struct based on the current `FutureRetOpt` settings,
+    /// which is used to configure parameters for the tea-strategy library's future return calculations.
+    ///
+    /// # Arguments
+    ///
+    /// * `multiplier` - An optional f64 value to use as the multiplier if not set in the instance.
+    ///
+    /// # Returns
+    ///
+    /// A `FutureRetKwargs` instance with the configured settings for tea-strategy.
     #[inline]
     fn to_future_ret_kwargs(&self, multiplier: Option<f64>) -> FutureRetKwargs {
         let multiplier = if let Some(opt_multiplier) = self.multiplier {
@@ -67,6 +92,19 @@ impl FutureRetOpt<'_> {
         }
     }
 
+    /// Converts the `FutureRetOpt` instance to `FutureRetSpreadKwargs` for tea-strategy.
+    ///
+    /// This method creates a `FutureRetSpreadKwargs` struct based on the current `FutureRetOpt` settings,
+    /// which is used to configure parameters for the tea-strategy library's future return calculations
+    /// that include spread considerations.
+    ///
+    /// # Arguments
+    ///
+    /// * `multiplier` - An optional f64 value to use as the multiplier if not set in the instance.
+    ///
+    /// # Returns
+    ///
+    /// A `FutureRetSpreadKwargs` instance with the configured settings for tea-strategy.
     #[inline]
     fn to_future_ret_spread_kwargs(&self, multiplier: Option<f64>) -> FutureRetSpreadKwargs {
         let multiplier = if let Some(opt_multiplier) = self.multiplier {
@@ -86,6 +124,36 @@ impl FutureRetOpt<'_> {
 }
 
 impl DataLoader {
+    /// Calculates future returns for the given factors using the specified options.
+    ///
+    /// This method computes future returns for each factor provided in the `facs` array,
+    /// applying the settings specified in the `FutureRetOpt` struct. It handles both
+    /// regular future returns and those with spread considerations.
+    ///
+    /// # Arguments
+    ///
+    /// * `facs` - A slice of factors (as strings) for which to calculate future returns.
+    /// * `opt` - A reference to `FutureRetOpt` containing calculation options and parameters.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing a new `DataLoader` with the calculated future returns,
+    /// or an error if the operation fails.
+    ///
+    /// # Details
+    ///
+    /// - If no multiplier is set, it attempts to set one using `with_multiplier()`.
+    /// - Calculations are performed in parallel for each symbol and dataframe.
+    /// - Handles both signal-based and non-signal-based calculations.
+    /// - Supports slippage considerations when `opt.slippage_flag` is true.
+    /// - The resulting columns are named by appending `opt.suffix` to the factor names.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - Setting the multiplier fails
+    /// - Any of the required columns are missing from the dataframes
+    /// - The calculations encounter any issues (e.g., type mismatches, invalid data)
     pub fn calc_future_ret<F: AsRef<str>>(self, facs: &[F], opt: &FutureRetOpt) -> Result<Self> {
         let facs = facs.iter().map(|f| f.as_ref()).collect::<Vec<_>>();
         let mut out = self.empty_copy();

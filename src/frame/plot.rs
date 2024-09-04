@@ -1,18 +1,31 @@
 use std::path::Path;
 
-use crate::prelude::*;
+use anyhow::Result;
 
+use super::Frame;
+
+/// Plotting options for Frame visualization.
+///
+/// This struct contains various options to customize the plot output.
 #[derive(Debug, Clone)]
 pub struct PlotOpt<'a> {
+    /// The column name to use for the x-axis.
     pub x: &'a str,
+    /// The column name to use for the y-axis.
     pub y: &'a str,
+    /// The file path to save the plot. If None, a default path will be used.
     pub save_name: Option<&'a Path>,
+    /// The title of the plot.
     pub title: &'a str,
+    /// Whether to display the plot interactively.
     pub show: bool,
+    /// Whether to save the plot to a file.
     pub save: bool,
+    /// Whether to include a range slider in the plot (for interactive plots).
     pub slider: bool,
 }
 
+/// Default implementation for PlotOpt.
 impl Default for PlotOpt<'_> {
     fn default() -> Self {
         Self {
@@ -28,6 +41,18 @@ impl Default for PlotOpt<'_> {
 }
 
 impl Frame {
+    /// Plot the Frame data using the specified plotting library.
+    ///
+    /// This method will use either Plotly or Poloto based on the feature flags.
+    ///
+    /// # Arguments
+    ///
+    /// * `strategies` - A slice of strategy names to plot.
+    /// * `opt` - The plotting options.
+    ///
+    /// # Returns
+    ///
+    /// A Result indicating success or failure of the plotting operation.
     #[allow(unreachable_code)]
     pub fn plot<S: AsRef<str>>(&self, strategies: &[S], opt: &PlotOpt) -> Result<()> {
         #[cfg(feature = "plotly")]
@@ -36,8 +61,20 @@ impl Frame {
         return self.poloto_plot_equity_curve(strategies, opt);
     }
 
+    /// Plot the Frame data using Plotly.
+    ///
+    /// This method is only available when the "plotly" feature is enabled.
+    ///
+    /// # Arguments
+    ///
+    /// * `strategies` - A slice of strategy names to plot.
+    /// * `opt` - The plotting options.
+    ///
+    /// # Returns
+    ///
+    /// A Result indicating success or failure of the plotting operation.
     #[cfg(feature = "plotly")]
-    pub fn plotly_plot_equity_curve<S: AsRef<str>>(
+    fn plotly_plot_equity_curve<S: AsRef<str>>(
         &self,
         strategies: &[S],
         opt: &PlotOpt,
@@ -101,6 +138,18 @@ impl Frame {
         Ok(())
     }
 
+    /// Plot the Frame data using Poloto.
+    ///
+    /// This method is only available when the "poloto" feature is enabled.
+    ///
+    /// # Arguments
+    ///
+    /// * `strategies` - A slice of strategy names to plot.
+    /// * `opt` - The plotting options.
+    ///
+    /// # Returns
+    ///
+    /// A Result indicating success or failure of the plotting operation.
     #[cfg(feature = "poloto")]
     fn poloto_plot_equity_curve<S: AsRef<str>>(
         &self,

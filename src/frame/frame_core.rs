@@ -6,10 +6,16 @@ use polars::prelude::*;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
+/// Represents a frame that can be either an eager DataFrame or a lazy LazyFrame.
+///
+/// This enum allows for flexibility in handling data processing, enabling both
+/// immediate (eager) and deferred (lazy) evaluation strategies.
 #[derive(From, Clone, IsVariant)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Frame {
+    /// An eager DataFrame, which holds data in memory and allows for immediate operations.
     Eager(DataFrame),
+    /// A lazy LazyFrame, which represents a set of operations to be performed when executed.
     #[cfg_attr(
         feature = "serde",
         serde(
@@ -49,6 +55,11 @@ impl Debug for Frame {
 }
 
 impl Frame {
+    /// Unwraps the Frame into a DataFrame, panicking if it's not an eager DataFrame.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the Frame is not an eager DataFrame.
     #[inline]
     pub fn unwrap_eager(self) -> DataFrame {
         if let Frame::Eager(df) = self {
@@ -57,6 +68,11 @@ impl Frame {
         panic!("not a eager dataframe")
     }
 
+    /// Unwraps the Frame into a LazyFrame, panicking if it's not a lazy LazyFrame.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the Frame is not a lazy LazyFrame.
     #[inline]
     pub fn unwrap_lazy(self) -> LazyFrame {
         if let Frame::Lazy(df) = self {
@@ -65,6 +81,7 @@ impl Frame {
         panic!("not a lazy dataframe")
     }
 
+    /// Returns a reference to the inner DataFrame if the Frame is eager, or None otherwise.
     #[inline]
     pub fn as_eager(&self) -> Option<&DataFrame> {
         if let Frame::Eager(df) = self {
@@ -73,6 +90,7 @@ impl Frame {
         None
     }
 
+    /// Returns a reference to the inner LazyFrame if the Frame is lazy, or None otherwise.
     #[inline]
     pub fn as_lazy(&self) -> Option<&LazyFrame> {
         if let Frame::Lazy(df) = self {
@@ -81,6 +99,11 @@ impl Frame {
         None
     }
 
+    /// Returns the schema of the Frame.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if there's an issue retrieving the schema for a lazy Frame.
     #[inline]
     pub fn schema(&mut self) -> Result<SchemaRef> {
         match self {
@@ -89,6 +112,11 @@ impl Frame {
         }
     }
 
+    /// Applies a function to the Frame's lazy representation and returns the result as a new Frame.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if there's an issue collecting the result for an eager Frame.
     #[inline]
     pub(super) fn impl_by_lazy<F>(self, f: F) -> Result<Frame>
     where
@@ -100,6 +128,7 @@ impl Frame {
         }
     }
 
+    /// Converts the Frame to a LazyFrame.
     #[inline]
     pub fn lazy(self) -> LazyFrame {
         match self {
@@ -108,6 +137,11 @@ impl Frame {
         }
     }
 
+    /// Collects the Frame into a DataFrame.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if there's an issue collecting a lazy Frame.
     #[inline]
     pub fn collect(self) -> Result<DataFrame> {
         match self {
@@ -116,6 +150,11 @@ impl Frame {
         }
     }
 
+    /// Renames columns in the Frame.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if there's an issue renaming columns in an eager Frame.
     #[inline]
     pub fn rename<I, J, T, S>(self, existing: I, new: J) -> Result<Self>
     where
@@ -135,26 +174,51 @@ impl Frame {
         }
     }
 
+    /// Selects columns or expressions in the Frame.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if there's an issue applying the selection.
     #[inline]
     pub fn select<E: AsRef<[Expr]>>(self, exprs: E) -> Result<Self> {
         self.impl_by_lazy(|df| df.select(exprs))
     }
 
+    /// Adds a new column to the Frame.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if there's an issue adding the column.
     #[inline]
     pub fn with_column(self, expr: Expr) -> Result<Self> {
         self.impl_by_lazy(|df| df.with_column(expr))
     }
 
+    /// Adds multiple new columns to the Frame.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if there's an issue adding the columns.
     #[inline]
     pub fn with_columns<E: AsRef<[Expr]>>(self, exprs: E) -> Result<Self> {
         self.impl_by_lazy(|df| df.with_columns(exprs))
     }
 
+    /// Filters the Frame based on a predicate.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if there's an issue applying the filter.
     #[inline]
     pub fn filter(self, predicate: Expr) -> Result<Self> {
         self.impl_by_lazy(|df| df.filter(predicate))
     }
 
+    /// Drops specified columns from the Frame.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if there's an issue dropping the columns.
     #[inline]
     pub fn drop<I, T>(mut self, columns: I) -> Result<Self>
     where
@@ -168,7 +232,16 @@ impl Frame {
     }
 }
 
+/// A trait for types that can be converted into a `Frame`.
+///
+/// This trait provides a method to convert compatible types into a `Frame`,
+/// which can represent either an eager `DataFrame` or a lazy `LazyFrame`.
 pub trait IntoFrame {
+    /// Converts the implementing type into a `Frame`.
+    ///
+    /// # Returns
+    ///
+    /// A `Frame` containing the data from the original type.
     fn into_frame(self) -> Frame;
 }
 

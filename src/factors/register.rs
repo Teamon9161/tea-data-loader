@@ -6,8 +6,18 @@ use parking_lot::Mutex;
 
 use super::{FactorBase, Param, PlFactor, TFactor};
 
+/// A type alias for a function that initializes a Polars factor.
+///
+/// This type represents a thread-safe, reference-counted function that takes a `Param`
+/// and returns a reference-counted `PlFactor` trait object.
 pub type PlFacInitFunc = Arc<dyn Fn(Param) -> Arc<dyn PlFactor> + Send + Sync>;
+
+/// A type alias for a function that initializes a T factor.
+///
+/// This type represents a thread-safe, reference-counted function that takes a `Param`
+/// and returns a reference-counted `TFactor` trait object.
 pub type TFacInitFunc = Arc<dyn Fn(Param) -> Arc<dyn TFactor> + Send + Sync>;
+
 /// A global map storing Polars factor initialization functions.
 ///
 /// This map associates factor names with their corresponding initialization functions.

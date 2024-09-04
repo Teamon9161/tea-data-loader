@@ -3,18 +3,32 @@ use rayon::prelude::*;
 use tea_strategy::equity::{calc_tick_future_ret, CommissionType, SignalType, TickFutureRetKwargs};
 
 use crate::prelude::*;
-
+/// Options for calculating tick-based future returns based on strategy signals and futures market data.
+///
+/// This struct contains various parameters used in the calculation of strategy returns
+/// for futures trading on a tick-by-tick basis, combining strategy signals with futures price data.
 pub struct TickFutureRetOpt<'a> {
+    /// Commission rate for trades.
     pub c_rate: f64,
+    /// Flag indicating whether the input is a next-period signal (true) or current-period position (false).
     pub is_signal: bool,
+    /// Initial cash amount for the trading strategy.
     pub init_cash: usize,
+    /// Column name for the bid price in the futures data.
     pub bid: &'a str,
+    /// Column name for the ask price in the futures data.
     pub ask: &'a str,
+    /// Optional column name for the contract change signal in the strategy data.
     pub contract_chg_signal: Option<&'a str>,
+    /// Optional multiplier for contract size.
     pub multiplier: Option<f64>,
+    /// Type of commission calculation for the futures trades.
     pub commission_type: CommissionType,
+    /// Type of signal used in the strategy (e.g., Absolute, Relative).
     pub signal_type: SignalType,
+    /// Flag indicating whether to allow the strategy to blow up (i.e., go bankrupt).
     pub blowup: bool,
+    /// Suffix for output column names in the resulting DataFrame.
     pub suffix: &'a str,
 }
 
@@ -38,6 +52,18 @@ impl Default for TickFutureRetOpt<'_> {
 }
 
 impl TickFutureRetOpt<'_> {
+    /// Converts the `TickFutureRetOpt` instance to `TickFutureRetKwargs` for tea-strategy.
+    ///
+    /// This method creates a `TickFutureRetKwargs` struct based on the current `TickFutureRetOpt` settings,
+    /// which is used to configure parameters for the tea-strategy library's tick-based future return calculations.
+    ///
+    /// # Arguments
+    ///
+    /// * `multiplier` - An optional f64 value to use as the multiplier if not set in the instance.
+    ///
+    /// # Returns
+    ///
+    /// A `TickFutureRetKwargs` instance with the configured settings for tea-strategy.
     #[inline]
     fn to_tick_future_ret_kwargs(&self, multiplier: Option<f64>) -> TickFutureRetKwargs {
         let multiplier = if let Some(opt_multiplier) = self.multiplier {
@@ -57,6 +83,35 @@ impl TickFutureRetOpt<'_> {
 }
 
 impl DataLoader {
+    /// Calculates tick-based future returns for the given factors using the specified options.
+    ///
+    /// This method computes tick-based future returns for each factor provided in the `facs` array,
+    /// applying the settings specified in the `TickFutureRetOpt` struct.
+    ///
+    /// # Arguments
+    ///
+    /// * `facs` - A slice of factors (as strings) for which to calculate future returns.
+    /// * `opt` - A reference to `TickFutureRetOpt` containing calculation options and parameters.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing a new `DataLoader` with the calculated tick-based future returns,
+    /// or an error if the operation fails.
+    ///
+    /// # Details
+    ///
+    /// - If no multiplier is set, it attempts to set one using `with_multiplier()`.
+    /// - Calculations are performed in parallel for each symbol and dataframe.
+    /// - Handles both signal-based and position-based calculations.
+    /// - Supports contract change signals when specified in `opt.contract_chg_signal`.
+    /// - The resulting columns are named by appending `opt.suffix` to the factor names.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if:
+    /// - Setting the multiplier fails
+    /// - Any of the required columns are missing from the dataframes
+    /// - The calculations encounter any issues (e.g., type mismatches, invalid data)
     pub fn calc_tick_future_ret<F: AsRef<str>>(
         self,
         facs: &[F],

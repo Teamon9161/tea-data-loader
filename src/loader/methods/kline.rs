@@ -9,12 +9,21 @@ use super::super::utils::{get_preprocess_exprs, get_time_filter_cond};
 use crate::path_finder::{PathConfig, PathFinder};
 use crate::prelude::*;
 
+/// Options for loading kline data.
+///
+/// This struct provides configuration options for loading kline (candlestick) data
+/// in a DataLoader.
 #[derive(Clone, Debug, Copy)]
 pub struct KlineOpt<'a> {
+    /// The frequency of the kline data (e.g., "daily", "1min", "5min").
     freq: &'a str,
+    /// The tier of the data, if applicable (e.g., Lead, SubLead for futures).
     tier: Option<Tier>,
+    /// The adjustment type for the data, if any.
     adjust: Option<Adjust>,
+    /// Whether to use memory mapping when reading the data files.
     memory_map: bool,
+    /// Whether to concatenate tick dataframes when processing.
     concat_tick_df: bool,
 }
 
@@ -30,7 +39,17 @@ impl Default for KlineOpt<'_> {
     }
 }
 
+/// Configuration options for loading kline (candlestick) data.
 impl<'a> KlineOpt<'a> {
+    /// Sets the default tier for the given type if not already set.
+    ///
+    /// # Arguments
+    ///
+    /// * `typ` - The type of data (e.g., "future").
+    ///
+    /// # Returns
+    ///
+    /// Returns `Self` with the tier set if it was previously `None`.
     fn with_default_tier(mut self, typ: &str) -> Self {
         if self.tier.is_none() {
             let tier = match typ {
@@ -42,6 +61,15 @@ impl<'a> KlineOpt<'a> {
         self
     }
 
+    /// Sets the default adjustment for the given type if not already set.
+    ///
+    /// # Arguments
+    ///
+    /// * `typ` - The type of data (e.g., "future").
+    ///
+    /// # Returns
+    ///
+    /// Returns `Self` with the adjustment set if it was previously `None`.
     fn with_default_adjust(mut self, typ: &str) -> Self {
         if self.adjust.is_none() {
             let adjust = match typ {
@@ -63,6 +91,15 @@ impl<'a> KlineOpt<'a> {
         self
     }
 
+    /// Creates a `PathConfig` based on the current options and given type.
+    ///
+    /// # Arguments
+    ///
+    /// * `typ` - The type of data (e.g., "future").
+    ///
+    /// # Returns
+    ///
+    /// Returns a `PathConfig` with the appropriate settings.
     #[inline]
     pub fn path_config(&self, typ: &str) -> PathConfig {
         let opt = self.with_default_tier(typ).with_default_adjust(typ);
@@ -75,6 +112,15 @@ impl<'a> KlineOpt<'a> {
         }
     }
 
+    /// Creates a new `KlineOpt` with the given frequency.
+    ///
+    /// # Arguments
+    ///
+    /// * `freq` - The frequency of the kline data.
+    ///
+    /// # Returns
+    ///
+    /// Returns a new `KlineOpt` instance with the specified frequency.
     #[inline]
     pub fn new(freq: &'a str) -> Self {
         Self {
@@ -83,6 +129,15 @@ impl<'a> KlineOpt<'a> {
         }
     }
 
+    /// Creates a new `KlineOpt` with the given frequency (alias for `new`).
+    ///
+    /// # Arguments
+    ///
+    /// * `freq` - The frequency of the kline data.
+    ///
+    /// # Returns
+    ///
+    /// Returns a new `KlineOpt` instance with the specified frequency.
     #[inline]
     pub fn freq(freq: &'a str) -> Self {
         Self {
@@ -92,7 +147,17 @@ impl<'a> KlineOpt<'a> {
     }
 }
 
+/// Data loading and processing methods.
 impl DataLoader {
+    /// Generates a time filter condition based on the given frequency.
+    ///
+    /// # Arguments
+    ///
+    /// * `freq` - The frequency of the data.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Result` containing an `Option<Expr>` representing the time filter condition.
     #[inline]
     pub fn time_filter_cond(&self, freq: &str) -> Result<Option<Expr>> {
         if freq == "min" || freq.contains("compose_") {
@@ -106,6 +171,15 @@ impl DataLoader {
         }
     }
 
+    /// Retrieves the rename table for the given tier.
+    ///
+    /// # Arguments
+    ///
+    /// * `tier` - The tier of the data.
+    ///
+    /// # Returns
+    ///
+    /// Returns an `Option<Table>` containing the rename configuration.
     #[inline]
     pub fn rename_table(&self, tier: Tier) -> Option<Table> {
         let rename_config = &CONFIG.loader.rename;
@@ -117,6 +191,17 @@ impl DataLoader {
         )
     }
 
+    /// Loads kline data for xbond.
+    ///
+    /// # Arguments
+    ///
+    /// * `path_config` - The path configuration for the data.
+    /// * `memory_map` - Whether to use memory mapping when reading files.
+    /// * `concat` - Whether to concatenate the loaded dataframes.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Result<Self>` containing the updated `DataLoader`.
     fn load_xbond_kline(
         mut self,
         path_config: PathConfig,
@@ -221,6 +306,16 @@ impl DataLoader {
         bail!("Unsupported freq: {:?} for xbond", self.freq);
     }
 
+    /// Loads kline data for futures.
+    ///
+    /// # Arguments
+    ///
+    /// * `path_config` - The path configuration for the data.
+    /// * `memory_map` - Whether to use memory mapping when reading files.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Result<Self>` containing the updated `DataLoader`.
     fn load_future_kline(mut self, path_config: PathConfig, memory_map: bool) -> Result<Self> {
         let finder = PathFinder::new(path_config)?;
         self.kline_path = Some(finder.path()?);
@@ -294,6 +389,15 @@ impl DataLoader {
         Ok(self)
     }
 
+    /// Loads kline data based on the given options.
+    ///
+    /// # Arguments
+    ///
+    /// * `opt` - The `KlineOpt` containing the loading options.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Result<Self>` containing the updated `DataLoader`.
     pub fn kline(mut self, opt: KlineOpt) -> Result<Self> {
         let path_config = opt.path_config(&self.typ);
         self.freq = Some(opt.freq.into());
@@ -307,6 +411,15 @@ impl DataLoader {
     }
 }
 
+/// Extracts a rename map from a TOML configuration.
+///
+/// # Arguments
+///
+/// * `config` - An optional TOML `Value` containing the rename configuration.
+///
+/// # Returns
+///
+/// Returns an `Option<Table>` containing the extracted rename map.
 #[inline]
 fn get_rename_map(config: Option<&Value>) -> Option<Table> {
     if let Some(config) = config {
@@ -325,6 +438,18 @@ fn get_rename_map(config: Option<&Value>) -> Option<Table> {
     None
 }
 
+/// Parses the rename configuration based on the given parameters.
+///
+/// # Arguments
+///
+/// * `config` - The TOML `Table` containing the rename configuration.
+/// * `typ` - An optional string representing the data type.
+/// * `freq` - An optional string representing the data frequency.
+/// * `tier` - An optional string representing the data tier.
+///
+/// # Returns
+///
+/// Returns an `Option<Table>` containing the parsed rename configuration.
 fn parse_rename_config(
     config: &Table,
     typ: Option<&str>,

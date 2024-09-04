@@ -5,14 +5,26 @@ use anyhow::{bail, Result};
 use polars::prelude::*;
 
 use crate::prelude::Params;
-
+/// Represents a filter used in strategy operations.
 pub struct Filter {
+    /// The name of the filter.
     pub name: Arc<str>,
+    /// The parameters associated with the filter.
     pub params: Params,
 }
 
 impl FromStr for Filter {
     type Err = anyhow::Error;
+
+    /// Parses a string into a `Filter` instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `strategy_name` - A string slice that contains the filter name and parameters.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<Self>` - A Result containing the parsed Filter or an error.
     fn from_str(strategy_name: &str) -> Result<Self> {
         let name_nodes: Vec<_> = strategy_name.split('_').collect();
         let params: Params = name_nodes[name_nodes.len() - 1].parse()?;
@@ -25,6 +37,11 @@ impl FromStr for Filter {
 }
 
 impl Filter {
+    /// Generates the expression for the filter.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<[Expr; 2]>` - A Result containing an array of two Expr or an error.
     pub fn expr(&self) -> Result<[Expr; 2]> {
         match self.name.as_ref() {
             "trend" => Ok(self.trend(false, "close")),
@@ -35,7 +52,16 @@ impl Filter {
         }
     }
 
-    /// return long open & short_open conditions
+    /// Generates trend-based filter expressions.
+    ///
+    /// # Arguments
+    ///
+    /// * `rev` - A boolean indicating whether to reverse the filter.
+    /// * `fac` - A string slice representing the factor to use (e.g., "close" or "mid").
+    ///
+    /// # Returns
+    ///
+    /// * `[Expr; 2]` - An array of two Expr representing long open and short open conditions.
     pub fn trend(&self, rev: bool, fac: &str) -> [Expr; 2] {
         let n = self.params[0].as_i32() as usize;
         let m = if self.params.len() > 1 {

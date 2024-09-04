@@ -3,14 +3,29 @@ use std::path::Path;
 use polars::prelude::*;
 
 use crate::prelude::*;
-
+/// Options for joining data in a DataLoader.
+///
+/// This struct provides configuration options for joining data from an external source
+/// with the data in a DataLoader.
+///
+/// # Type Parameters
+///
+/// * `P`: A type that can be converted to a Path, typically used for specifying the file path.
+/// * `E`: A type that can be converted to a slice of Expressions, used for specifying join columns.
 pub struct JoinOpt<P: AsRef<Path>, E: AsRef<[Expr]>> {
+    /// The path to the file containing the data to join.
     path: P,
+    /// The column(s) to join on from the left (existing) DataFrame.
     left_on: Option<E>,
+    /// The column(s) to join on from the right (new) DataFrame.
     right_on: Option<E>,
+    /// The type of join to perform (e.g., inner, left, right, outer).
     how: JoinType,
+    /// Whether to coalesce columns with the same name after joining.
     coalesce: Option<bool>,
+    /// A flag to determine whether the join operation should be performed.
     flag: bool,
+    /// An optional suffix to append to the file name when reading the data.
     suffix: Option<&'static str>,
 }
 
@@ -46,6 +61,18 @@ impl<P: AsRef<Path>, E: AsRef<[Expr]>> JoinOpt<P, E> {
 }
 
 impl DataLoader {
+    /// Joins the current DataLoader with another dataset based on the provided options.
+    ///
+    /// This method performs a join operation between the current DataLoader and another dataset
+    /// specified by the `JoinOpt` parameter. It supports various join types and options.
+    ///
+    /// # Arguments
+    ///
+    /// * `option` - A `JoinOpt` struct containing join options including path, join columns, join type, etc.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the joined `DataLoader` if successful, or an error if the join operation fails.
     pub fn join<P: AsRef<Path>, E: AsRef<[Expr]>>(self, option: JoinOpt<P, E>) -> Result<Self> {
         if !option.flag {
             return Ok(self);
@@ -84,6 +111,20 @@ impl DataLoader {
         Ok(out)
     }
 
+    /// Performs a left join between the current DataLoader and another dataset.
+    ///
+    /// This is a convenience method that calls `join` with `JoinType::Left`.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The path to the other dataset.
+    /// * `left_on` - The column(s) to join on from the left (current) DataFrame.
+    /// * `right_on` - The column(s) to join on from the right (other) DataFrame.
+    /// * `flag` - A boolean flag to determine whether the join operation should be performed.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the joined `DataLoader` if successful, or an error if the join operation fails.
     #[inline]
     pub fn left_join<P: AsRef<Path>, E: AsRef<[Expr]>>(
         self,

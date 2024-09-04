@@ -9,6 +9,19 @@ use tea_strategy::tevec::prelude::CollectTrustedToVec;
 use crate::prelude::*;
 
 impl DataLoader {
+    /// Adds factors to the DataLoader using the specified backend.
+    ///
+    /// This method processes a list of factor names, parses them according to the chosen backend,
+    /// and adds the resulting factors to each DataFrame in the DataLoader.
+    ///
+    /// # Arguments
+    ///
+    /// * `facs` - A slice of factor names to be added.
+    /// * `backend` - The backend to use for factor calculation (Polars or Tevec).
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the modified `DataLoader` with new factors added, or an error.
     #[inline]
     pub fn with_facs<F: AsRef<str>>(mut self, facs: &[F], backend: Backend) -> Result<Self> {
         use crate::factors::parse_pl_fac;
@@ -54,6 +67,18 @@ impl DataLoader {
         }
     }
 
+    /// Adds Polars factors to the DataLoader.
+    ///
+    /// This method processes a slice of Polars factors and adds them to each DataFrame
+    /// in the DataLoader.
+    ///
+    /// # Arguments
+    ///
+    /// * `facs` - A slice of Polars factors to be added.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the modified `DataLoader` with new Polars factors added, or an error.
     #[inline]
     pub fn with_pl_facs<F: AsRef<dyn PlFactor>>(mut self, facs: &[F]) -> Result<Self> {
         let schema = self.schema()?;
@@ -71,11 +96,35 @@ impl DataLoader {
         self.with_columns(exprs)
     }
 
+    /// Adds a single Polars factor to the DataLoader.
+    ///
+    /// This method processes a single Polars factor and adds it to each DataFrame
+    /// in the DataLoader.
+    ///
+    /// # Arguments
+    ///
+    /// * `fac` - A Polars factor to be added.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the modified `DataLoader` with the new Polars factor added, or an error.
     #[inline]
     pub fn with_pl_fac<F: PlFactor>(self, fac: F) -> Result<Self> {
         self.with_column(fac.try_expr()?.alias(&fac.name()))
     }
 
+    /// Adds Tfactors to the DataLoader.
+    ///
+    /// This method processes a slice of Tfactors and adds them to each DataFrame
+    /// in the DataLoader.
+    ///
+    /// # Arguments
+    ///
+    /// * `facs` - A slice of Tfactors to be added.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the modified `DataLoader` with new Tfactors added, or an error.
     #[inline]
     pub fn with_t_facs<F: AsRef<dyn TFactor>>(self, facs: &[F]) -> Result<Self> {
         let mut out = self.collect(true)?;
@@ -107,6 +156,18 @@ impl DataLoader {
         Ok(out)
     }
 
+    /// Adds a single Tfactor to the DataLoader.
+    ///
+    /// This method processes a single Tfactor and adds it to each DataFrame
+    /// in the DataLoader.
+    ///
+    /// # Arguments
+    ///
+    /// * `fac` - A tfactor to be added.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the modified `DataLoader` with the new Tfactor added, or an error.
     #[inline]
     pub fn with_t_fac<F: TFactor>(self, fac: F) -> Result<Self> {
         let facs: Vec<Arc<dyn TFactor>> = vec![Arc::new(fac)];

@@ -50,10 +50,28 @@ impl IntoParallelIterator for DataLoader {
 }
 
 impl DataLoader {
+    /// Returns an iterator over the symbols and frames in the DataLoader.
+    ///
+    /// This method provides a way to iterate over the pairs of symbols and frames
+    /// stored in the DataLoader. It uses a zip iterator to combine the symbols
+    /// and frames into tuples.
+    ///
+    /// # Returns
+    ///
+    /// A `std::iter::Zip` iterator yielding pairs of `(&Arc<str>, &Frame)`.
     pub fn iter(&self) -> std::iter::Zip<std::slice::Iter<Arc<str>>, std::slice::Iter<Frame>> {
         self.symbols.as_ref().unwrap().iter().zip(self.dfs.iter())
     }
 
+    /// Returns a parallel iterator over the symbols and frames in the DataLoader.
+    ///
+    /// This method provides a way to iterate over the pairs of symbols and frames
+    /// stored in the DataLoader in parallel. It uses Rayon's parallel iterators
+    /// to potentially improve performance on multi-core systems.
+    ///
+    /// # Returns
+    ///
+    /// A `rayon::iter::Zip` parallel iterator yielding pairs of `(&Arc<str>, &Frame)`.
     pub fn par_iter(
         &self,
     ) -> rayon::iter::Zip<rayon::slice::Iter<Arc<str>>, rayon::slice::Iter<Frame>> {

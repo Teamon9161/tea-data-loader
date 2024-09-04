@@ -2,16 +2,87 @@ use polars::lazy::dsl::{Expr, GetOutput};
 use polars::prelude::{DataType, *};
 
 use crate::export::tevec::prelude::*;
-
+/// Extension trait for Series providing additional functionality.
 pub trait SeriesExt {
+    /// Casts the Series to Float64 type.
+    ///
+    /// # Returns
+    /// A Result containing the casted Series or an error.
     fn cast_f64(&self) -> Result<Series>;
+
+    /// Casts the Series to Boolean type.
+    ///
+    /// # Returns
+    /// A Result containing the casted Series or an error.
     fn cast_bool(&self) -> Result<Series>;
+
+    /// Casts the Series to Float32 type.
+    ///
+    /// # Returns
+    /// A Result containing the casted Series or an error.
     fn cast_f32(&self) -> Result<Series>;
+
+    /// Calculates the exponentially weighted moving average.
+    ///
+    /// # Arguments
+    /// * `window` - The size of the moving window.
+    /// * `min_periods` - The minimum number of observations in window required to have a value.
+    ///
+    /// # Returns
+    /// A new Series with the calculated values.
     fn ts_ewm(&self, window: usize, min_periods: Option<usize>) -> Self;
+
+    /// Calculates the rolling skewness.
+    ///
+    /// # Arguments
+    /// * `window` - The size of the moving window.
+    /// * `min_periods` - The minimum number of observations in window required to have a value.
+    ///
+    /// # Returns
+    /// A new Series with the calculated values.
     fn ts_skew(&self, window: usize, min_periods: Option<usize>) -> Self;
+
+    /// Calculates the rolling kurtosis.
+    ///
+    /// # Arguments
+    /// * `window` - The size of the moving window.
+    /// * `min_periods` - The minimum number of observations in window required to have a value.
+    ///
+    /// # Returns
+    /// A new Series with the calculated values.
     fn ts_kurt(&self, window: usize, min_periods: Option<usize>) -> Self;
+
+    /// Calculates the rolling rank.
+    ///
+    /// # Arguments
+    /// * `window` - The size of the moving window.
+    /// * `min_periods` - The minimum number of observations in window required to have a value.
+    /// * `pct` - If true, compute percentage rank.
+    /// * `rev` - If true, compute reverse rank.
+    ///
+    /// # Returns
+    /// A new Series with the calculated values.
     fn ts_rank(&self, window: usize, min_periods: Option<usize>, pct: bool, rev: bool) -> Self;
+
+    /// Calculates the rolling z-score.
+    ///
+    /// # Arguments
+    /// * `window` - The size of the moving window.
+    /// * `min_periods` - The minimum number of observations in window required to have a value.
+    ///
+    /// # Returns
+    /// A new Series with the calculated values.
     fn ts_zscore(&self, window: usize, min_periods: Option<usize>) -> Self;
+
+    /// Calculates the rolling regression beta coefficient.
+    ///
+    /// # Arguments
+    /// * `x` - The independent variable Series.
+    /// * `window` - The size of the moving window.
+    /// * `min_periods` - The minimum number of observations in window required to have a value.
+    ///
+    /// # Returns
+    /// A new Series with the calculated beta coefficients.
     fn ts_regx_beta(&self, x: &Series, window: usize, min_periods: Option<usize>) -> Self;
 }
 
@@ -202,12 +273,51 @@ impl SeriesExt for Series {
     }
 }
 
+/// Extension trait for Polars expressions providing time series operations.
 pub trait ExprExt {
+    /// Calculates the exponentially weighted moving average.
+    ///
+    /// # Arguments
+    /// * `window` - The size of the moving window.
+    /// * `min_periods` - The minimum number of observations in window required to have a value.
     fn ts_ewm(self, window: usize, min_periods: Option<usize>) -> Self;
+
+    /// Calculates the rolling skewness.
+    ///
+    /// # Arguments
+    /// * `window` - The size of the moving window.
+    /// * `min_periods` - The minimum number of observations in window required to have a value.
     fn ts_skew(self, window: usize, min_periods: Option<usize>) -> Self;
+
+    /// Calculates the rolling kurtosis.
+    ///
+    /// # Arguments
+    /// * `window` - The size of the moving window.
+    /// * `min_periods` - The minimum number of observations in window required to have a value.
     fn ts_kurt(self, window: usize, min_periods: Option<usize>) -> Self;
+
+    /// Calculates the rolling rank.
+    ///
+    /// # Arguments
+    /// * `window` - The size of the moving window.
+    /// * `min_periods` - The minimum number of observations in window required to have a value.
+    /// * `pct` - If true, compute percentage rank.
+    /// * `rev` - If true, compute reverse rank.
     fn ts_rank(self, window: usize, min_periods: Option<usize>, pct: bool, rev: bool) -> Self;
+
+    /// Calculates the rolling z-score.
+    ///
+    /// # Arguments
+    /// * `window` - The size of the moving window.
+    /// * `min_periods` - The minimum number of observations in window required to have a value.
     fn ts_zscore(self, window: usize, min_periods: Option<usize>) -> Self;
+
+    /// Calculates the rolling regression beta coefficient.
+    ///
+    /// # Arguments
+    /// * `x` - The independent variable expression.
+    /// * `window` - The size of the moving window.
+    /// * `min_periods` - The minimum number of observations in window required to have a value.
     fn ts_regx_beta(self, x: Expr, window: usize, min_periods: Option<usize>) -> Self;
 }
 

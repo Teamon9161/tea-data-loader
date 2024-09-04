@@ -4,24 +4,44 @@ use anyhow::{bail, Result};
 
 use super::enums::{Adjust, Tier};
 use crate::configs::MainPathConfig;
-
+/// Configuration for path finding.
 pub struct PathConfig {
+    /// The main path configuration.
     pub(crate) config: MainPathConfig,
+    /// The type of data (e.g., "future", "rf", "xbond").
     pub typ: String,
+    /// The frequency of data (e.g., "daily", "min", "tick").
     pub freq: String,
+    /// The tier of contracts (e.g., lead, sub-lead).
     pub tier: Tier,
+    /// The adjustment method for prices.
     pub adjust: Adjust,
 }
 
+/// Struct for finding and constructing file paths.
 pub(crate) struct PathFinder {
+    /// The main path for data files.
     pub main_path: PathBuf,
+    /// The type of data.
     pub typ: String,
+    /// The frequency of data.
     pub freq: String,
+    /// The tier of contracts.
     pub tier: Tier,
+    /// The adjustment method for prices.
     pub adjust: Adjust,
 }
 
 impl PathFinder {
+    /// Creates a new PathFinder instance.
+    ///
+    /// # Arguments
+    ///
+    /// * `config` - The configuration for path finding.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the PathFinder instance or an error.
     #[inline]
     pub fn new(config: PathConfig) -> Result<Self> {
         let path_config = config.config;
@@ -51,16 +71,23 @@ impl PathFinder {
         })
     }
 
+    /// Returns the type of data.
     #[inline]
     pub fn get_typ(&self) -> &str {
         self.typ.as_str()
     }
 
+    /// Returns the frequency of data.
     #[inline]
     pub fn get_freq(&self) -> &str {
         self.freq.as_str()
     }
 
+    /// Constructs and returns the full path for the data file.
+    ///
+    /// # Returns
+    ///
+    /// A Result containing the PathBuf of the data file or an error.
     #[inline]
     pub fn path(&self) -> Result<PathBuf> {
         let path = match self.get_typ() {
