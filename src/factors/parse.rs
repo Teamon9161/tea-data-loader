@@ -5,6 +5,15 @@ use regex::Regex;
 
 use super::{Param, PlFactor, TFactor, POLARS_FAC_MAP, T_FAC_MAP};
 
+/// Parses a string representation of a Polars factor and returns the corresponding `PlFactor`.
+///
+/// # Arguments
+///
+/// * `name` - A string slice that holds the name of the factor, potentially including parameters.
+///
+/// # Returns
+///
+/// * `Result<Arc<dyn PlFactor>>` - An `Arc` containing the parsed `PlFactor` if successful, or an error if parsing fails.
 pub fn parse_pl_fac(name: &str) -> Result<Arc<dyn PlFactor>> {
     let re = Regex::new(r"_\d+|\[.+\]|\(.*\)").unwrap();
     if re.is_match(name) {
@@ -30,6 +39,15 @@ pub fn parse_pl_fac(name: &str) -> Result<Arc<dyn PlFactor>> {
     }
 }
 
+/// Parses a string representation of a T factor and returns the corresponding `TFactor`.
+///
+/// # Arguments
+///
+/// * `name` - A string slice that holds the name of the factor, potentially including parameters.
+///
+/// # Returns
+///
+/// * `Result<Arc<dyn TFactor>>` - An `Arc` containing the parsed `TFactor` if successful, or an error if parsing fails.
 pub fn parse_t_fac(name: &str) -> Result<Arc<dyn TFactor>> {
     let re = Regex::new(r"_\d+|\[.+\]|\(.*\)").unwrap();
     if re.is_match(name) {
@@ -57,11 +75,29 @@ pub fn parse_t_fac(name: &str) -> Result<Arc<dyn TFactor>> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
     #[test]
     fn test_parse_pl_fac() {
-        let fac = super::parse_pl_fac("typ_1").unwrap();
+        let fac = parse_pl_fac("typ_1").unwrap();
         assert_eq!(fac.name(), "typ_1");
-        let fac = super::parse_pl_fac("typ").unwrap();
+        let fac = parse_pl_fac("typ").unwrap();
         assert_eq!(fac.name(), "typ");
+        assert!(parse_pl_fac("non_existent_factor").is_err());
+    }
+
+    #[test]
+    fn test_parse_t_fac() {
+        let fac = parse_t_fac("typ_1").unwrap();
+        assert_eq!(fac.name(), "typ_1");
+        let fac = parse_t_fac("typ").unwrap();
+        assert_eq!(fac.name(), "typ");
+
+        // Test with parameters
+        let fac = parse_t_fac("typ").unwrap();
+        assert_eq!(fac.name(), "typ");
+
+        // Test with non-existent factor
+        assert!(parse_t_fac("non_existent_factor").is_err());
     }
 }

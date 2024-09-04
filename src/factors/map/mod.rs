@@ -18,8 +18,8 @@ pub use efficiency::{Efficiency, EfficiencySign};
 mod ret;
 pub use ret::{LogRet, Ret};
 
-mod marketpl;
-pub use marketpl::MarketPl;
+mod mpl;
+pub use mpl::Mpl;
 
 mod wr;
 pub use wr::Wr;
