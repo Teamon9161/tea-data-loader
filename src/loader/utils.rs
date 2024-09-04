@@ -27,7 +27,11 @@ fn get_preprocess_exprs_impl(typ: &str) -> Vec<Expr> {
             base_exprs
         },
         "xbond" => vec![],
-        _ => unimplemented!("preprocess exprs is not implemented for type: {}", typ),
+        "ddb-xbond" => vec![],
+        _ => {
+            eprintln!("preprocess exprs is not implemented for type: {}", typ);
+            vec![]
+        },
     }
 }
 

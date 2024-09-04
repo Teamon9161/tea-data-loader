@@ -25,12 +25,10 @@ impl GetName for StrategyWork {
     fn name(&self) -> String {
         if let Some(name) = &self.name {
             name.to_string()
+        } else if !self.is_null_fac() {
+            format!("{}__{}", self.fac, self.strategy.name())
         } else {
-            if !self.is_null_fac() {
-                format!("{}__{}", self.fac, self.strategy.name())
-            } else {
-                self.strategy.name()
-            }
+            self.strategy.name()
         }
     }
 }
@@ -38,13 +36,13 @@ impl GetName for StrategyWork {
 impl StrategyWork {
     #[inline]
     pub fn is_null_fac(&self) -> bool {
-        &*self.fac == ""
+        (*self.fac).is_empty()
     }
 
     #[inline]
     pub fn pl_fac(&self) -> Result<Option<Arc<dyn PlFactor>>> {
         if !self.is_null_fac() {
-            parse_pl_fac(self.fac.as_ref()).map(|v| Some(v))
+            parse_pl_fac(self.fac.as_ref()).map(Some)
         } else {
             Ok(None)
         }

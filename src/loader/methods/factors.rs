@@ -15,7 +15,7 @@ impl DataLoader {
         let facs = facs.iter().map(|v| v.as_ref());
         let len = facs.len();
         let schema = self.schema()?;
-        let filtered_facs = facs.filter(|f| (!schema.contains(f)) && (*f != ""));
+        let filtered_facs = facs.filter(|f| (!schema.contains(f)) && !f.is_empty());
         match backend {
             Backend::Polars => {
                 let mut pl_facs = Vec::with_capacity(len);
@@ -61,7 +61,7 @@ impl DataLoader {
         let fac_names = facs.iter().map(|f| f.as_ref().name());
         facs.iter()
             .zip(fac_names)
-            .filter(|(_, n)| (!schema.contains(n)) && (*n != ""))
+            .filter(|(_, n)| (!schema.contains(n)) && !n.is_empty())
             .unique_by(|(_, n)| n.clone())
             .try_for_each::<_, Result<()>>(|(f, n)| {
                 let expr = f.as_ref().try_expr()?.alias(&n);

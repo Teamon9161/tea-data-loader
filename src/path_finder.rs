@@ -110,6 +110,14 @@ impl PathFinder {
                 "tick" => self.main_path.join("tick"),
                 _ => bail!("Unknown freq: {} for xbond", self.get_freq()),
             },
+            "ddb-xbond" => match self.get_freq() {
+                "tick" => self.main_path.join("tick"),
+                _ => bail!("Unknown freq: {} for ddb-xbond", self.get_freq()),
+            },
+            "ddb-future" => match self.get_freq() {
+                "tick" => self.main_path.join("tick"),
+                _ => bail!("Unknown freq: {} for ddb-future", self.get_freq()),
+            },
             typ => {
                 if typ.starts_with("coin_") {
                     self.main_path

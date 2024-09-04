@@ -1,5 +1,7 @@
 use super::super::export::*;
 
+/// RSI 指标
+///
 /// CLOSEUP=IF(CLOSE>REF(CLOSE,1),CLOSE-REF(CLOSE,1),0)
 /// CLOSEDOWN=IF(CLOSE<REF(CLOSE,1),ABS(CLOSE-REF(CLOSE,1)),0)
 /// CLOSEUP_MA=SMA(CLOSEUP,N,1)

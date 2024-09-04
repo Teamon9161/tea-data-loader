@@ -1,5 +1,7 @@
 use super::super::export::*;
 
+/// RSRS 指标
+///
 /// 我们用相对位置变化程度，即类似`delta(high)/delta(low)`的值来
 /// 描述支撑位与阻力位的相对强度，即最低价每变动1的时候，最高价变动
 /// 的幅度。实际上，`delta(high)/delta(low)`是连接高低价格平面上的两

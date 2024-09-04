@@ -153,7 +153,7 @@ fn try_read_ipc_path<P: AsRef<Path>>(
         .unwrap_or(false)
     {
         if !lazy {
-            let file = File::open(&file_path)?;
+            let file = File::open(file_path)?;
             let mut reader = IpcReader::new(file);
             if memory_map {
                 reader = reader.memory_mapped(Some(file_path.to_owned()))
