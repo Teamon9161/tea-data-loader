@@ -1,4 +1,4 @@
-pub use anyhow::Result;
+pub use anyhow::{bail, ensure, Result};
 pub use polars::lazy::dsl::{self, Expr};
 
 pub(crate) use super::configs::CONFIG;

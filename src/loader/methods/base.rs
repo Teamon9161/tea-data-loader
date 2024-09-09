@@ -125,4 +125,33 @@ impl DataLoader {
     pub fn filter(self, expr: Expr) -> Result<Self> {
         self.try_apply(|df| df.filter(expr.clone()))
     }
+
+    /// Sorts the DataFrame by the specified columns.
+    ///
+    /// # Arguments
+    ///
+    /// * `by` - A vector of column names to sort by.
+    /// * `sort_options` - Options for sorting, including order and null handling.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the modified `DataLoader` or an error.
+    #[inline]
+    pub fn sort(
+        self,
+        by: impl IntoVec<SmartString>,
+        sort_options: SortMultipleOptions,
+    ) -> Result<Self> {
+        let by = by.into_vec();
+        self.try_apply(|df| df.sort(&by, sort_options.clone()))
+    }
+
+    #[inline]
+    pub fn drop<I, T>(self, columns: I) -> Result<Self>
+    where
+        I: IntoIterator<Item = T> + Clone,
+        T: AsRef<str> + Into<Selector>,
+    {
+        self.try_apply(|df| df.drop(columns.clone()))
+    }
 }

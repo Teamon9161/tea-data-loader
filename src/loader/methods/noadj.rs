@@ -51,7 +51,7 @@ impl DataLoader {
 
         let filter_cond = self.time_filter_cond(new_freq.as_str())?;
         let rename_table = self.rename_table(Tier::Lead);
-        let preprocess_exprs = get_preprocess_exprs("__base__");
+        let preprocess_exprs = get_preprocess_exprs("__base__", &new_freq);
         let finder_config = PathConfig {
             config: CONFIG.path_finder.clone(),
             typ: "future".into(),

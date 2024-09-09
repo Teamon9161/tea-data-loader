@@ -245,8 +245,8 @@ impl DataLoaderGroupBy {
     /// - If no last time column is present, it simply applies the provided aggregations.
     pub fn agg<E: AsRef<[Expr]>>(self, aggs: E) -> DataLoader {
         let aggs = aggs.as_ref();
-        let time_col = self.time.as_deref().unwrap();
         let dfs = if let Some(last_time) = &self.last_time {
+            let time_col = self.time.as_deref().unwrap();
             if last_time.as_ref() != time_col {
                 let aggs: Vec<_> = aggs
                     .iter()

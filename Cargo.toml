@@ -18,7 +18,7 @@ io = ["serde", "bincode", "serde_par"]
 
 
 [dependencies]
-polars = { version = "0.41", features = [
+polars = { version = "0.42", features = [
     "polars-io",
     "ipc",
     "lazy",

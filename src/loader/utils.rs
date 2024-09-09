@@ -12,7 +12,7 @@ use tea_strategy::tevec::prelude::{Cast, DateTime};
 /// # Returns
 ///
 /// A vector of `Expr` objects containing the preprocessing expressions.
-fn get_preprocess_exprs_impl(typ: &str) -> Vec<Expr> {
+fn get_preprocess_exprs_impl(typ: &str, freq: &str) -> Vec<Expr> {
     match typ {
         "__base__" => {
             vec![when(cols(["close", "open", "high", "low"]).eq(0))
@@ -23,21 +23,26 @@ fn get_preprocess_exprs_impl(typ: &str) -> Vec<Expr> {
                 .keep()]
         },
         "future" => {
-            let mut base_exprs = get_preprocess_exprs("__base__");
-            base_exprs.extend([
-                when(col("volume").lt(0))
-                    .then(0)
-                    .otherwise("volume")
-                    .alias("volume"),
-                col("dominant_id")
-                    .neq(col("dominant_id").shift(lit(1)))
-                    .fill_null(false)
-                    .alias("contract_chg_signal"),
-            ]);
-            base_exprs
+            if freq != "tick" {
+                let mut base_exprs = get_preprocess_exprs("__base__", freq);
+                base_exprs.extend([
+                    when(col("volume").lt(0))
+                        .then(0)
+                        .otherwise("volume")
+                        .alias("volume"),
+                    col("dominant_id")
+                        .neq(col("dominant_id").shift(lit(1)))
+                        .fill_null(false)
+                        .alias("contract_chg_signal"),
+                ]);
+                base_exprs
+            } else {
+                vec![]
+            }
         },
         "xbond" => vec![],
         "ddb-xbond" => vec![],
+        "ddb-future" => vec![],
         _ => {
             eprintln!("preprocess exprs is not implemented for type: {}", typ);
             vec![]
@@ -109,6 +114,6 @@ pub fn get_time_filter_cond<A: Cast<DateTime>, B: Cast<DateTime>, T: AsRef<str>>
 ///
 /// A vector of `Expr` objects containing the preprocessing expressions.
 #[inline]
-pub fn get_preprocess_exprs<S: AsRef<str>>(typ: S) -> Vec<Expr> {
-    get_preprocess_exprs_impl(typ.as_ref())
+pub fn get_preprocess_exprs<S: AsRef<str>, F: AsRef<str>>(typ: S, freq: F) -> Vec<Expr> {
+    get_preprocess_exprs_impl(typ.as_ref(), freq.as_ref())
 }

@@ -214,6 +214,15 @@ impl Frame {
         self.impl_by_lazy(|df| df.filter(predicate))
     }
 
+    #[inline]
+    pub fn sort(
+        self,
+        by: impl IntoVec<SmartString>,
+        sort_options: SortMultipleOptions,
+    ) -> Result<Self> {
+        self.impl_by_lazy(|df| df.sort(by, sort_options))
+    }
+
     /// Drops specified columns from the Frame.
     ///
     /// # Errors
@@ -223,7 +232,7 @@ impl Frame {
     pub fn drop<I, T>(mut self, columns: I) -> Result<Self>
     where
         I: IntoIterator<Item = T>,
-        T: AsRef<str>,
+        T: AsRef<str> + Into<Selector>,
     {
         // ignore exists columns
         let schema = self.schema()?;

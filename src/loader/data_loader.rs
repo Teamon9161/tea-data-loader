@@ -190,6 +190,19 @@ impl DataLoader {
         self
     }
 
+    /// Returns a vector of symbol references if symbols are present in the `DataLoader`.
+    ///
+    /// # Returns
+    ///
+    /// An `Option<Vec<&str>>` containing references to the symbols if they exist,
+    /// or `None` if no symbols are present in the `DataLoader`.
+    #[inline]
+    pub fn get_symbols(&self) -> Option<Vec<&str>> {
+        self.symbols
+            .as_ref()
+            .map(|symbols| symbols.iter().map(|s| s.as_ref()).collect())
+    }
+
     /// Returns a `Series` containing the symbols in the `DataLoader`.
     ///
     /// If no symbols are present, returns an empty `Series` with the name "symbol".
