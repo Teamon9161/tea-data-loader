@@ -21,7 +21,6 @@ io = ["serde", "bincode", "serde_par"]
 polars = { version = "0.42", features = [
     "polars-io",
     "ipc",
-    "lazy",
     "cov",
     "rolling_window",
     "dynamic_group_by",
@@ -65,4 +64,4 @@ bincode = { version = "1.3.3", optional = true }
 git = "https://github.com/Teamon9161/tea_strategy.git"
 branch = "master"
 default-features = false
-features = ['polars', "time"]
+features = ['polars-lazy', "time"]

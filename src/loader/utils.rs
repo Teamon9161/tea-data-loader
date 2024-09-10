@@ -68,18 +68,10 @@ fn get_filter_cond_impl(
 ) -> Option<Expr> {
     match (start, end) {
         (Some(start), Some(end)) => {
-            let start = start.to_cr().unwrap().naive_utc();
-            let end = end.to_cr().unwrap().naive_utc();
-            Some((col(time).gt_eq(lit(start))).and(col(time).lt_eq(lit(end))))
+            Some((col(time).gt_eq(start.lit())).and(col(time).lt_eq(end.lit())))
         },
-        (Some(start), None) => {
-            let start = start.to_cr().unwrap().naive_utc();
-            Some(col(time).gt_eq(lit(start)))
-        },
-        (None, Some(end)) => {
-            let end = end.to_cr().unwrap().naive_utc();
-            Some(col(time).lt_eq(lit(end)))
-        },
+        (Some(start), None) => Some(col(time).gt_eq(start.lit())),
+        (None, Some(end)) => Some(col(time).lt_eq(end.lit())),
         (None, None) => None,
     }
 }

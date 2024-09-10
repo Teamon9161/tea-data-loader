@@ -2110,22 +2110,22 @@ checksum = "c1bbb9f3c5c463a01705937a24fdabc5047929ac764b2d5b9cf681c1f5041ed5"
 
 [[package]]
 name = "tea-agg"
-version = "0.4.1"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4a0d01529574488a4ff148e2c12df7c4ef6c8861a559c2f94290ea05313ab395"
+checksum = "3fdcd374c0a7f1083fa356561e3a9d7621b89ba511d04653cd3937d7c591dc52"
 dependencies = [
  "tea-core",
 ]
 
 [[package]]
 name = "tea-core"
-version = "0.4.1"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "98fcf2057d253c14414e01a639ebe65a80eb0d12e712ca4998b1075fb659d83d"
+checksum = "71ee961f7003c2bc71f9ccf8c2a92da44d7848c26b1b1c70a5707a2c4cd1ef89"
 dependencies = [
  "num-traits",
- "polars",
  "serde",
+ "tea-deps",
  "tea-dtype",
  "tea-error",
 ]
@@ -2154,20 +2154,31 @@ dependencies = [
 ]
 
 [[package]]
-name = "tea-dtype"
-version = "0.4.1"
+name = "tea-deps"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "59d93b6ec5248813539157f6a6a0899c31f2eb8691c4c1e13e7153ec5ad1fb93"
+checksum = "6d8f9e8b523868e1722e4e603e9aadeabd7d909cd23059a941d810a072c51b1c"
+dependencies = [
+ "chrono",
+ "polars",
+]
+
+[[package]]
+name = "tea-dtype"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4df24a49c61bfdeef9a03f85674fd77da5fc2738b717571aef096cab185e7f4f"
 dependencies = [
  "num-traits",
+ "tea-deps",
  "tea-time",
 ]
 
 [[package]]
 name = "tea-error"
-version = "0.4.1"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "45a12d163ae77014799b19fd723b49ea610fcba6f9ecca308a16dfda5f1e4fad"
+checksum = "e5fe36a293f9edbc85f67c2803b602bb1849c6d9493c7c895bd6de8081ff0cbb"
 dependencies = [
  "anyhow",
  "thiserror",
@@ -2175,9 +2186,9 @@ dependencies = [
 
 [[package]]
 name = "tea-macros"
-version = "0.4.1"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb44f062518ff4977f06097851712882dc085555dc5a13f1bdabf03555e0121e"
+checksum = "a59dd1cd8bde988778b2228abe1ea7f3d7788ad75e859e43b0494911fccb480e"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2186,9 +2197,9 @@ dependencies = [
 
 [[package]]
 name = "tea-map"
-version = "0.4.1"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a8fad4d729c16f18b5eb6ad4bc7dbe3ac460edc375d7dd60326e67566507cd6"
+checksum = "bd3cd6894fbe629edbdd912f4e9f6f9151419c1cd8796f835833af715c96e2c3"
 dependencies = [
  "anyhow",
  "itertools",
@@ -2198,9 +2209,9 @@ dependencies = [
 
 [[package]]
 name = "tea-rolling"
-version = "0.4.1"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1f5f60b007b48832c62ac1b0600cda83e52cb1438bf83d55690830fc8aece61"
+checksum = "e1e972dda49f22461cca48c1734d0648a2fc73a4d3b46e16480504318548c896"
 dependencies = [
  "num-traits",
  "tea-core",
@@ -2209,32 +2220,34 @@ dependencies = [
 
 [[package]]
 name = "tea-time"
-version = "0.4.1"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8780f088a9261f7a13a5d7a0a9c9048df79fca964ffa09e3149faed89ca649cc"
+checksum = "b3220f43f4881bbe0cc871367231101d735c0af877c95778e9801a712fd8a37f"
 dependencies = [
  "chrono",
  "serde",
  "serde_with",
+ "tea-deps",
  "tea-error",
 ]
 
 [[package]]
 name = "tea_strategy"
 version = "0.1.0"
-source = "git+https://github.com/Teamon9161/tea_strategy.git?branch=master#42efd0e6bcf5c222fc36932074907375aab51a5a"
+source = "git+https://github.com/Teamon9161/tea_strategy.git?branch=master#4bd4e512b0d7945a2591ce9099c6c26e1ff43dfa"
 dependencies = [
  "derive_more",
  "itertools",
+ "polars",
  "serde",
  "tevec",
 ]
 
 [[package]]
 name = "tevec"
-version = "0.4.1"
+version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0973c4cf24c234b812b4baabe69c9f647a3344df29264226542c0e4c1c620460"
+checksum = "30905a827c762fb8f8ec4203b223a8768d950778ed0a52348479a2e1a04c99ef"
 dependencies = [
  "derive_more",
  "tea-agg",
