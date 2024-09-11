@@ -142,6 +142,36 @@ impl DataLoader {
         self.dfs.is_empty()
     }
 
+    /// Checks if the `DataLoader` is lazy.
+    ///
+    /// This method determines if the data loading is lazy by checking the first data frame.
+    /// If the `DataLoader` is empty, it is considered not lazy.
+    ///
+    /// # Returns
+    ///
+    /// `true` if the `DataLoader` is lazy, `false` otherwise.
+    #[inline]
+    pub fn is_lazy(&self) -> bool {
+        if self.is_empty() {
+            false
+        } else {
+            self.dfs[0].is_lazy()
+        }
+    }
+
+    /// Checks if the `DataLoader` is eager.
+    ///
+    /// This method is the opposite of `is_lazy()`. It returns `true` if the `DataLoader`
+    /// is not lazy, which means it's eager.
+    ///
+    /// # Returns
+    ///
+    /// `true` if the `DataLoader` is eager, `false` otherwise.
+    #[inline]
+    pub fn is_eager(&self) -> bool {
+        !self.is_lazy()
+    }
+
     /// Sets the start date/time for the `DataLoader`.
     ///
     /// # Arguments
