@@ -66,6 +66,7 @@ impl TickFutureRetOpt<'_> {
     /// A `TickFutureRetKwargs` instance with the configured settings for tea-strategy.
     #[inline]
     fn to_tick_future_ret_kwargs(&self, multiplier: Option<f64>) -> TickFutureRetKwargs {
+        // 优先使用自身指定的multiplier，然后才是传入的multiplier
         let multiplier = if let Some(opt_multiplier) = self.multiplier {
             opt_multiplier
         } else {
@@ -149,7 +150,7 @@ impl DataLoader {
                                 bid_vec.f64().unwrap(),
                                 ask_vec.f64().unwrap(),
                                 Some(contract_chg_signal_vec.bool().unwrap()),
-                                &opt.to_tick_future_ret_kwargs(multiplier_map.get(symbol).cloned()),
+                                &opt.to_tick_future_ret_kwargs(multiplier),
                             )
                         } else {
                             calc_tick_future_ret::<_, _, _, BooleanChunked>(

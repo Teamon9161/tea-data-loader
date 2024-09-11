@@ -79,6 +79,8 @@ impl DataLoader {
         let closed_window = match source {
             "rq" => ClosedWindow::Right,
             "coin" => ClosedWindow::Left,
+            "ddb-xbond" => ClosedWindow::Left,
+            "ddb-future" => ClosedWindow::Left,
             _ => {
                 eprintln!(
                     "unsupported source in group_by_time: {}, use Left Closed by default",

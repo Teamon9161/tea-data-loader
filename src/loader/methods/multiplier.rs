@@ -58,7 +58,7 @@ impl DataLoader {
                 self.multiplier = Some(map);
             },
             _ => {
-                eprintln!("unsupported type in multiplier: {}", self.typ);
+                eprintln!("Default multiplier for type {} is not set", self.typ);
                 self.multiplier = Some(HashMap::with_capacity(0));
             },
         }

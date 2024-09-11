@@ -54,8 +54,10 @@ pub trait Strategy: GetName + Send + Sync + 'static {
     ///   2. long_close_cond (whether long positions should be closed)
     ///   3. short_open_cond (whether short positions can be opened)
     ///   4. short_close_cond (whether short positions should be closed)
-    ///   Unlike [`eval_to_fac`](Strategy::eval_to_fac), these are Polars `Expr` objects instead of DataFrame columns.
-    ///   However, the order of the filters must be consistent with `eval_to_fac`.
+    ///     
+    /// Unlike [`eval_to_fac`](Strategy::eval_to_fac), these are Polars `Expr` objects instead of DataFrame columns.
+    ///     
+    /// However, the order of the filters must be consistent with `eval_to_fac`.
     ///
     /// # Returns
     ///

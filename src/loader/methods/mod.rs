@@ -1,4 +1,5 @@
 mod base;
+mod concat;
 mod equity;
 mod factors;
 mod group_by;
