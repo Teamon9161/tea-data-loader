@@ -295,14 +295,14 @@ impl DataLoader {
     ///
     /// # Arguments
     ///
-    /// * `typ` - A string slice that holds the new type of data.
+    /// * `typ` - Any type that can be referenced as a str.
     ///
     /// # Returns
     ///
     /// The modified `DataLoader` instance.
     #[inline]
-    pub fn with_type(mut self, typ: &str) -> Self {
-        self.typ = typ.into();
+    pub fn with_type<R: AsRef<str>>(mut self, typ: R) -> Self {
+        self.typ = typ.as_ref().into();
         self
     }
 
@@ -310,14 +310,14 @@ impl DataLoader {
     ///
     /// # Arguments
     ///
-    /// * `freq` - A string slice that holds the new frequency (e.g., "daily", "hourly").
+    /// * `freq` - Any type that can be referenced as a str.
     ///
     /// # Returns
     ///
     /// The modified `DataLoader` instance.
     #[inline]
-    pub fn with_freq(mut self, freq: &str) -> Self {
-        self.freq = Some(freq.into());
+    pub fn with_freq<R: AsRef<str>>(mut self, freq: R) -> Self {
+        self.freq = Some(freq.as_ref().into());
         self
     }
 
