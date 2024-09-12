@@ -395,11 +395,11 @@ impl DataLoader {
     /// A `Result` containing the `SchemaRef` of the first data frame or an error.
     /// If the `DataLoader` is empty, returns an empty `SchemaRef`.
     #[inline]
-    pub fn schema(&mut self) -> Result<SchemaRef> {
+    pub fn schema(&self) -> Result<SchemaRef> {
         if self.is_empty() {
             Ok(SchemaRef::default())
         } else {
-            self[0].schema()
+            self[0].clone().schema()
         }
     }
 }

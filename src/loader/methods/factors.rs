@@ -23,7 +23,7 @@ impl DataLoader {
     ///
     /// A `Result` containing the modified `DataLoader` with new factors added, or an error.
     #[inline]
-    pub fn with_facs<F: AsRef<str>>(mut self, facs: &[F], backend: Backend) -> Result<Self> {
+    pub fn with_facs<F: AsRef<str>>(self, facs: &[F], backend: Backend) -> Result<Self> {
         use crate::factors::parse_pl_fac;
         let facs = facs.iter().map(|v| v.as_ref());
         let len = facs.len();
@@ -80,7 +80,7 @@ impl DataLoader {
     ///
     /// A `Result` containing the modified `DataLoader` with new Polars factors added, or an error.
     #[inline]
-    pub fn with_pl_facs<F: AsRef<dyn PlFactor>>(mut self, facs: &[F]) -> Result<Self> {
+    pub fn with_pl_facs<F: AsRef<dyn PlFactor>>(self, facs: &[F]) -> Result<Self> {
         let schema = self.schema()?;
         let mut exprs = Vec::with_capacity(facs.len());
         let fac_names = facs.iter().map(|f| f.as_ref().name());

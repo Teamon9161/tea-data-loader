@@ -40,6 +40,14 @@ impl Default for PlotOpt<'_> {
     }
 }
 
+impl<'a> PlotOpt<'a> {
+    #[inline]
+    pub fn with_x(mut self, x: &'a str) -> Self {
+        self.x = x;
+        self
+    }
+}
+
 impl Frame {
     /// Plot the Frame data using the specified plotting library.
     ///
@@ -82,12 +90,13 @@ impl Frame {
         use plotly::common::Mode;
         use plotly::layout::{Axis, RangeSlider};
         use plotly::Scatter;
-        use polars::prelude::TimeUnit as PlTimeUnit;
+        use polars::prelude::{DataType, TimeUnit as PlTimeUnit};
         use tea_strategy::tevec::prelude::{unit, DateTime};
         let df = self
             .as_eager()
             .ok_or_else(|| anyhow::Error::msg("not a eager dataframe"))?;
-        let x_data = df[opt.x].datetime()?;
+        let time_series = df[opt.x].cast(&DataType::Datetime(PlTimeUnit::Milliseconds, None))?;
+        let x_data = time_series.datetime()?;
         let time_unit = x_data.time_unit();
         // TODO: time zone is ignoredhere
         let mut plot = plotly::Plot::new();

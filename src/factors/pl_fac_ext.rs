@@ -171,6 +171,51 @@ pub trait PlFactorExt: PlFactor + Sized {
         };
         PlExtFactor::new(self, "efficiency_sign", p, func)
     }
+
+    /// Calculates the imbalance between two factors.
+    ///
+    /// The imbalance is defined as (self - other) / (self + other) when (self + other) > 0,
+    /// and NULL otherwise.
+    fn imb(self, other: impl PlFactor) -> impl PlFactor {
+        let other_expr = other.try_expr().unwrap();
+        let func = move |expr: Expr| {
+            let imb_expr =
+                (expr.clone() - other_expr.clone()) / (expr.clone() + other_expr.clone());
+            let expr = when((expr + other_expr.clone()).gt(0.lit()))
+                .then(imb_expr)
+                .otherwise(NULL.lit());
+            Ok(expr)
+        };
+        PlExtFactor::new(self, "imb", Param::None, func)
+    }
+
+    /// Adds two factors together.
+    fn add(self, other: impl PlFactor) -> impl PlFactor {
+        let other_expr = other.expr();
+        let func = move |expr: Expr| Ok(expr.clone() + other_expr.clone());
+        PlExtFactor::new(self, "add", Param::None, func)
+    }
+
+    /// Subtracts one factor from another.
+    fn sub(self, other: impl PlFactor) -> impl PlFactor {
+        let other_expr = other.expr();
+        let func = move |expr: Expr| Ok(expr.clone() - other_expr.clone());
+        PlExtFactor::new(self, "sub", Param::None, func)
+    }
+
+    /// Multiplies two factors together.
+    fn mul(self, other: impl PlFactor) -> impl PlFactor {
+        let other_expr = other.expr();
+        let func = move |expr: Expr| Ok(expr.clone() * other_expr.clone());
+        PlExtFactor::new(self, "mul", Param::None, func)
+    }
+
+    /// Divides one factor by another, using protected division.
+    fn div(self, other: impl PlFactor) -> impl PlFactor {
+        let other_expr = other.expr();
+        let func = move |expr: Expr| Ok(expr.clone().protect_div(other_expr.clone()));
+        PlExtFactor::new(self, "div", Param::None, func)
+    }
 }
 
 impl<F: PlFactor + Sized> PlFactorExt for F {}

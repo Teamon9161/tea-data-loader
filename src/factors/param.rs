@@ -72,10 +72,24 @@ impl From<usize> for Param {
     }
 }
 
+impl From<u32> for Param {
+    #[inline]
+    fn from(v: u32) -> Self {
+        Param::I32(v as i32)
+    }
+}
+
 impl From<Param> for usize {
     #[inline]
     fn from(p: Param) -> Self {
         p.as_usize()
+    }
+}
+
+impl From<Param> for u32 {
+    #[inline]
+    fn from(p: Param) -> Self {
+        p.as_u32()
     }
 }
 

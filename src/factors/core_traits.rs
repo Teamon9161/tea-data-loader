@@ -63,6 +63,14 @@ pub trait PlFactor: GetName + Send + Sync + 'static {
     fn expr(&self) -> Expr {
         self.try_expr().unwrap()
     }
+
+    #[inline]
+    fn pl_dyn(self) -> Arc<dyn PlFactor>
+    where
+        Self: Sized,
+    {
+        Arc::new(self)
+    }
 }
 
 /// Trait for factors that can be computed directly from a DataFrame.
@@ -81,4 +89,12 @@ pub trait TFactor: GetName + Send + Sync + 'static {
     /// A `Result` containing the computed `Series` if successful, or an error if the
     /// evaluation fails.
     fn eval(&self, df: &DataFrame) -> Result<Series>;
+
+    #[inline]
+    fn t_dyn(self) -> Arc<dyn TFactor>
+    where
+        Self: Sized,
+    {
+        Arc::new(self)
+    }
 }

@@ -22,6 +22,17 @@ pub trait SeriesExt {
     /// A Result containing the casted Series or an error.
     fn cast_f32(&self) -> Result<Series>;
 
+    /// Winsorizes the series using the specified method.
+    ///
+    /// # Arguments
+    ///
+    /// * `method` - The winsorization method to use (Quantile, Median, or Sigma).
+    /// * `method_params` - Optional parameter specific to the chosen method:
+    ///   - For Quantile: The quantile value (default: 0.01).
+    ///   - For Median: The number of MADs to use for clipping (default: 3).
+    ///   - For Sigma: The number of standard deviations to use for clipping (default: 3).
+    fn winsorize(&self, method: WinsorizeMethod, method_params: Option<f64>) -> Result<Series>;
+
     /// Calculates the exponentially weighted moving average.
     ///
     /// # Arguments
@@ -112,6 +123,49 @@ impl SeriesExt for Series {
         } else {
             Ok(Series::cast(self, &DataType::Float32)?)
         }
+    }
+
+    fn winsorize(&self, method: WinsorizeMethod, method_params: Option<f64>) -> Result<Series> {
+        let res: Series = match self.dtype() {
+            DataType::Float64 => {
+                let ca: Float64Chunked = self
+                    .f64()
+                    .unwrap()
+                    .winsorize(method, method_params)?
+                    .map(IsNone::to_opt)
+                    .collect_trusted_vec1();
+                ca.into_series()
+            },
+            DataType::Float32 => {
+                let ca: Float32Chunked = self
+                    .f32()
+                    .unwrap()
+                    .winsorize(method, method_params)?
+                    .map(|v| v.as_opt().map(|v| *v as f32))
+                    .collect_trusted_vec1();
+                ca.into_series()
+            },
+            DataType::Int64 => {
+                let ca: Float64Chunked = self
+                    .i64()
+                    .unwrap()
+                    .winsorize(method, method_params)?
+                    .map(IsNone::to_opt)
+                    .collect_trusted_vec1();
+                ca.into_series()
+            },
+            DataType::Int32 => {
+                let ca: Float64Chunked = self
+                    .i32()
+                    .unwrap()
+                    .winsorize(method, method_params)?
+                    .map(IsNone::to_opt)
+                    .collect_trusted_vec1();
+                ca.into_series()
+            },
+            _ => bail!("unsupported data type in winsorize"),
+        };
+        Ok(res)
     }
 
     fn ts_ewm(&self, window: usize, min_periods: Option<usize>) -> Self {
@@ -275,6 +329,41 @@ impl SeriesExt for Series {
 
 /// Extension trait for Polars expressions providing time series operations.
 pub trait ExprExt {
+    /// Calculates the imbalance between two expressions.
+    ///
+    /// The imbalance is calculated using the formula: (a - b) / (a + b)
+    /// where 'a' is the current expression and 'b' is the other expression.
+    ///
+    /// # Arguments
+    /// * `other` - The other expression to compare with.
+    ///
+    /// # Returns
+    /// An expression representing the imbalance between `self` and `other`.
+    fn imbalance(self, other: Expr) -> Self;
+
+    /// Performs a protected division operation.
+    ///
+    /// This function divides the current expression by another expression,
+    /// with protection against division by zero.
+    ///
+    /// # Arguments
+    /// * `other` - The expression to divide by.
+    ///
+    /// # Returns
+    /// An expression representing the result of the protected division.
+    fn protect_div(self, other: Expr) -> Self;
+
+    /// Winsorizes  using the specified method.
+    ///
+    /// # Arguments
+    ///
+    /// * `method` - The winsorization method to use (Quantile, Median, or Sigma).
+    /// * `method_params` - Optional parameter specific to the chosen method:
+    ///   - For Quantile: The quantile value (default: 0.01).
+    ///   - For Median: The number of MADs to use for clipping (default: 3).
+    ///   - For Sigma: The number of standard deviations to use for clipping (default: 3).
+    fn winsorize(self, method: WinsorizeMethod, method_params: Option<f64>) -> Self;
+
     /// Calculates the exponentially weighted moving average.
     ///
     /// # Arguments
@@ -322,6 +411,33 @@ pub trait ExprExt {
 }
 
 impl ExprExt for Expr {
+    #[inline]
+    fn imbalance(self, other: Expr) -> Self {
+        when((self.clone() + other.clone()).gt(0.lit()))
+            .then((self.clone() - other.clone()) / (self + other))
+            .otherwise(NULL.lit())
+    }
+
+    #[inline]
+    fn protect_div(self, other: Expr) -> Self {
+        when(other.clone().lt(0.lit()))
+            .then(self / other)
+            .otherwise(NULL.lit())
+    }
+
+    #[inline]
+    fn winsorize(self, method: WinsorizeMethod, method_params: Option<f64>) -> Self {
+        self.apply(
+            move |s| {
+                s.winsorize(method, method_params)
+                    .map(Some)
+                    .map_err(|e| PolarsError::ComputeError(e.to_string().into()))
+            },
+            GetOutput::float_type(),
+        )
+    }
+
+    #[inline]
     fn ts_ewm(self, window: usize, min_periods: Option<usize>) -> Self {
         self.apply(
             move |s| Ok(Some(s.ts_ewm(window, min_periods))),
@@ -329,6 +445,7 @@ impl ExprExt for Expr {
         )
     }
 
+    #[inline]
     fn ts_skew(self, window: usize, min_periods: Option<usize>) -> Self {
         self.apply(
             move |s| Ok(Some(s.ts_skew(window, min_periods))),
@@ -336,6 +453,7 @@ impl ExprExt for Expr {
         )
     }
 
+    #[inline]
     fn ts_kurt(self, window: usize, min_periods: Option<usize>) -> Self {
         self.apply(
             move |s| Ok(Some(s.ts_kurt(window, min_periods))),
@@ -343,6 +461,7 @@ impl ExprExt for Expr {
         )
     }
 
+    #[inline]
     fn ts_rank(self, window: usize, min_periods: Option<usize>, pct: bool, rev: bool) -> Self {
         self.apply(
             move |s| Ok(Some(s.ts_rank(window, min_periods, pct, rev))),
@@ -350,6 +469,7 @@ impl ExprExt for Expr {
         )
     }
 
+    #[inline]
     fn ts_zscore(self, window: usize, min_periods: Option<usize>) -> Self {
         self.apply(
             move |s| Ok(Some(s.ts_zscore(window, min_periods))),

@@ -4,17 +4,25 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-default = ["plot", "fac_ext", "io"]
+default = ["io", "fac-analyse"]
 
 serde = ["polars/serde", "polars/serde-lazy", "tea_strategy/serde"]
 serde_par = []
 performant = ["polars/simd", "polars/performant"]
 
-fac_ext = []
+
 plot = ["plotly"]
 poloto = ["dep:poloto", "poloto-chrono"]
 
 io = ["serde", "bincode", "serde_par"]
+
+# factors
+fac-ext = []
+fac-analyse = []                                           # 基础因子扩展方法
+map-fac = ["fac-ext"]
+tick-fac = ["order-book-fac", "order-flow-fac", "fac-ext"]
+order-book-fac = ["fac-ext"]
+order-flow-fac = ["fac-ext"]
 
 
 [dependencies]
@@ -31,18 +39,24 @@ polars = { version = "0.42", features = [
     "log",
     "pct_change",
     "meta",
+    "round_series",
+    "rank",
+    "propagate_nans",
 ] }
-toml = "0.8"
-glob = "0.3"
-serde = { version = "1.0", features = ["derive"] }
+
 derive_more = { version = "1", features = [
     "from",
     "is_variant",
     "deref",
     "deref_mut",
 ] }
+smartstring = "1"
+toml = "0.8"
+glob = "0.3"
+serde = { version = "1.0", features = ["derive"] }
 anyhow = "1.0"
 rayon = "1.10"
+paste = "1.0"
 ctor = "0.2"
 regex = "1.10"
 parking_lot = "0.12"

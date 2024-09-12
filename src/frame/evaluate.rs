@@ -21,8 +21,10 @@ pub struct EvaluateOpt<'a> {
     pub save: bool,
     /// The path to save the results, if saving.
     pub save_name: Option<&'a Path>,
+    #[cfg(feature = "plot")]
     /// Whether to plot the results.
     pub plot: bool,
+    #[cfg(feature = "plot")]
     /// Options for plotting.
     pub plot_opt: PlotOpt<'a>,
 }
@@ -37,13 +39,51 @@ impl Default for EvaluateOpt<'_> {
             sort: true,
             save: true,
             save_name: None,
+            #[cfg(feature = "plot")]
             plot: false,
+            #[cfg(feature = "plot")]
             plot_opt: PlotOpt {
                 x: "time",
                 ..Default::default()
             },
         }
     }
+}
+
+/// Retrieves the strategy column names from a given schema.
+///
+/// This function determines which columns in the schema represent strategies to be evaluated.
+/// It either uses the provided column names or, if none are provided, selects all columns
+/// except for the time column.
+///
+/// # Arguments
+///
+/// * `schema` - The schema of the data frame.
+/// * `time` - The name of the time column.
+/// * `eval_cols` - Optional slice of column names to evaluate.
+///
+/// # Returns
+///
+/// A vector of `Arc<str>` containing the names of the strategy columns.
+fn get_strategy_columns<S: AsRef<str>>(
+    schema: &Schema,
+    time: &str,
+    eval_cols: Option<&[S]>,
+) -> Vec<Arc<str>> {
+    eval_cols
+        .map(|cols| cols.iter().map(|s| s.as_ref().into()).collect())
+        .unwrap_or_else(|| {
+            schema
+                .iter_names()
+                .filter_map(|name| {
+                    if name != time {
+                        Some(name.as_str().into())
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<_>>()
+        })
 }
 
 impl Frame {
@@ -75,38 +115,36 @@ impl Frame {
     ///
     /// This function assumes that the input data represents return rates of strategies.
     /// For equity-based evaluation, use the `equity_evaluate` function instead.
+    ///
+    /// # See also
+    ///
+    /// [`equity_evaluate`](Self::equity_evaluate)
+    ///
+    /// [`profit_evaluate`](Self::profit_evaluate)
     pub fn ret_evaluate<S: AsRef<str>>(
         mut self,
         eval_cols: Option<&[S]>,
         opt: EvaluateOpt,
     ) -> Result<Self> {
-        let strategies: Vec<Arc<str>> = eval_cols
-            .map(|cols| cols.iter().map(|s| s.as_ref().into()).collect())
-            .unwrap_or_else(|| {
-                self.schema()
-                    .unwrap()
-                    .iter_names()
-                    .filter_map(|name| {
-                        if name != opt.time {
-                            Some(name.as_str().into())
-                        } else {
-                            None
-                        }
-                    })
-                    .collect::<Vec<_>>()
-            });
+        let strategies = get_strategy_columns(&self.schema().unwrap(), opt.time, eval_cols);
         let ret_df = self.with_column(cols(&strategies).fill_nan(lit(NULL)))?;
         let equity_curves: Vec<String> = strategies
             .iter()
             .map(|s| format!("{}{}", s, "_equity_curve"))
             .collect();
+        #[cfg(feature = "plot")]
         if opt.plot {
+            let plot_opt = if opt.plot_opt.x != opt.time {
+                opt.plot_opt.with_x(opt.time)
+            } else {
+                opt.plot_opt
+            };
             ret_df
                 .clone()
                 .with_column(cols(&strategies).fill_null(lit(0.)).cum_sum(false))?
                 .collect()?
                 .into_frame()
-                .plot(&strategies, &opt.plot_opt)?;
+                .plot(&strategies, &plot_opt)?;
         }
         // calculate equity curve
         let ret_df = ret_df
@@ -204,28 +242,56 @@ impl Frame {
     /// # See also
     ///
     /// [`ret_evaluate`](Self::ret_evaluate)
+    ///
+    /// [`profit_evaluate`](Self::profit_evaluate)
     pub fn equity_evaluate<S: AsRef<str>>(
         mut self,
         eval_cols: Option<&[S]>,
         opt: EvaluateOpt,
     ) -> Result<Self> {
-        let strategies: Vec<Arc<str>> = eval_cols
-            .map(|cols| cols.iter().map(|s| s.as_ref().into()).collect())
-            .unwrap_or_else(|| {
-                self.schema()
-                    .unwrap()
-                    .iter_names()
-                    .filter_map(|name| {
-                        if name != opt.time {
-                            Some(name.as_str().into())
-                        } else {
-                            None
-                        }
-                    })
-                    .collect::<Vec<_>>()
-            });
+        let strategies = get_strategy_columns(&self.schema().unwrap(), opt.time, eval_cols);
         let df = self.with_column(cols(&strategies).pct_change(lit(1)))?;
-        // self.with_column(cols(&strategies) / cols(&strategies).shift(lit(1.)) - lit(1.))?;
+        df.ret_evaluate(Some(&strategies), opt)
+    }
+
+    /// Evaluates profit-based strategies.
+    ///
+    /// # Arguments
+    ///
+    /// * `eval_cols` - Optional slice of column names to evaluate.
+    /// * `init_cash` - Initial cash amount for each strategy.
+    /// * `opt` - Evaluation options.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the evaluated `Frame` with performance metrics for each strategy.
+    ///
+    /// # Performance Metrics
+    ///
+    /// This method calculates the same performance metrics as `ret_evaluate`:
+    /// - Annual Return
+    /// - Annual Standard Deviation
+    /// - Sharpe Ratio
+    /// - Win Rate
+    /// - Maximum Drawdown
+    /// - Maximum Drawdown Start Time
+    /// - Maximum Drawdown End Time
+    ///
+    /// # See also
+    ///
+    /// [`ret_evaluate`](Self::ret_evaluate)
+    ///
+    /// [`equity_evaluate`](Self::equity_evaluate)
+    pub fn profit_evaluate<S: AsRef<str>>(
+        mut self,
+        eval_cols: Option<&[S]>,
+        init_cash: f64,
+        opt: EvaluateOpt,
+    ) -> Result<Self> {
+        let strategies = get_strategy_columns(&self.schema().unwrap(), opt.time, eval_cols);
+        let df = self.with_column(
+            (cols(&strategies).cum_sum(false) + init_cash.lit()).pct_change(1.lit()),
+        )?;
         df.ret_evaluate(Some(&strategies), opt)
     }
 }

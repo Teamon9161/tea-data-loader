@@ -37,3 +37,15 @@ impl Tier {
         }
     }
 }
+
+/// 聚合方法
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum AggMethod {
+    Mean,
+    WeightMean(Box<str>), // 通过权重字段加权平均
+    Max,
+    Min,
+    Sum,
+    First,
+    Last,
+}

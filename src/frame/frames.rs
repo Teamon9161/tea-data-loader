@@ -7,6 +7,7 @@ use polars::prelude::*;
 use tea_strategy::tevec::prelude::{terr, CollectTrustedToVec, TryCollectTrustedToVec};
 
 use super::frame_core::Frame;
+use crate::enums::AggMethod;
 
 /// A collection of `Frame` objects.
 ///
@@ -179,5 +180,216 @@ impl Frames {
                 .collect::<Vec<_>>()
                 .into()
         })
+    }
+
+    /// Retrieves a column from each frame in the collection.
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - The name of the column to retrieve.
+    ///
+    /// # Returns
+    ///
+    /// An iterator over references to the Series of the specified column from each frame.
+    pub fn get_column<'a, S: AsRef<str> + 'a>(
+        &'a self,
+        key: S,
+    ) -> impl Iterator<Item = &'a Series> + 'a {
+        self.iter()
+            .map(move |df| df.as_eager().unwrap().column(key.as_ref()).unwrap())
+    }
+
+    /// Performs horizontal aggregation on the frames collection.
+    ///
+    /// # Arguments
+    ///
+    /// * `keys` - An iterator of column names to aggregate.
+    /// * `methods` - An iterator of aggregation methods corresponding to each key.
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing a `DataFrame` with the aggregated results, or an error if the aggregation fails.
+    pub fn horizontal_agg<S: AsRef<str>>(
+        self,
+        keys: impl IntoIterator<Item = S>,
+        methods: impl IntoIterator<Item = AggMethod>,
+    ) -> Result<DataFrame> {
+        use polars::lazy::dsl::*;
+        let dfs = self.collect(true)?;
+        let exprs = keys
+            .into_iter()
+            .zip(methods)
+            .map(|(key, method)| {
+                let expr = match method {
+                    AggMethod::Mean => mean_horizontal(
+                        dfs.get_column(key)
+                            .map(|s| s.clone().lit())
+                            .collect::<Vec<_>>(),
+                    )?,
+                    AggMethod::WeightMean(weight) => {
+                        let weight_sum = sum_horizontal(
+                            dfs.get_column(&weight)
+                                .map(|s| s.clone().lit())
+                                .collect::<Vec<_>>(),
+                        )?;
+                        let all_sum = sum_horizontal(
+                            dfs.iter()
+                                .map(|df| {
+                                    let df = df.as_eager().unwrap();
+                                    (df.column(key.as_ref()).unwrap()
+                                        * df.column(weight.as_ref()).unwrap())
+                                    .unwrap()
+                                    .lit()
+                                })
+                                .collect::<Vec<_>>(),
+                        )?;
+                        (all_sum / weight_sum).alias(key.as_ref())
+                    },
+                    AggMethod::Max => max_horizontal(
+                        dfs.get_column(key)
+                            .map(|s| s.clone().lit())
+                            .collect::<Vec<_>>(),
+                    )?,
+                    AggMethod::Min => min_horizontal(
+                        dfs.get_column(key)
+                            .map(|s| s.clone().lit())
+                            .collect::<Vec<_>>(),
+                    )?,
+                    AggMethod::Sum => sum_horizontal(
+                        dfs.get_column(key)
+                            .map(|s| s.clone().lit())
+                            .collect::<Vec<_>>(),
+                    )?,
+                    AggMethod::First => dfs[0]
+                        .as_eager()
+                        .unwrap()
+                        .column(key.as_ref())
+                        .unwrap()
+                        .clone()
+                        .lit(),
+                    AggMethod::Last => dfs[dfs.len() - 1]
+                        .as_eager()
+                        .unwrap()
+                        .column(key.as_ref())
+                        .unwrap()
+                        .clone()
+                        .lit(),
+                };
+                Ok(expr)
+            })
+            .collect::<PolarsResult<Vec<_>>>()?;
+        Ok(DataFrame::default().lazy().with_columns(exprs).collect()?)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use polars::prelude::*;
+
+    use crate::prelude::*;
+
+    fn assert_series_equal(left: &Series, right: &Series) -> Result<()> {
+        assert!(left.equal_missing(right).unwrap().all());
+        Ok(())
+    }
+
+    #[test]
+    fn test_horizontal_agg() -> Result<()> {
+        // Create sample data
+        let df1 = df! {
+            "A" => [1, 2, 3],
+            "B" => [4, 5, 6],
+            "weight" => [0.5, 0.3, 0.2]
+        }?;
+        let df2 = df! {
+            "A" => [10, 20, 30],
+            "B" => [40, 50, 60],
+            "weight" => [0.4, 0.4, 0.2]
+        }?;
+
+        let frames = Frames(vec![Frame::from(df1.lazy()), Frame::from(df2.lazy())]);
+
+        // Test Mean
+        let result_mean = frames
+            .clone()
+            .horizontal_agg(&["A", "B"], [AggMethod::Mean, AggMethod::Mean])?;
+        let expected_mean_a = Series::new("A", &[5.5, 11.0, 16.5]);
+        let expected_mean_b = Series::new("B", &[22.0, 27.5, 33.0]);
+        assert_series_equal(result_mean.column("A")?, &expected_mean_a)?;
+        assert_series_equal(result_mean.column("B")?, &expected_mean_b)?;
+
+        // Test WeightMean
+        let result_weight_mean = frames.clone().horizontal_agg(
+            &["A", "B"],
+            [
+                AggMethod::WeightMean("weight".into()),
+                AggMethod::WeightMean("weight".into()),
+            ],
+        )?;
+        let expected_weight_mean_a = Series::new(
+            "A",
+            &[
+                (1.0 * 0.5 + 10.0 * 0.4) / 0.9,
+                (2.0 * 0.3 + 20.0 * 0.4) / 0.7,
+                (3.0 * 0.2 + 30.0 * 0.2) / 0.4,
+            ],
+        );
+        let expected_weight_mean_b = Series::new(
+            "B",
+            &[
+                (4.0 * 0.5 + 40.0 * 0.4) / 0.9,
+                (5.0 * 0.3 + 50.0 * 0.4) / 0.7,
+                (6.0 * 0.2 + 60.0 * 0.2) / 0.4,
+            ],
+        );
+        assert_series_equal(result_weight_mean.column("A")?, &expected_weight_mean_a)?;
+        assert_series_equal(result_weight_mean.column("B")?, &expected_weight_mean_b)?;
+
+        // Test Max
+        let result_max = frames
+            .clone()
+            .horizontal_agg(&["A", "B"], [AggMethod::Max, AggMethod::Max])?;
+        let expected_max_a = Series::new("A", &[10.0, 20.0, 30.0]);
+        let expected_max_b = Series::new("B", &[40.0, 50.0, 60.0]);
+        assert_series_equal(result_max.column("A")?, &expected_max_a)?;
+        assert_series_equal(result_max.column("B")?, &expected_max_b)?;
+
+        // Test Min
+        let result_min = frames
+            .clone()
+            .horizontal_agg(&["A", "B"], [AggMethod::Min, AggMethod::Min])?;
+        let expected_min_a = Series::new("A", &[1.0, 2.0, 3.0]);
+        let expected_min_b = Series::new("B", &[4.0, 5.0, 6.0]);
+        assert_series_equal(result_min.column("A")?, &expected_min_a)?;
+        assert_series_equal(result_min.column("B")?, &expected_min_b)?;
+
+        // Test Sum
+        let result_sum = frames
+            .clone()
+            .horizontal_agg(&["A", "B"], [AggMethod::Sum, AggMethod::Sum])?;
+        let expected_sum_a = Series::new("A", &[11.0, 22.0, 33.0]);
+        let expected_sum_b = Series::new("B", &[44.0, 55.0, 66.0]);
+        assert_series_equal(result_sum.column("A")?, &expected_sum_a)?;
+        assert_series_equal(result_sum.column("B")?, &expected_sum_b)?;
+
+        // Test First
+        let result_first = frames
+            .clone()
+            .horizontal_agg(&["A", "B"], [AggMethod::First, AggMethod::First])?;
+        let expected_first_a = Series::new("A", &[1.0, 2.0, 3.0]);
+        let expected_first_b = Series::new("B", &[4.0, 5.0, 6.0]);
+        assert_series_equal(result_first.column("A")?, &expected_first_a)?;
+        assert_series_equal(result_first.column("B")?, &expected_first_b)?;
+
+        // Test Last
+        let result_last = frames
+            .clone()
+            .horizontal_agg(&["A", "B"], [AggMethod::Last, AggMethod::Last])?;
+        let expected_last_a = Series::new("A", &[10.0, 20.0, 30.0]);
+        let expected_last_b = Series::new("B", &[40.0, 50.0, 60.0]);
+        assert_series_equal(result_last.column("A")?, &expected_last_a)?;
+        assert_series_equal(result_last.column("B")?, &expected_last_b)?;
+
+        Ok(())
     }
 }
