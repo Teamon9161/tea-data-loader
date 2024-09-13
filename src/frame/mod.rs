@@ -2,6 +2,7 @@ mod calc_fac;
 mod evaluate;
 mod frame_core;
 mod frames;
+mod frames_align;
 mod join;
 #[cfg(feature = "plot")]
 mod plot;

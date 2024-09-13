@@ -16,6 +16,8 @@ pub mod strategy;
 
 use std::sync::LazyLock;
 
+#[cfg(feature = "fac-analyse")]
+pub use fac_analyse::linspace;
 pub use factor_macro as macros;
 pub use loader::utils;
 use rayon::{ThreadPool, ThreadPoolBuilder};

@@ -154,4 +154,10 @@ impl DataLoader {
     {
         self.try_apply(|df| df.drop(columns.clone()))
     }
+
+    #[inline]
+    pub fn align<E: AsRef<[Expr]>>(mut self, on: E, how: Option<JoinType>) -> Result<Self> {
+        self.dfs = self.dfs.align(on, how)?;
+        Ok(self)
+    }
 }

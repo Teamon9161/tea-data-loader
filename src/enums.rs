@@ -42,10 +42,11 @@ impl Tier {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AggMethod {
     Mean,
-    WeightMean(Box<str>), // 通过权重字段加权平均
+    WeightMean(std::sync::Arc<str>), // 通过权重字段加权平均
     Max,
     Min,
     Sum,
+    ValidFirst, // currently not yet implemented as polarsr doesn't support a valid first horizontal expression
     First,
     Last,
 }

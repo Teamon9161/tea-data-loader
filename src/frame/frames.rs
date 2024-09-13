@@ -274,6 +274,9 @@ impl Frames {
                         .unwrap()
                         .clone()
                         .lit(),
+                    AggMethod::ValidFirst => {
+                        todo!()
+                    },
                 };
                 Ok(expr)
             })

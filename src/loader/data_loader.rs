@@ -14,7 +14,7 @@ use crate::prelude::{Frame, Frames};
 ///
 /// This struct holds various pieces of information related to the loaded data,
 /// including the data frames, symbols, time range, and other metadata.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct DataLoader {
     /// The type of data, such as future, bond, stock, etc.

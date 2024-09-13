@@ -1,7 +1,7 @@
 use polars::lazy::dsl::{Expr, GetOutput};
 use polars::prelude::{DataType, *};
 
-use crate::export::tevec::prelude::*;
+use crate::export::tevec::prelude::{DataType as TDataType, *};
 /// Extension trait for Series providing additional functionality.
 pub trait SeriesExt {
     /// Casts the Series to Float64 type.
@@ -95,6 +95,46 @@ pub trait SeriesExt {
     /// # Returns
     /// A new Series with the calculated beta coefficients.
     fn ts_regx_beta(&self, x: &Series, window: usize, min_periods: Option<usize>) -> Self;
+
+    /// Categorize values into bins.
+    ///
+    /// This function categorizes the values in the Series into bins defined by the `bin` parameter.
+    /// It assigns labels to each bin as specified by the `labels` parameter.
+    ///
+    /// # Arguments
+    ///
+    /// * `bin` - A Series of bin edges.
+    /// * `labels` - A Series of labels for each bin.
+    /// * `right` - If true, intervals are closed on the right. If false, intervals are closed on the left.
+    /// * `add_bounds` - If true, adds -∞ and +∞ as the first and last bin edges respectively.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Result<Series>` containing the categorized values.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The number of labels doesn't match the number of bins (accounting for `add_bounds`).
+    /// - A value falls outside the bin ranges.
+    /// - The input Series has an unsupported data type.
+    fn cut(
+        &self,
+        bin: &Series,
+        labels: &Series,
+        right: Option<bool>,
+        add_bounds: Option<bool>,
+    ) -> Result<Series>;
+
+    /// Calculates the valid first non-null value.
+    ///
+    /// This function calculates the first non-null value in the Series.
+    /// If the Series is empty or all values are null, it returns null.
+    ///
+    /// # Returns
+    ///
+    /// A new Series with the valid first non-null value.
+    fn vfirst(&self) -> AnyValue<'_>;
 }
 
 impl SeriesExt for Series {
@@ -325,6 +365,62 @@ impl SeriesExt for Series {
         };
         res
     }
+
+    fn cut(
+        &self,
+        bin: &Series,
+        labels: &Series,
+        right: Option<bool>,
+        add_bounds: Option<bool>,
+    ) -> Result<Series> {
+        use DataType::*;
+        let name = self.name();
+        let right = right.unwrap_or(true);
+        let add_bounds = add_bounds.unwrap_or(true);
+        let labels_f64 = labels.cast(&Float64)?;
+        let labels = labels_f64.f64()?;
+        let res: Float64Chunked = match self.dtype() {
+            Int32 => self
+                .i32()?
+                .titer()
+                .vcut(bin.cast(&Int32)?.i32()?, labels, right, add_bounds)?
+                .try_collect_trusted_vec1()?,
+            Int64 => self
+                .i64()?
+                .titer()
+                .vcut(bin.cast(&Int64)?.i64()?, labels, right, add_bounds)?
+                .try_collect_trusted_vec1()?,
+            Float32 => self
+                .f32()?
+                .titer()
+                .vcut(bin.cast(&Float32)?.f32()?, labels, right, add_bounds)?
+                .try_collect_trusted_vec1()?,
+            Float64 => self
+                .f64()?
+                .titer()
+                .vcut(bin.cast(&Float64)?.f64()?, labels, right, add_bounds)?
+                .try_collect_trusted_vec1()?,
+            dtype => bail!(
+                "dtype {} not supported for cut, expected Int32, Int64, Float32, Float64.",
+                dtype
+            ),
+        };
+        Ok(res.with_name(name).into_series())
+    }
+
+    fn vfirst(&self) -> AnyValue<'_> {
+        match self.dtype() {
+            DataType::Float64 => self.f64().unwrap().vfirst().into(),
+            DataType::Float32 => self.f32().unwrap().vfirst().into(),
+            DataType::Int64 => self.i64().unwrap().vfirst().into(),
+            DataType::Int32 => self.i32().unwrap().vfirst().into(),
+            DataType::Boolean => self.bool().unwrap().vfirst().into(),
+            DataType::String => self.str().unwrap().vfirst().into(),
+            DataType::Date => self.date().unwrap().vfirst().into(),
+            DataType::Datetime(_, _) => self.datetime().unwrap().vfirst().into(),
+            _ => panic!("unsupported data type"),
+        }
+    }
 }
 
 /// Extension trait for Polars expressions providing time series operations.
@@ -408,6 +504,20 @@ pub trait ExprExt {
     /// * `window` - The size of the moving window.
     /// * `min_periods` - The minimum number of observations in window required to have a value.
     fn ts_regx_beta(self, x: Expr, window: usize, min_periods: Option<usize>) -> Self;
+
+    /// Cuts the data into bins and labels them.
+    ///
+    /// # Arguments
+    /// * `bin` - An expression defining the bin edges.
+    /// * `labels` - An expression defining the labels for each bin.
+    /// * `right` - Whether the intervals should be closed on the right (and open on the left) or vice versa. Default is true.
+    /// * `add_bounds` - Whether to add the minimum and maximum of the data as explicit bin edges. Default is false.
+    ///
+    /// # Returns
+    /// An expression representing the binned and labeled data.
+    fn cut(self, bin: Expr, labels: Expr, right: Option<bool>, add_bounds: Option<bool>) -> Expr;
+
+    fn vfirst(self) -> Self;
 }
 
 impl ExprExt for Expr {
@@ -491,6 +601,28 @@ impl ExprExt for Expr {
                     _ => DataType::Float64,
                 })
             }),
+        )
+    }
+
+    fn cut(self, bin: Expr, labels: Expr, right: Option<bool>, add_bounds: Option<bool>) -> Expr {
+        self.apply_many(
+            move |series_slice| {
+                let s = &series_slice[0];
+                let bin = &series_slice[1];
+                let labels = &series_slice[2];
+                Ok(Some(s.cut(bin, labels, right, add_bounds).map_err(
+                    |e| PolarsError::ComputeError(e.to_string().into()),
+                )?))
+            },
+            &[bin, labels],
+            GetOutput::from_type(DataType::Float64),
+        )
+    }
+
+    fn vfirst(self) -> Self {
+        self.apply(
+            |s| Series::from_any_values(s.name(), &[s.vfirst()], true).map(Some),
+            GetOutput::same_type(),
         )
     }
 }
