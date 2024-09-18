@@ -50,3 +50,27 @@ pub enum AggMethod {
     First,
     Last,
 }
+
+/// 手续费
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum CRate {
+    Percent(f64),  // 使用百分比计算的手续费
+    Absolute(f64), // 固定按一手多少手续费计算
+}
+
+impl Default for CRate {
+    #[inline]
+    fn default() -> Self {
+        Self::Percent(0.)
+    }
+}
+
+impl CRate {
+    #[inline]
+    pub fn get_type(&self) -> tea_strategy::equity::CommissionType {
+        match self {
+            CRate::Percent(_) => tea_strategy::equity::CommissionType::Percent,
+            CRate::Absolute(_) => tea_strategy::equity::CommissionType::Absolute,
+        }
+    }
+}

@@ -91,6 +91,10 @@ impl DataLoader {
         };
         match rule {
             "daily" => {
+                ensure!(
+                    opt.group_by.is_none(),
+                    "Also group_by on specified columns is not implemented yet"
+                );
                 let lgbs = if !opt.maintain_order {
                     self.dfs
                         .iter()
@@ -111,7 +115,7 @@ impl DataLoader {
             },
             _ => self.group_by_dynamic(
                 col(opt.time),
-                [],
+                opt.group_by.unwrap_or_default(),
                 DynamicGroupOptions {
                     every: Duration::parse(rule),
                     period: Duration::parse(rule),

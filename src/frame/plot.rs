@@ -61,12 +61,14 @@ impl Frame {
     /// # Returns
     ///
     /// A Result indicating success or failure of the plotting operation.
-    #[allow(unreachable_code)]
+    #[allow(unreachable_code, unused_variables)]
+    #[cfg(feature = "plot")]
     pub fn plot<S: AsRef<str>>(&self, strategies: &[S], opt: &PlotOpt) -> Result<()> {
-        #[cfg(feature = "plotly")]
+        #[cfg(feature = "plotly-plot")]
         return self.plotly_plot_equity_curve(strategies, opt);
-        #[cfg(feature = "poloto")]
+        #[cfg(feature = "poloto-plot")]
         return self.poloto_plot_equity_curve(strategies, opt);
+        anyhow::bail!("Must specify plot backend")
     }
 
     /// Plot the Frame data using Plotly.
@@ -81,7 +83,7 @@ impl Frame {
     /// # Returns
     ///
     /// A Result indicating success or failure of the plotting operation.
-    #[cfg(feature = "plotly")]
+    #[cfg(feature = "plotly-plot")]
     fn plotly_plot_equity_curve<S: AsRef<str>>(
         &self,
         strategies: &[S],
@@ -159,7 +161,7 @@ impl Frame {
     /// # Returns
     ///
     /// A Result indicating success or failure of the plotting operation.
-    #[cfg(feature = "poloto")]
+    #[cfg(feature = "poloto-plot")]
     fn poloto_plot_equity_curve<S: AsRef<str>>(
         &self,
         strategies: &[S],

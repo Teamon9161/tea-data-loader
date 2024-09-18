@@ -197,4 +197,104 @@ impl FacAnalysis {
             .with_ts_group_rets(ts_group_rets);
         Ok(self)
     }
+
+    pub fn with_group_ret(mut self, rule: Option<&str>, group: usize) -> Result<Self> {
+        let daily_col = self.dl.daily_col();
+        if let Some(rule) = rule {
+            // 根据某种时间规则聚合后分组
+            let symbol_group_rets = POOL
+                .install(|| {
+                    self.facs.par_iter().map(|fac| {
+                        let group_expr = get_ts_group(col(&fac), group).alias("group");
+                        self.dl
+                            .clone()
+                            .with_column(group_expr)?
+                            .sort(["group", daily_col], Default::default())?
+                            .group_by_time(
+                                rule,
+                                GroupByTimeOpt {
+                                    time: daily_col,
+                                    group_by: Some(&[col("group")]),
+                                    ..Default::default()
+                                },
+                            )?
+                            .agg(
+                                [
+                                    col(&fac).min().alias("min"),
+                                    col(&fac).max().alias("max"),
+                                    col(&fac).count().alias("count"),
+                                ]
+                                .into_iter()
+                                .chain(self.labels.iter().map(|n| col(n).mean()))
+                                .collect::<Vec<_>>(),
+                            )
+                            .filter(col("group").is_not_null())?
+                            .collect(true)?
+                            .align([col("group")], None)?
+                            .collect(true)
+                    })
+                })
+                .collect::<Result<Vec<_>>>()?;
+            let group_rets = symbol_group_rets
+                .iter()
+                .map(|tgr| {
+                    use AggMethod::*;
+                    tgr.clone()
+                        .group_by_stable(["group"])
+                        .agg([col("*").exclude([daily_col]).mean()])
+                        .dfs
+                        .horizontal_agg(
+                            once("group").chain(self.labels.iter().map(|s| s.as_ref())),
+                            once(First).chain(vec![Mean; self.labels.len()]),
+                        )
+                })
+                .collect::<Result<Vec<_>>>()?;
+            self.summary = self
+                .summary
+                .with_symbol_group_rets(symbol_group_rets)
+                .with_group_rets(group_rets);
+        } else {
+            // 使用全历史数据直接分组
+            let symbol_group_rets = POOL
+                .install(|| {
+                    self.facs.par_iter().map(|fac| {
+                        let group_expr = get_ts_group(col(&fac), group).alias("group");
+                        self.dl
+                            .clone()
+                            .group_by([group_expr])
+                            .agg(
+                                [
+                                    col(&fac).min().alias("min"),
+                                    col(&fac).max().alias("max"),
+                                    col(&fac).count().alias("count"),
+                                ]
+                                .into_iter()
+                                .chain(self.labels.iter().map(|n| col(n).mean()))
+                                .collect::<Vec<_>>(),
+                            )
+                            .filter(col("group").is_not_null())?
+                            .sort(["group"], Default::default())?
+                            .collect(true)?
+                            .align([col("group")], None)?
+                            .collect(true)
+                    })
+                })
+                .collect::<Result<Vec<_>>>()?;
+            let group_rets = symbol_group_rets
+                .iter()
+                .map(|tgr| {
+                    use AggMethod::*;
+                    tgr.dfs.clone().horizontal_agg(
+                        once("group").chain(self.labels.iter().map(|s| s.as_ref())),
+                        once(First).chain(vec![WeightMean("count".into()); self.labels.len()]),
+                    )
+                })
+                .collect::<Result<Vec<_>>>()?;
+            self.summary = self
+                .summary
+                .with_symbol_group_rets(symbol_group_rets)
+                .with_group_rets(group_rets);
+        };
+        Ok(self)
+    }
 }

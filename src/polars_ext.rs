@@ -1,7 +1,7 @@
 use polars::lazy::dsl::{Expr, GetOutput};
 use polars::prelude::{DataType, *};
 
-use crate::export::tevec::prelude::{DataType as TDataType, *};
+use crate::export::tevec::prelude::*;
 /// Extension trait for Series providing additional functionality.
 pub trait SeriesExt {
     /// Casts the Series to Float64 type.

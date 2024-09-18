@@ -2,7 +2,7 @@ pub(crate) mod base;
 pub use base::*;
 
 mod mid;
-pub use mid::Mid;
+pub use mid::{Mid, MidYtm};
 
 mod obi;
 pub use obi::Obi;
@@ -23,7 +23,7 @@ mod ob_slope_l1;
 pub use ob_slope_l1::ObSlopeL1;
 
 mod spread;
-pub use spread::Spread;
+pub use spread::{Spread, YtmSpread};
 
 mod bond_future_spread;
 pub use bond_future_spread::BondFutureSpread;
