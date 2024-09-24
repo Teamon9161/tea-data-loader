@@ -3,7 +3,7 @@ use polars::prelude::*;
 // use super::Mid;
 use crate::factors::export::*;
 
-#[derive(FactorBase, Default, Debug, Clone)]
+#[derive(FactorBase, Default, Clone)]
 pub struct BondFutureSpread(pub Param);
 
 impl PlFactor for BondFutureSpread {

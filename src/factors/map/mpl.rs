@@ -22,7 +22,7 @@ use super::super::export::*;
 /// - 该指标的量纲会受到合约乘数的影响，如果要对不同品种进行比较，需要进行标准化处理
 /// - 可以用来判断市场情绪和潜在的支撑/阻力位
 /// - 结合其他技术指标使用，可以提供更全面的市场分析
-#[derive(FactorBase, Default, Debug, Clone)]
+#[derive(FactorBase, Default, Clone)]
 pub struct Mpl(pub Param);
 
 impl PlFactor for Mpl {

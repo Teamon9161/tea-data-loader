@@ -16,7 +16,7 @@ use super::super::export::*;
 /// - 正相关：价格上涨时成交量增加，下跌时成交量减少，可能表示趋势较强
 /// - 负相关：价格上涨时成交量减少，下跌时成交量增加，可能表示市场存在分歧
 /// - 接近零：价格和成交量之间没有明显的相关性
-#[derive(FactorBase, Default, Debug, Clone)]
+#[derive(FactorBase, Default, Clone)]
 pub struct PVCorr(pub Param);
 
 impl PlFactor for PVCorr {
@@ -41,7 +41,7 @@ impl PlFactor for PVCorr {
 /// - Price Return: 收盘价的百分比变化
 /// - Volume Return: 成交量的百分比变化
 /// - N: 滚动窗口大小，由 Param 参数指定
-#[derive(FactorBase, Default, Debug, Clone)]
+#[derive(FactorBase, Default, Clone)]
 pub struct PrVrCorr(pub Param);
 
 impl PlFactor for PrVrCorr {
@@ -66,7 +66,7 @@ impl PlFactor for PrVrCorr {
 /// - Price Return: 收盘价的百分比变化
 /// - Volume: 成交量
 /// - N: 滚动窗口大小，由 Param 参数指定
-#[derive(FactorBase, Default, Debug, Clone)]
+#[derive(FactorBase, Default, Clone)]
 pub struct PrVCorr(pub Param);
 
 impl PlFactor for PrVCorr {
@@ -91,7 +91,7 @@ impl PlFactor for PrVCorr {
 /// - Price: 收盘价
 /// - Volume Return: 成交量的百分比变化
 /// - N: 滚动窗口大小，由 Param 参数指定
-#[derive(FactorBase, Default, Debug, Clone)]
+#[derive(FactorBase, Default, Clone)]
 pub struct PVrCorr(pub Param);
 
 impl PlFactor for PVrCorr {

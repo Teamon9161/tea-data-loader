@@ -1,5 +1,5 @@
 pub(crate) use super::{AskCumVol, BidCumVol};
-use super::{Mid, MidYtm};
+use super::{Mid, MidYtm, Spread, YtmSpread};
 use crate::factors::export::*;
 
 define_base_fac!(
@@ -40,4 +40,6 @@ define_base_fac!(
 );
 
 pub const MID: Mid = Mid(Param::None);
-pub const MIDYTM: MidYtm = MidYtm(Param::None);
+pub const MID_YTM: MidYtm = MidYtm(Param::None);
+pub const SPREAD: Spread = Spread(Param::None);
+pub const YTM_SPREAD: YtmSpread = YtmSpread(Param::None);

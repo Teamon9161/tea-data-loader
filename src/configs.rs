@@ -43,7 +43,7 @@ pub(crate) struct LoaderConfig {
 /// Configuration for main path settings.
 ///
 /// This struct contains settings related to path finding and type sources.
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Clone, Default)]
 pub(crate) struct MainPathConfig {
     /// A table of main paths used in the application.
     pub main_path: Table,

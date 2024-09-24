@@ -7,21 +7,46 @@ use crate::factors::export::*;
 /// This factor calculates the sum of bid volumes from the first level up to the level
 /// specified by the `Param` value. For example, if `Param` is 3, it will sum the volumes
 /// of the first three bid levels.
-#[derive(FactorBase, Default, Debug, Clone)]
+#[derive(FactorBase, Default, Clone)]
 pub struct BidCumVol(pub Param);
 
 impl PlFactor for BidCumVol {
     fn try_expr(&self) -> Result<Expr> {
         match self.0.as_u32() {
-            1 => Ok(BID1VOL.expr()),
-            2 => Ok(BID1VOL.expr() + BID2VOL.expr()),
-            3 => Ok(BID1VOL.expr() + BID2VOL.expr() + BID3VOL.expr()),
-            4 => Ok(BID1VOL.expr() + BID2VOL.expr() + BID3VOL.expr() + BID4VOL.expr()),
-            5 => Ok(BID1VOL.expr()
-                + BID2VOL.expr()
-                + BID3VOL.expr()
-                + BID4VOL.expr()
-                + BID5VOL.expr()),
+            1 => Ok(BID1_VOL.expr()),
+            2 => Ok(BID1_VOL.expr() + BID2_VOL.expr()),
+            3 => Ok(BID1_VOL.expr() + BID2_VOL.expr() + BID3_VOL.expr()),
+            4 => Ok(BID1_VOL.expr() + BID2_VOL.expr() + BID3_VOL.expr() + BID4_VOL.expr()),
+            5 => Ok(BID1_VOL.expr()
+                + BID2_VOL.expr()
+                + BID3_VOL.expr()
+                + BID4_VOL.expr()
+                + BID5_VOL.expr()),
+            _ => bail!("invalid param for bid_cum_vol: {}", self.0.as_u32()),
+        }
+    }
+}
+
+#[derive(FactorBase, Default, Clone)]
+pub struct CumBidCumVol(pub Param);
+
+impl PlFactor for CumBidCumVol {
+    fn try_expr(&self) -> Result<Expr> {
+        match self.0.as_u32() {
+            1 => Ok(BID1_VOL.expr().cum_sum(false)),
+            2 => Ok(BID1_VOL.expr().cum_sum(false) + BID2_VOL.expr().cum_sum(false)),
+            3 => Ok(BID1_VOL.expr().cum_sum(false)
+                + BID2_VOL.expr().cum_sum(false)
+                + BID3_VOL.expr().cum_sum(false)),
+            4 => Ok(BID1_VOL.expr().cum_sum(false)
+                + BID2_VOL.expr().cum_sum(false)
+                + BID3_VOL.expr().cum_sum(false)
+                + BID4_VOL.expr().cum_sum(false)),
+            5 => Ok(BID1_VOL.expr().cum_sum(false)
+                + BID2_VOL.expr().cum_sum(false)
+                + BID3_VOL.expr().cum_sum(false)
+                + BID4_VOL.expr().cum_sum(false)
+                + BID5_VOL.expr().cum_sum(false)),
             _ => bail!("invalid param for bid_cum_vol: {}", self.0.as_u32()),
         }
     }
@@ -29,5 +54,6 @@ impl PlFactor for BidCumVol {
 
 #[ctor::ctor]
 fn register() {
-    register_pl_fac::<BidCumVol>().unwrap()
+    register_pl_fac::<BidCumVol>().unwrap();
+    register_pl_fac::<CumBidCumVol>().unwrap();
 }

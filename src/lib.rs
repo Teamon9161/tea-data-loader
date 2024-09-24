@@ -49,8 +49,10 @@ mod tests {
     use std::sync::Arc;
 
     use super::prelude::*;
+    #[cfg(feature = "map-fac")]
     use crate::factors::map::Typ;
     #[test]
+    #[cfg(feature = "map-fac")]
     pub fn test_base() -> Result<()> {
         let facs: Vec<Arc<dyn PlFactor>> = vec![Arc::new(Typ::default())];
         let dl = DataLoader::new("future")

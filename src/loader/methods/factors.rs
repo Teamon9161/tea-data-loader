@@ -109,7 +109,7 @@ impl DataLoader {
     ///
     /// A `Result` containing the modified `DataLoader` with the new Polars factor added, or an error.
     #[inline]
-    pub fn with_pl_fac<F: PlFactor>(self, fac: F) -> Result<Self> {
+    pub fn with_pl_fac(self, fac: impl PlFactor) -> Result<Self> {
         self.with_column(fac.try_expr()?.alias(&fac.name()))
     }
 
@@ -169,7 +169,7 @@ impl DataLoader {
     ///
     /// A `Result` containing the modified `DataLoader` with the new Tfactor added, or an error.
     #[inline]
-    pub fn with_t_fac<F: TFactor>(self, fac: F) -> Result<Self> {
+    pub fn with_t_fac(self, fac: impl TFactor) -> Result<Self> {
         let facs: Vec<Arc<dyn TFactor>> = vec![Arc::new(fac)];
         self.with_t_facs(&facs)
     }

@@ -114,7 +114,7 @@ fn get_rename_map(config: Option<&Value>) -> Option<Table> {
 /// # Returns
 ///
 /// Returns an `Option<Table>` containing the parsed rename configuration.
-fn parse_rename_config(
+pub(crate) fn parse_rename_config(
     config: &Table,
     typ: Option<&str>,
     freq: Option<&str>,

@@ -22,7 +22,7 @@ use super::super::export::*;
 /// 使用注意：
 /// - MFI可以用来确认趋势、预测反转和识别超买超卖区域
 /// - 本实现中的典型价格计算包含了开盘价，这可能与某些传统MFI实现有所不同
-#[derive(FactorBase, Default, Debug, Clone)]
+#[derive(FactorBase, Default, Clone)]
 pub struct Mfi(pub Param);
 
 impl PlFactor for Mfi {

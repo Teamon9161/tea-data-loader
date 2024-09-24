@@ -4,13 +4,12 @@ use anyhow::{bail, Result};
 use polars::lazy::dsl;
 use polars::prelude::*;
 
+use super::filters::FILTER_SYMBOL;
+use super::stop_filters::STOP_FILTER_SYMBOL;
 use super::{Strategy, STRATEGY_MAP};
-use crate::factors::{parse_pl_fac, Params};
-use crate::prelude::{GetName, PlFactor};
-use crate::strategy::Filter;
-
-// const close_filter_symbol: char = '*';
-const FILTER_SYMBOL: char = '~';
+use crate::factors::{parse_pl_fac, GetName, Params};
+use crate::prelude::PlFactor;
+use crate::strategy::{Filters, StopFilters};
 // const weight_func_symbol: &str = "@";
 
 /// Represents a strategy work unit that combines a factor, strategy, and optional filters.
@@ -19,28 +18,43 @@ pub struct StrategyWork {
     pub fac: Arc<str>,
     /// The strategy to be applied, represented as an `Arc<dyn Strategy>`.
     pub strategy: Arc<dyn Strategy>,
-    /// Optional filters to be applied to the strategy, represented as `Option<Filter>`.
-    pub filters: Option<Filter>,
+    /// Optional filters to be applied to the strategy, represented as `Option<Filters>`.
+    pub filters: Option<Filters>,
+    /// Optional stop filters to be applied to the strategy, represented as `Option<Filters>`.
+    pub stop_filters: Option<StopFilters>,
     /// Optional name for the strategy work, represented as `Option<Arc<str>>`.
     pub name: Option<Arc<str>>,
 }
 
-impl GetName for StrategyWork {
+impl std::fmt::Debug for StrategyWork {
     /// Returns the name of the strategy work.
     ///
     /// If a custom name is set, it returns that name.
     /// Otherwise, it combines the factor and strategy names, or just returns the strategy name if there's no factor.
     #[inline]
-    fn name(&self) -> String {
-        if let Some(name) = &self.name {
-            name.to_string()
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let name = if let Some(name) = &self.name {
+            format!("{}", name)
         } else if !self.is_null_fac() {
             format!("{}__{}", self.fac, self.strategy.name())
         } else {
-            self.strategy.name()
-        }
+            format!("{}", self.strategy.name())
+        };
+        let name = if let Some(filters) = &self.filters {
+            format!("{}{}{}", name, FILTER_SYMBOL, filters)
+        } else {
+            name
+        };
+        let name = if let Some(stop_filters) = &self.stop_filters {
+            format!("{}{}{}", name, STOP_FILTER_SYMBOL, stop_filters)
+        } else {
+            name
+        };
+        write!(f, "{}", name)
     }
 }
+
+impl GetName for StrategyWork {}
 
 impl StrategyWork {
     /// Checks if the factor is null (empty).
@@ -65,14 +79,28 @@ impl StrategyWork {
     #[inline]
     pub fn eval(&self, df: &DataFrame) -> Result<Series> {
         let open_filter_expr = self.filters.as_ref().map(|f| f.expr()).transpose()?;
-        let filters = open_filter_expr.map(|filters| {
-            [
-                filters[0].clone(),
+        let stop_filter_expr = self.stop_filters.as_ref().map(|f| f.expr()).transpose()?;
+        let filters = match (open_filter_expr, stop_filter_expr) {
+            (Some(open_filters), Some(stop_filters)) => Some([
+                open_filters[0].clone(),
+                stop_filters[0].clone(),
+                open_filters[1].clone(),
+                stop_filters[1].clone(),
+            ]),
+            (Some(open_filters), None) => Some([
+                open_filters[0].clone(),
                 dsl::repeat(false, dsl::len()),
-                filters[1].clone(),
+                open_filters[1].clone(),
                 dsl::repeat(false, dsl::len()),
-            ]
-        });
+            ]),
+            (None, Some(stop_filters)) => Some([
+                dsl::repeat(true, dsl::len()),
+                stop_filters[0].clone(),
+                dsl::repeat(true, dsl::len()),
+                stop_filters[1].clone(),
+            ]),
+            (None, None) => None,
+        };
         self.strategy.eval(&self.fac, df, filters)
     }
 }
@@ -92,6 +120,14 @@ impl FromStr for StrategyWork {
             } else {
                 ("", strategy_name)
             };
+        // parse stop filters
+        let stop_filters = if strategy_name.contains(STOP_FILTER_SYMBOL) {
+            let (name, stop_filters) = strategy_name.split_once(STOP_FILTER_SYMBOL).unwrap();
+            strategy_name = name;
+            Some(stop_filters.parse()?)
+        } else {
+            None
+        };
         // parse open pos filter
         let filters = if strategy_name.contains(FILTER_SYMBOL) {
             let (name, filters) = strategy_name.split_once(FILTER_SYMBOL).unwrap();
@@ -115,6 +151,7 @@ impl FromStr for StrategyWork {
                 fac: fac.into(),
                 strategy,
                 filters,
+                stop_filters,
                 name: Some(full_name.into()),
             })
         } else {

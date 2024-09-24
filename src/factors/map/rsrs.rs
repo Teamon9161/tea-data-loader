@@ -35,7 +35,7 @@ use super::super::export::*;
 /// 局限性：
 /// 1. 作为滞后指标，可能在快速变化的市场中反应不够及时
 /// 2. 需要合理选择参数N，以平衡指标的灵敏度和稳定性
-#[derive(FactorBase, Default, Debug, Clone)]
+#[derive(FactorBase, Default, Clone)]
 pub struct Rsrs(pub Param);
 
 impl PlFactor for Rsrs {

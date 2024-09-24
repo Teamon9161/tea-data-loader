@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 use std::str::FromStr;
 
 use anyhow::{bail, Result};
@@ -49,6 +49,26 @@ pub enum Param {
     None,
 }
 
+impl From<Option<i32>> for Param {
+    #[inline]
+    fn from(v: Option<i32>) -> Self {
+        match v {
+            Some(v) => Param::I32(v),
+            None => Param::None,
+        }
+    }
+}
+
+impl From<Option<f64>> for Param {
+    #[inline]
+    fn from(v: Option<f64>) -> Self {
+        match v {
+            Some(v) => Param::F64(v),
+            None => Param::None,
+        }
+    }
+}
+
 impl FromStr for Param {
     type Err = anyhow::Error;
     #[inline]
@@ -69,6 +89,13 @@ impl From<usize> for Param {
     #[inline]
     fn from(v: usize) -> Self {
         Param::I32(v as i32)
+    }
+}
+
+impl<T: Into<Param> + Copy> From<&T> for Param {
+    #[inline]
+    fn from(v: &T) -> Self {
+        (*v).into()
     }
 }
 
@@ -107,6 +134,12 @@ impl Debug for Param {
             Param::F64(v) => write!(f, "{}", v),
             Param::None => write!(f, ""),
         }
+    }
+}
+
+impl Display for Param {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
     }
 }
 
@@ -258,6 +291,13 @@ impl From<Param> for RollingCovOptions {
 pub struct Params(pub Vec<Param>);
 
 impl Debug for Params {
+    #[inline]
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl std::fmt::Display for Params {
     #[inline]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.0.fmt(f)

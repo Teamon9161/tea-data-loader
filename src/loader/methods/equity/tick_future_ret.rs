@@ -1,6 +1,6 @@
 use polars::prelude::*;
 use rayon::prelude::*;
-use tea_strategy::equity::{calc_tick_future_ret, CommissionType, SignalType, TickFutureRetKwargs};
+use tea_strategy::equity::{calc_tick_future_ret, SignalType, TickFutureRetKwargs};
 
 use crate::prelude::*;
 /// Options for calculating tick-based future returns based on strategy signals and futures market data.
@@ -9,7 +9,7 @@ use crate::prelude::*;
 /// for futures trading on a tick-by-tick basis, combining strategy signals with futures price data.
 pub struct TickFutureRetOpt<'a> {
     /// Commission rate for trades.
-    pub c_rate: f64,
+    pub c_rate: CRate,
     /// Flag indicating whether the input is a next-period signal (true) or current-period position (false).
     pub is_signal: bool,
     /// Initial cash amount for the trading strategy.
@@ -22,9 +22,7 @@ pub struct TickFutureRetOpt<'a> {
     pub contract_chg_signal: Option<&'a str>,
     /// Optional multiplier for contract size.
     pub multiplier: Option<f64>,
-    /// Type of commission calculation for the futures trades.
-    pub commission_type: CommissionType,
-    /// Type of signal used in the strategy (e.g., Absolute, Relative).
+    /// Type of signal used in the strategy (e.g., Absolute, Percent).
     pub signal_type: SignalType,
     /// Flag indicating whether to allow the strategy to blow up (i.e., go bankrupt).
     pub blowup: bool,
@@ -36,14 +34,14 @@ impl Default for TickFutureRetOpt<'_> {
     #[inline]
     fn default() -> Self {
         TickFutureRetOpt {
-            c_rate: 0.0003,
+            c_rate: Default::default(),
             is_signal: true,
             init_cash: 10_000_000,
             bid: "b1",
             ask: "a1",
             contract_chg_signal: None,
             multiplier: None,
-            commission_type: CommissionType::Percent,
+            // commission_type: CommissionType::Percent,
             signal_type: SignalType::Absolute,
             blowup: false,
             suffix: "",
@@ -75,10 +73,10 @@ impl TickFutureRetOpt<'_> {
         TickFutureRetKwargs {
             init_cash: self.init_cash,
             multiplier,
-            commission_type: self.commission_type,
+            commission_type: self.c_rate.get_type(),
             signal_type: self.signal_type,
             blowup: self.blowup,
-            c_rate: self.c_rate,
+            c_rate: self.c_rate.get_value(),
         }
     }
 }

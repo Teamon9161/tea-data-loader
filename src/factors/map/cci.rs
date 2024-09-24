@@ -24,7 +24,7 @@ use super::super::export::*;
 /// 使用注意：
 /// - CCI对于发现周期性的市场极端具有重要意义
 /// - 可以用来辨别市场趋势的强弱、超买超卖，以及可能的反转点
-#[derive(FactorBase, Default, Debug, Clone)]
+#[derive(FactorBase, Default, Clone)]
 pub struct Cci(pub Param);
 
 impl PlFactor for Cci {

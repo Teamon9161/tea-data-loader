@@ -11,7 +11,7 @@ use crate::factors::export::*;
 /// # Fields
 ///
 /// * `Param` - A parameter type that can be used to configure the factor if needed.
-#[derive(FactorBase, Default, Debug, Clone)]
+#[derive(FactorBase, Default, Clone)]
 pub struct Spread(pub Param);
 
 impl PlFactor for Spread {
@@ -20,12 +20,21 @@ impl PlFactor for Spread {
     }
 }
 
-#[derive(FactorBase, Default, Debug, Clone)]
+/// Represents the spread between the yield to maturity (YTM) of the best bid and best ask prices in the order book.
+///
+/// The YTM spread is calculated as the difference between the highest bid YTM (BID1_YTM)
+/// and the lowest ask YTM (ASK1_YTM). It is a measure of the yield differential between
+/// the best bid and ask prices.
+///
+/// # Fields
+///
+/// * `Param` - A parameter type that can be used to configure the factor if needed.
+#[derive(FactorBase, Default, Clone)]
 pub struct YtmSpread(pub Param);
 
 impl PlFactor for YtmSpread {
     fn try_expr(&self) -> Result<Expr> {
-        BID1YTM.sub(ASK1YTM).try_expr()
+        BID1_YTM.sub(ASK1_YTM).try_expr()
     }
 }
 

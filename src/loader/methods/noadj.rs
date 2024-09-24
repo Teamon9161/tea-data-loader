@@ -85,14 +85,7 @@ impl DataLoader {
                     .with_columns(&preprocess_exprs)
                     .select([cols(NOADJ_COLS).name().suffix("_noadj")]);
                 out.dfs.push(
-                    concat_lf_horizontal(
-                        [df.lazy(), df_noadj.lazy()],
-                        UnionArgs {
-                            rechunk: true,
-                            ..Default::default()
-                        },
-                    )?
-                    .into(),
+                    concat_lf_horizontal([df.lazy(), df_noadj.lazy()], Default::default())?.into(),
                 )
             } else {
                 eprintln!("no no-adjusted data found for symbol: {}", symbol);

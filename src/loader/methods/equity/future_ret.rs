@@ -1,6 +1,6 @@
 use polars::prelude::*;
 use rayon::prelude::*;
-use tea_strategy::equity::{CommissionType, FutureRetKwargs, FutureRetSpreadKwargs};
+use tea_strategy::equity::{FutureRetKwargs, FutureRetSpreadKwargs};
 
 use crate::prelude::*;
 
@@ -22,7 +22,7 @@ macro_rules! auto_cast {
 /// for futures trading, combining strategy signals with futures price data.
 pub struct FutureRetOpt<'a> {
     /// Commission rate for trades.
-    pub c_rate: f64,
+    pub c_rate: CRate,
     /// Flag indicating whether the input is a next-period signal (true) or current-period position (false).
     pub is_signal: bool,
     /// Initial cash amount for the trading strategy.
@@ -35,8 +35,6 @@ pub struct FutureRetOpt<'a> {
     pub contract_chg_signal: &'a str,
     /// Optional multiplier for contract size.
     pub multiplier: Option<f64>,
-    /// Type of commission calculation for the futures trades.
-    pub commission_type: CommissionType,
     /// Flag indicating whether to apply slippage in the return calculation.
     pub slippage_flag: bool,
     /// Suffix for output column names in the resulting DataFrame.
@@ -47,14 +45,14 @@ impl Default for FutureRetOpt<'_> {
     #[inline]
     fn default() -> Self {
         FutureRetOpt {
-            c_rate: 0.0003,
+            c_rate: Default::default(),
             is_signal: true,
             init_cash: 10_000_000,
             opening_cost: "open_noadj",
             closing_cost: "close_noadj",
             contract_chg_signal: "contract_chg_signal",
             multiplier: None,
-            commission_type: CommissionType::Percent,
+            // commission_type: CommissionType::Percent,
             slippage_flag: true,
             suffix: "",
         }
@@ -85,9 +83,9 @@ impl FutureRetOpt<'_> {
             init_cash: self.init_cash,
             leverage: 1.,
             multiplier,
-            commission_type: self.commission_type,
+            commission_type: self.c_rate.get_type(),
             blowup: false,
-            c_rate: self.c_rate,
+            c_rate: self.c_rate.get_value(),
             slippage: 0.,
         }
     }
@@ -116,9 +114,9 @@ impl FutureRetOpt<'_> {
             init_cash: self.init_cash,
             leverage: 1.,
             multiplier,
-            commission_type: self.commission_type,
+            commission_type: self.c_rate.get_type(),
             blowup: false,
-            c_rate: self.c_rate,
+            c_rate: self.c_rate.get_value(),
         }
     }
 }

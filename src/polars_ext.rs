@@ -22,6 +22,8 @@ pub trait SeriesExt {
     /// A Result containing the casted Series or an error.
     fn cast_f32(&self) -> Result<Series>;
 
+    fn protect_div(&self, other: Series) -> Result<Series>;
+
     /// Winsorizes the series using the specified method.
     ///
     /// # Arguments
@@ -135,6 +137,16 @@ pub trait SeriesExt {
     ///
     /// A new Series with the valid first non-null value.
     fn vfirst(&self) -> AnyValue<'_>;
+
+    /// Calculates the half-life of a factor series using autocorrelation.
+    ///
+    /// The half-life is defined as the lag at which the autocorrelation drops to 0.5.
+    ///
+    /// # Arguments
+    ///
+    /// * `min_periods` - The minimum number of observations required to calculate the half-life.
+    ///                   If None, defaults to half the length of the series.
+    fn half_life(&self, min_periods: Option<usize>) -> usize;
 }
 
 impl SeriesExt for Series {
@@ -163,6 +175,14 @@ impl SeriesExt for Series {
         } else {
             Ok(Series::cast(self, &DataType::Float32)?)
         }
+    }
+
+    #[inline]
+    fn protect_div(&self, other: Series) -> Result<Series> {
+        Ok(LazyFrame::default()
+            .select([self.clone().lit().protect_div(other.lit())])
+            .collect()?[0]
+            .clone())
     }
 
     fn winsorize(&self, method: WinsorizeMethod, method_params: Option<f64>) -> Result<Series> {
@@ -418,7 +438,17 @@ impl SeriesExt for Series {
             DataType::String => self.str().unwrap().vfirst().into(),
             DataType::Date => self.date().unwrap().vfirst().into(),
             DataType::Datetime(_, _) => self.datetime().unwrap().vfirst().into(),
-            _ => panic!("unsupported data type"),
+            dtype => panic!("dtype {} not supported for vfirst", dtype),
+        }
+    }
+
+    fn half_life(&self, min_periods: Option<usize>) -> usize {
+        match self.dtype() {
+            DataType::Float64 => self.f64().unwrap().half_life(min_periods),
+            DataType::Float32 => self.f32().unwrap().half_life(min_periods),
+            DataType::Int64 => self.i64().unwrap().half_life(min_periods),
+            DataType::Int32 => self.i32().unwrap().half_life(min_periods),
+            dtype => panic!("dtype {} not supported for half_life", dtype),
         }
     }
 }
@@ -517,21 +547,33 @@ pub trait ExprExt {
     /// An expression representing the binned and labeled data.
     fn cut(self, bin: Expr, labels: Expr, right: Option<bool>, add_bounds: Option<bool>) -> Expr;
 
+    /// Returns the first non-null value in a vector.
+    ///
+    /// This function is useful for obtaining the first valid observation in a series,
+    /// ignoring any null values at the beginning.
     fn vfirst(self) -> Self;
+
+    /// Calculates the half-life of a factor series using autocorrelation.
+    ///
+    /// The half-life is defined as the lag at which the autocorrelation drops to 0.5.
+    ///
+    /// # Arguments
+    ///
+    /// * `min_periods` - The minimum number of observations required to calculate the half-life.
+    ///                   If None, defaults to half the length of the series.
+    fn half_life(self, min_periods: Option<usize>) -> Self;
 }
 
 impl ExprExt for Expr {
     #[inline]
     fn imbalance(self, other: Expr) -> Self {
-        when((self.clone() + other.clone()).gt(0.lit()))
-            .then((self.clone() - other.clone()) / (self + other))
-            .otherwise(NULL.lit())
+        (self.clone() - other.clone()).protect_div(self + other)
     }
 
     #[inline]
     fn protect_div(self, other: Expr) -> Self {
-        when(other.clone().lt(0.lit()))
-            .then(self / other)
+        when(other.clone().neq(0.lit()))
+            .then(self.cast(DataType::Float64) / other)
             .otherwise(NULL.lit())
     }
 
@@ -623,6 +665,13 @@ impl ExprExt for Expr {
         self.apply(
             |s| Series::from_any_values(s.name(), &[s.vfirst()], true).map(Some),
             GetOutput::same_type(),
+        )
+    }
+
+    fn half_life(self, min_periods: Option<usize>) -> Self {
+        self.apply(
+            move |s| Ok(std::iter::once(Some(s.half_life(min_periods) as i32)).collect()),
+            GetOutput::from_type(DataType::Int32),
         )
     }
 }

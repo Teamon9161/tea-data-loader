@@ -13,7 +13,7 @@ use super::super::export::*;
 ///
 /// 参数：
 /// - Param: 用于可能的未来扩展，目前在计算中未使用
-#[derive(FactorBase, Default, Debug, Clone)]
+#[derive(FactorBase, Default, Clone)]
 pub struct Typ(pub Param);
 
 impl PlFactor for Typ {

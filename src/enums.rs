@@ -61,7 +61,7 @@ pub enum CRate {
 impl Default for CRate {
     #[inline]
     fn default() -> Self {
-        Self::Percent(0.)
+        Self::Percent(0.0003)
     }
 }
 
@@ -71,6 +71,14 @@ impl CRate {
         match self {
             CRate::Percent(_) => tea_strategy::equity::CommissionType::Percent,
             CRate::Absolute(_) => tea_strategy::equity::CommissionType::Absolute,
+        }
+    }
+
+    #[inline]
+    pub fn get_value(&self) -> f64 {
+        match self {
+            CRate::Percent(v) => *v,
+            CRate::Absolute(v) => *v,
         }
     }
 }

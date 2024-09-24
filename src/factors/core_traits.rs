@@ -9,7 +9,7 @@ use super::param::Param;
 /// This trait provides two essential methods for factors:
 /// - `fac_name`: for obtaining the factor's name
 /// - `new`: for creating a new instance of the factor
-pub trait FactorBase: Sized {
+pub trait FactorBase: std::fmt::Debug + Sized {
     /// Returns the name of the factor as an `Arc<str>`.
     fn fac_name() -> Arc<str>;
 
@@ -18,23 +18,29 @@ pub trait FactorBase: Sized {
     /// # Arguments
     ///
     /// * `param` - A value that can be converted into a `Param`.
-    fn new<P: Into<Param>>(param: P) -> Self;
+    // fn new<P: Into<Param>>(param: P) -> Self;
+    fn new(param: impl Into<Param>) -> Self;
 }
 
 /// Trait for retrieving the name of a factor.
 ///
 /// This trait provides a method to get the name of a factor as a String.
 /// It is primarily used to obtain a unique identifier for each factor.
-pub trait GetName {
+pub trait GetName: std::fmt::Debug {
     /// Returns the name of the factor.
     ///
     /// # Returns
     ///
     /// A `String` representing the name of the factor.
-    fn name(&self) -> String;
+    fn name(&self) -> String {
+        format!("{:?}", self)
+    }
 }
 
+impl<F: std::fmt::Debug + FactorBase> GetName for F {}
+
 /// Trait for factors that can be computed using Polars expressions.
+
 ///
 /// This trait is implemented by factors that can be expressed and calculated
 /// using Polars' lazy expressions. It provides methods to convert the factor
@@ -73,6 +79,25 @@ pub trait PlFactor: GetName + Send + Sync + 'static {
     }
 }
 
+impl GetName for Arc<dyn PlFactor> {
+    #[inline]
+    fn name(&self) -> String {
+        self.as_ref().name()
+    }
+}
+
+impl PlFactor for Arc<dyn PlFactor> {
+    #[inline]
+    fn try_expr(&self) -> Result<Expr> {
+        self.as_ref().try_expr()
+    }
+
+    #[inline]
+    fn pl_dyn(self) -> Arc<dyn PlFactor> {
+        self
+    }
+}
+
 /// Trait for factors that can be computed directly from a DataFrame.
 ///
 /// This trait is implemented by factors that can be calculated using the data
@@ -96,5 +121,24 @@ pub trait TFactor: GetName + Send + Sync + 'static {
         Self: Sized,
     {
         Arc::new(self)
+    }
+}
+
+impl GetName for Arc<dyn TFactor> {
+    #[inline]
+    fn name(&self) -> String {
+        self.as_ref().name()
+    }
+}
+
+impl TFactor for Arc<dyn TFactor> {
+    #[inline]
+    fn eval(&self, df: &DataFrame) -> Result<Series> {
+        self.as_ref().eval(df)
+    }
+
+    #[inline]
+    fn t_dyn(self) -> Arc<dyn TFactor> {
+        self
     }
 }

@@ -9,7 +9,7 @@ use crate::factors::export::*;
 ///
 /// # Fields
 /// * `Param` - A parameter that can be used to customize the mid-price calculation if needed.
-#[derive(FactorBase, Default, Debug, Clone)]
+#[derive(FactorBase, Default, Clone)]
 pub struct Mid(pub Param);
 
 impl PlFactor for Mid {
@@ -27,12 +27,12 @@ impl PlFactor for Mid {
 ///
 /// # Fields
 /// * `Param` - A parameter that can be used to customize the mid-price YTM calculation if needed.
-#[derive(FactorBase, Default, Debug, Clone)]
+#[derive(FactorBase, Default, Clone)]
 pub struct MidYtm(pub Param);
 
 impl PlFactor for MidYtm {
     fn try_expr(&self) -> Result<Expr> {
-        let mid_ytm = (ASK1YTM.expr() + BID1YTM.expr()) * 0.5.lit();
+        let mid_ytm = (ASK1_YTM.expr() + BID1_YTM.expr()) * 0.5.lit();
         Ok(mid_ytm)
     }
 }

@@ -33,7 +33,7 @@ impl DataLoader {
     /// - There's an issue parsing the strategies.
     /// - There's a problem calculating factors or applying strategies.
     /// - Any other data processing error occurs.
-    pub fn with_strategies<S: AsRef<str>>(self, strategies: &[S]) -> Result<Self> {
+    pub fn with_strategies(self, strategies: &[impl AsRef<str>]) -> Result<Self> {
         let schema = self.schema()?;
         let strategies = strategies.iter().filter_map(|n| {
             let n = n.as_ref();

@@ -33,7 +33,7 @@ use super::super::export::*;
 /// - 当RSI从低于30上穿30时，可能是买入信号
 /// - 当RSI从高于70下穿70时，可能是卖出信号
 /// - RSI还可以用来判断趋势强度和寻找背离
-#[derive(FactorBase, Default, Debug, Clone)]
+#[derive(FactorBase, Default, Clone)]
 pub struct Rsi(pub Param);
 
 impl PlFactor for Rsi {

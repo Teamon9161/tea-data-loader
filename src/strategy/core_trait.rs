@@ -20,7 +20,7 @@ pub trait StrategyBase: Sized {
     /// # Returns
     ///
     /// Returns a new instance of the strategy initialized with the provided parameters.
-    fn new<P: Into<Params>>(params: P) -> Self;
+    fn new(params: impl Into<Params>) -> Self;
 }
 
 /// Defines the core functionality for a strategy.

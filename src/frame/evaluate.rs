@@ -165,7 +165,7 @@ impl Frame {
             "年化标准差" => strategies.iter().map(|s| ret_df[s.as_ref()].std(1).map(|v| v * (n.sqrt()))).collect::<Float64Chunked>(),
         )?;
         result.with_column(
-            ((&result["年化收益率"] - opt.rf) / result["年化标准差"].clone())?
+            ((&result["年化收益率"] - opt.rf).protect_div(result["年化标准差"].clone()))?
                 .with_name("夏普比率"),
         )?;
         let drawdown_expr = cols(&equity_curves)

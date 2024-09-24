@@ -7,16 +7,9 @@ use smartstring::alias::String;
 use tea_strategy::tevec::prelude::*;
 
 use super::summary::Summary;
-use super::utils::{get_ts_group, stable_corr};
+use super::utils::{get_ts_group, infer_label_periods, stable_corr};
 use crate::prelude::*;
 use crate::POOL;
-
-// pub struct FacAnalyseOpt<'a> {
-//     facs: Vec<String>,
-//     labels: Vec<String>,
-//     label_periods: Vec<usize>,
-//     drop_peak: bool,
-// }
 
 pub struct FacAnalysis {
     pub dl: DataLoader,
@@ -31,12 +24,13 @@ impl DataLoader {
         self,
         facs: &[S],
         labels: &[L],
-        label_periods: &[usize],
+        // label_periods: &[usize],
         drop_peak: bool,
     ) -> Result<FacAnalysis> {
         let facs = facs.iter().map(|s| s.as_ref().into()).collect();
         let labels: Vec<String> = labels.iter().map(|s| s.as_ref().into()).collect();
-        let label_periods = label_periods.to_vec();
+        // let label_periods = label_periods.to_vec();
+        let label_periods = infer_label_periods(&labels);
         ensure!(
             label_periods.len() == labels.len(),
             "label_periods and labels must have the same length"
@@ -58,7 +52,7 @@ impl FacAnalysis {
             dl.with_column(
                 cols(&facs)
                     .fill_nan(NULL.lit())
-                    .winsorize(WinsorizeMethod::Quantile, Some(0.025)),
+                    .winsorize(WinsorizeMethod::Quantile, Some(0.01)),
             )?
         } else {
             dl
@@ -230,7 +224,7 @@ impl FacAnalysis {
                             )
                             .filter(col("group").is_not_null())?
                             .collect(true)?
-                            .align([col("group")], None)?
+                            .align([col("group"), col(daily_col)], None)?
                             .collect(true)
                     })
                 })
@@ -295,6 +289,19 @@ impl FacAnalysis {
                 .with_symbol_group_rets(symbol_group_rets)
                 .with_group_rets(group_rets);
         };
+        Ok(self)
+    }
+
+    pub fn with_half_life(mut self) -> Result<Self> {
+        let symbol_half_life = self
+            .dl
+            .clone()
+            .select([cols(&self.facs).half_life(None)])?
+            .collect(true)?;
+        let half_life = symbol_half_life
+            .dfs
+            .horizontal_agg(&self.facs, vec![AggMethod::Mean; self.facs.len()])?;
+        self.summary = self.summary.with_half_life(half_life);
         Ok(self)
     }
 }

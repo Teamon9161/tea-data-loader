@@ -10,16 +10,20 @@ use crate::factors::export::*;
 /// # Interpretation
 /// A larger slope at higher levels may indicate stronger conviction or information
 /// advantage among more patient investors.
-#[derive(FactorBase, Default, Debug, Clone)]
+#[derive(FactorBase, Default, Clone)]
 pub struct ObSlopeHigh(pub Param);
 
 impl PlFactor for ObSlopeHigh {
     fn try_expr(&self) -> Result<Expr> {
         // 暂时将level3 -> level5定义为高档位, level1 -> level2为低档位
-        let ask_slope_high =
-            ASK5.sub(ASK3).expr() / AskCumVol::new(5).sub(AskCumVol::new(3)).expr();
-        let bid_slope_high =
-            BID5.sub(BID3).expr() / BidCumVol::new(5).sub(BidCumVol::new(3)).expr();
+        let ask_slope_high = ASK5
+            .sub(ASK3)
+            .expr()
+            .protect_div(AskCumVol::new(5).sub(AskCumVol::new(3)).expr());
+        let bid_slope_high = BID5
+            .sub(BID3)
+            .expr()
+            .protect_div(BidCumVol::new(5).sub(BidCumVol::new(3)).expr());
         Ok(ask_slope_high.imbalance(-bid_slope_high))
     }
 }
@@ -33,14 +37,20 @@ impl PlFactor for ObSlopeHigh {
 /// The slope at lower levels aligns with the elasticity logic of supply and demand,
 /// where a larger slope on the buy side indicates less price sensitivity and potentially
 /// higher expected returns.
-#[derive(FactorBase, Default, Debug, Clone)]
+#[derive(FactorBase, Default, Clone)]
 pub struct ObSlopeLow(pub Param);
 
 impl PlFactor for ObSlopeLow {
     fn try_expr(&self) -> Result<Expr> {
         // 暂时将level3 -> level5定义为高档位, level1 -> level2为低档位
-        let ask_slope_low = ASK2.sub(ASK1).expr() / AskCumVol::new(2).sub(ASK1VOL).expr();
-        let bid_slope_low = BID2.sub(BID1).expr() / BidCumVol::new(2).sub(ASK1VOL).expr();
+        let ask_slope_low = ASK2
+            .sub(ASK1)
+            .expr()
+            .protect_div(AskCumVol::new(2).sub(ASK1_VOL).expr());
+        let bid_slope_low = BID2
+            .sub(BID1)
+            .expr()
+            .protect_div(BidCumVol::new(2).sub(ASK1_VOL).expr());
         Ok(ask_slope_low.imbalance(-bid_slope_low))
     }
 }
@@ -54,7 +64,7 @@ impl PlFactor for ObSlopeLow {
 /// 有优势信息，会与低档位投资者产生相反的预测效果。如买方高档斜率越大，投资者对于
 /// 更低的价格区间形成了较为一致的预期，股票的预期收益更低。反之，卖方高档斜率越大，
 /// 投资者的心理预期价格较高，股票预期收益越高。
-#[derive(FactorBase, Default, Debug, Clone)]
+#[derive(FactorBase, Default, Clone)]
 pub struct ObSlopeConvex(pub Param);
 
 impl PlFactor for ObSlopeConvex {

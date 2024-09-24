@@ -25,17 +25,26 @@ pub fn derive_factor_base(input: TokenStream) -> TokenStream {
             }
 
             #[inline]
-            fn new<P: Into<Param>>(param: P) -> Self {
+            fn new(param: impl Into<Param>) -> Self {
                 Self(param.into())
             }
         }
 
-        impl GetName for #name {
-            #[inline]
-            fn name(&self) -> String {
+        // impl GetName for #name {
+        //     #[inline]
+        //     fn name(&self) -> String {
+        //         match self.0 {
+        //             Param::None => format!("{}", &Self::fac_name()),
+        //             param => format!("{}_{:?}", &Self::fac_name(), param)
+        //         }
+        //     }
+        // }
+
+        impl ::std::fmt::Debug for #name {
+            fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
                 match self.0 {
-                    Param::None => format!("{}", &Self::fac_name()),
-                    param => format!("{}_{:?}", &Self::fac_name(), param)
+                    Param::None => write!(f, "{}", &Self::fac_name()),
+                    param => write!(f, "{}_{:?}", &Self::fac_name(), param)
                 }
             }
         }
@@ -64,18 +73,19 @@ pub fn derive_strategy_base(input: TokenStream) -> TokenStream {
             }
 
             #[inline]
-            fn new<P: Into<Params>>(params: P) -> Self {
+            fn new(params: impl Into<Params>) -> Self {
                 let params: Params = params.into();
                 Self(params.into())
             }
         }
 
-        impl GetName for #name {
-            #[inline]
-            fn name(&self) -> String {
-                format!("{}_{:?}", &Self::strategy_name(), self.0.params)
+        impl ::std::fmt::Debug for #name {
+            fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+                write!(f, "{}_{:?}", &Self::strategy_name(), self.0.params)
             }
         }
+
+        impl GetName for #name {}
     };
 
     // Convert the expanded code back into a TokenStream

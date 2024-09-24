@@ -19,7 +19,7 @@ use super::super::export::*;
 ///
 /// 使用注意：
 /// - 乖离率常用于判断市场的超买超卖状态
-#[derive(FactorBase, Default, Debug, Clone)]
+#[derive(FactorBase, Default, Clone)]
 pub struct Bias(pub Param);
 
 impl PlFactor for Bias {

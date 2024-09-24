@@ -1,3 +1,4 @@
+use std::iter::once;
 use std::ops::Index;
 
 use anyhow::Result;
@@ -5,7 +6,7 @@ use polars::prelude::*;
 use smartstring::alias::String;
 use tea_strategy::tevec::export::arrow::legacy::utils::CustomIterTools;
 
-use crate::prelude::DataLoader;
+use crate::prelude::{CRate, DataLoader};
 
 #[derive(Clone, Debug)]
 pub struct Summary {
@@ -19,6 +20,7 @@ pub struct Summary {
     pub ts_group_rets: Vec<DataFrame>, // 按一定时间计算的分组收益，最后再取平均(一般用于计算分组的资金曲线)
     pub symbol_group_rets: Vec<DataLoader>, // 每个因子在每个group的平均收益，尚未在品种间平均
     pub group_rets: Vec<DataFrame>,    // 每个group的平均收益
+    pub half_life: Option<DataFrame>,  // 每个因子的半衰期
 }
 
 #[derive(Clone, Debug)]
@@ -32,6 +34,7 @@ pub struct FacSummary {
     pub ts_group_rets: Option<DataFrame>,
     pub symbol_group_rets: Option<DataLoader>,
     pub group_rets: Option<DataFrame>,
+    pub half_life: Option<f64>, // 在不同品种间平均之后，半衰期不一定再为int
 }
 
 pub struct SummaryReport(Vec<FacSummary>);
@@ -40,6 +43,24 @@ impl<'a> Index<&'a str> for SummaryReport {
     type Output = FacSummary;
 
     fn index(&self, index: &str) -> &Self::Output {
+        let idx = self.0.iter().position(|f| &f.fac == index).unwrap();
+        &self.0[idx]
+    }
+}
+
+impl<'a> Index<&'a String> for SummaryReport {
+    type Output = FacSummary;
+
+    fn index(&self, index: &'a String) -> &Self::Output {
+        let idx = self.0.iter().position(|f| &f.fac == index).unwrap();
+        &self.0[idx]
+    }
+}
+
+impl<'a> Index<&'a std::string::String> for SummaryReport {
+    type Output = FacSummary;
+
+    fn index(&self, index: &'a std::string::String) -> &Self::Output {
         let idx = self.0.iter().position(|f| &f.fac == index).unwrap();
         &self.0[idx]
     }
@@ -65,6 +86,7 @@ impl Default for Summary {
             ts_group_rets: vec![],
             symbol_group_rets: vec![],
             group_rets: vec![],
+            half_life: None,
         }
     }
 }
@@ -92,6 +114,13 @@ impl Summary {
                 ts_group_rets: self.ts_group_rets.get(i).cloned(),
                 symbol_group_rets: self.symbol_group_rets.get(i).cloned(),
                 group_rets: self.group_rets.get(i).cloned(),
+                half_life: {
+                    if let Some(half_life) = &self.half_life {
+                        half_life.get(0).map(|s| s[i].extract::<f64>().unwrap())
+                    } else {
+                        None
+                    }
+                },
             })
             .collect::<Vec<_>>();
         SummaryReport(fac_summaries)
@@ -131,6 +160,11 @@ impl Summary {
         self.group_rets = group_rets;
         self
     }
+
+    pub fn with_half_life(mut self, half_life: DataFrame) -> Self {
+        self.half_life = Some(half_life);
+        self
+    }
 }
 
 fn concat_fac_res(dfs: &[DataFrame], facs: Series, expr: Expr) -> Result<DataFrame> {
@@ -142,6 +176,111 @@ fn concat_fac_res(dfs: &[DataFrame], facs: Series, expr: Expr) -> Result<DataFra
     Ok(concat(&dfs, Default::default())?
         .with_column(facs.lit().alias("fac"))
         .collect()?)
+}
+
+#[cfg(feature = "plotly-plot")]
+fn plot_heatmap(
+    df: &DataFrame,
+    labels: &[impl AsRef<str>],
+    title: impl AsRef<str>,
+    save_path: impl AsRef<std::path::Path>,
+    square: bool,
+) -> Result<()> {
+    use anyhow::ensure;
+    use plotly::layout::{Axis, AxisConstrain, AxisType};
+    use plotly::HeatMap;
+
+    use crate::prelude::SeriesExt;
+    let x_axis = df
+        .column("fac")
+        .unwrap()
+        .str()?
+        .into_iter()
+        .map(|s| {
+            let s = s.unwrap();
+            // 不保留因子名称，只保留因子参数
+            if s.contains('_') {
+                s.split('_').last().unwrap().into()
+            } else {
+                s.into()
+            }
+        })
+        .collect::<Vec<Arc<str>>>();
+
+    let labels = labels
+        .iter()
+        .map(|l| {
+            let l = l.as_ref();
+            if l.contains('_') {
+                l.split('_').last().unwrap().into()
+            } else {
+                l.into()
+            }
+        })
+        .collect::<Vec<Arc<str>>>();
+
+    let y_axis = labels.to_vec();
+    let data = df
+        .get_columns()
+        .iter()
+        .filter_map(|series| {
+            if series.dtype().is_numeric() {
+                let ics_per_label = series
+                    .cast_f64()
+                    .unwrap()
+                    .f64()
+                    .unwrap()
+                    .iter()
+                    .map(|v| v.unwrap_or(f64::NAN))
+                    .collect::<Vec<_>>();
+                Some(ics_per_label)
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<_>>();
+    ensure!(
+        data.len() == labels.len(),
+        "data length: {} must be equal to labels length: {}",
+        data.len(),
+        labels.len()
+    );
+    let trace = HeatMap::new(x_axis, y_axis, data).zauto(true);
+
+    let mut plot = plotly::Plot::new();
+    let (x_axis, y_axis) = if square {
+        (
+            Axis::new()
+                .title("因子参数")
+                .type_(AxisType::Category)
+                .scale_anchor("y")
+                .constrain(AxisConstrain::Domain),
+            Axis::new()
+                .title("预测窗口(tick)")
+                .type_(AxisType::Category)
+                .constrain(AxisConstrain::Domain),
+        )
+    } else {
+        (
+            Axis::new().title("因子参数").type_(AxisType::Category),
+            Axis::new()
+                .title("预测窗口(tick)")
+                .type_(AxisType::Category),
+        )
+    };
+
+    let layout = plotly::Layout::new()
+        .title(title.as_ref())
+        .x_axis(x_axis)
+        .y_axis(y_axis);
+    plot.add_trace(trace);
+    plot.set_layout(layout);
+    let save_path = save_path.as_ref();
+    if !save_path.parent().map(|p| p.exists()).unwrap_or(true) {
+        std::fs::create_dir(save_path.parent().unwrap())?;
+    }
+    plot.write_html(save_path);
+    Ok(())
 }
 
 impl SummaryReport {
@@ -170,6 +309,44 @@ impl SummaryReport {
         concat_fac_res(&self.ts_ic(), self.fac_series(), cols(self.labels()).mean())
     }
 
+    #[cfg(feature = "plotly-plot")]
+    pub fn ic_heatmap(&self, save_path: impl AsRef<std::path::Path>) -> Result<()> {
+        let first_fac_name = self[0].fac.clone();
+        let fac_name = if first_fac_name.contains('_') {
+            let mut fac_name = first_fac_name.split('_').collect::<Vec<_>>();
+            fac_name.pop().unwrap();
+            fac_name.join("_")
+        } else {
+            first_fac_name.into()
+        };
+        plot_heatmap(
+            &self.ic()?,
+            self.labels(),
+            &format!("{} IC heatmap", fac_name),
+            save_path,
+            true,
+        )
+    }
+
+    #[cfg(feature = "plotly-plot")]
+    pub fn ir_heatmap(&self, save_path: impl AsRef<std::path::Path>) -> Result<()> {
+        let first_fac_name = self[0].fac.clone();
+        let fac_name = if first_fac_name.contains('_') {
+            let mut fac_name = first_fac_name.split('_').collect::<Vec<_>>();
+            fac_name.pop().unwrap();
+            fac_name.join("_")
+        } else {
+            first_fac_name.into()
+        };
+        plot_heatmap(
+            &self.ir()?,
+            self.labels(),
+            &format!("{} IR heatmap", fac_name),
+            save_path,
+            true,
+        )
+    }
+
     pub fn ic_std(&self) -> Result<DataFrame> {
         concat_fac_res(&self.ts_ic(), self.fac_series(), cols(self.labels()).std(1))
     }
@@ -177,8 +354,10 @@ impl SummaryReport {
     pub fn ir(&self) -> Result<DataFrame> {
         let ic_df = self.ic()?;
         let ic_std_df = self.ic_std()?;
-        let ir_df = &ic_df / &ic_std_df;
-        Ok(ir_df?)
+        let ir_df = &ic_df.select(self.labels())? / &ic_std_df.select(self.labels())?;
+        let mut ir_df = ir_df?;
+        ir_df.with_column(self.fac_series())?;
+        Ok(ir_df)
     }
 
     pub fn ic_skew(&self) -> Result<DataFrame> {
@@ -218,6 +397,16 @@ impl SummaryReport {
             .map(|f| f.group_rets.clone().unwrap())
             .collect()
     }
+
+    pub fn half_life(&self) -> DataFrame {
+        let fac_series = self.fac_series();
+        let half_life: Float64Chunked = self.0.iter().map(|f| f.half_life).collect();
+        DataFrame::new(vec![
+            fac_series,
+            half_life.into_series().with_name("half_life"),
+        ])
+        .unwrap()
+    }
 }
 
 impl FacSummary {
@@ -227,10 +416,12 @@ impl FacSummary {
         if !save_path.parent().map(|p| p.exists()).unwrap_or(true) {
             std::fs::create_dir(save_path.parent().unwrap())?;
         }
+        let stem = save_path.file_stem().unwrap().to_str().unwrap();
         let df = self.group_rets.clone().unwrap();
         use plotlars::{BarPlot, Plot};
         BarPlot::builder()
             .data(&df)
+            .plot_title(stem)
             .labels("group")
             .values(label)
             .y_title(label)
@@ -238,5 +429,21 @@ impl FacSummary {
             .build()
             .write_html(save_path.to_str().unwrap());
         Ok(())
+    }
+
+    pub fn group_analyse(&self, c_rate: CRate) -> Result<usize> {
+        // 先转化为每期平均收益
+        let _df: DataFrame = self
+            .group_rets
+            .clone()
+            .unwrap()
+            .get_columns()
+            .into_iter()
+            .map(|s| {
+                let periods = super::utils::infer_label_periods(once(s.name()))[0];
+                s / periods
+            })
+            .collect();
+        todo!()
     }
 }

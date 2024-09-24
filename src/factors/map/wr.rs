@@ -26,7 +26,7 @@ use super::super::export::*;
 /// 注意：
 /// - Williams %R 与 Stochastic Oscillator（随机指标）非常相似，但计算方式略有不同
 /// - 在强势趋势市场中，指标可能长期处于超买或超卖区域
-#[derive(FactorBase, Default, Debug, Clone)]
+#[derive(FactorBase, Default, Clone)]
 pub struct Wr(pub Param);
 
 impl PlFactor for Wr {

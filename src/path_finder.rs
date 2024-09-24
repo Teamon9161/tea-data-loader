@@ -18,6 +18,30 @@ pub struct PathConfig {
     pub adjust: Adjust,
 }
 
+impl Default for PathConfig {
+    fn default() -> Self {
+        Self {
+            config: MainPathConfig::default(),
+            typ: "".to_string(),
+            freq: "".to_string(),
+            tier: Tier::None,
+            adjust: Adjust::None,
+        }
+    }
+}
+
+impl PathConfig {
+    pub fn new(typ: &str, freq: &str) -> Self {
+        use crate::configs::CONFIG;
+        Self {
+            config: CONFIG.path_finder.clone(),
+            typ: typ.to_string(),
+            freq: freq.to_string(),
+            ..Default::default()
+        }
+    }
+}
+
 /// Struct for finding and constructing file paths.
 pub(crate) struct PathFinder {
     /// The main path for data files.
@@ -139,6 +163,7 @@ impl PathFinder {
             },
             "ddb-xbond" => match self.get_freq() {
                 "tick" => self.main_path.join("tick"),
+                "trade" => self.main_path.join("bond_trade.feather"),
                 _ => bail!("Unknown freq: {} for ddb-xbond", self.get_freq()),
             },
             "ddb-future" => match self.get_freq() {

@@ -5,7 +5,7 @@ use tea_strategy::tevec::prelude::{Time, Timelike};
 
 use crate::factors::export::*;
 
-#[derive(FactorBase, Default, Debug, Clone)]
+#[derive(FactorBase, Default, Clone)]
 pub struct AtTime(pub Param);
 
 const MORNING_START_TIME: Time = Time::from_hms(9, 30, 0);

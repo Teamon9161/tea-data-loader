@@ -9,6 +9,7 @@ mod multiplier;
 mod noadj;
 mod spread;
 mod strategy;
+mod trade_data;
 
 pub use equity::{FutureRetOpt, TickFutureRetOpt};
 pub use group_by::{DataLoaderGroupBy, GroupByTimeOpt};

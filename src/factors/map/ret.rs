@@ -16,7 +16,7 @@ use super::super::export::*;
 /// 注意：
 /// - 当 n = 1 时，即计算相邻两个交易日之间的收益率
 /// - 结果以小数形式表示，例如 0.05 表示 5% 的涨幅
-#[derive(FactorBase, Default, Debug, Clone)]
+#[derive(FactorBase, Default, Clone)]
 pub struct Ret(pub Param);
 
 impl PlFactor for Ret {
@@ -44,7 +44,7 @@ impl PlFactor for Ret {
 /// 注意：
 /// - 当价格变动较小时，对数收益率近似等于普通收益率
 /// - 结果以小数形式表示，需要乘以100才能得到百分比形式
-#[derive(FactorBase, Default, Debug, Clone)]
+#[derive(FactorBase, Default, Clone)]
 pub struct LogRet(pub Param);
 
 impl PlFactor for LogRet {
