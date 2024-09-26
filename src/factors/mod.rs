@@ -1,6 +1,7 @@
 pub mod base;
 mod core_traits;
 pub(super) mod export;
+mod factor_struct;
 mod macros;
 #[cfg(feature = "map-fac")]
 pub mod map;
@@ -12,6 +13,7 @@ mod register;
 pub mod tick;
 
 pub use core_traits::{FactorBase, GetName, IntoPlFactor, PlFactor, TFactor};
+pub use factor_struct::Factor;
 pub use param::{Param, Params};
 pub use parse::{parse_pl_fac, parse_t_fac};
 #[cfg(feature = "fac-ext")]
