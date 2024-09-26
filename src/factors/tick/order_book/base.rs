@@ -43,3 +43,41 @@ pub const MID: Mid = Mid(Param::None);
 pub const MID_YTM: MidYtm = MidYtm(Param::None);
 pub const SPREAD: Spread = Spread(Param::None);
 pub const YTM_SPREAD: YtmSpread = YtmSpread(Param::None);
+
+/// Represents the ask (sell) price at a specific level in the order book.
+///
+/// The `Param` field specifies the level (1-5) of the ask price to retrieve.
+#[derive(FactorBase, Default, Clone)]
+pub struct Ask(pub Param);
+
+impl PlFactor for Ask {
+    fn try_expr(&self) -> Result<Expr> {
+        match self.0.as_usize() {
+            1 => Ok(ASK1.expr()),
+            2 => Ok(ASK2.expr()),
+            3 => Ok(ASK3.expr()),
+            4 => Ok(ASK4.expr()),
+            5 => Ok(ASK5.expr()),
+            _ => bail!("level must be 1,2,3,4,5"),
+        }
+    }
+}
+
+/// Represents the bid (buy) price at a specific level in the order book.
+///
+/// The `Param` field specifies the level (1-5) of the bid price to retrieve.
+#[derive(FactorBase, Default, Clone)]
+pub struct Bid(pub Param);
+
+impl PlFactor for Bid {
+    fn try_expr(&self) -> Result<Expr> {
+        match self.0.as_usize() {
+            1 => Ok(BID1.expr()),
+            2 => Ok(BID2.expr()),
+            3 => Ok(BID3.expr()),
+            4 => Ok(BID4.expr()),
+            5 => Ok(BID5.expr()),
+            _ => bail!("level must be 1,2,3,4,5"),
+        }
+    }
+}

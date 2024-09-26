@@ -8,7 +8,7 @@ mod obi;
 pub use obi::{CumObi, Obi};
 
 mod ob_slope;
-pub use ob_slope::ObSlope;
+pub use ob_slope::{ObSlope, ObSlopeFine};
 
 mod ob_slope_convex;
 pub use ob_slope_convex::{ObSlopeConvex, ObSlopeHigh, ObSlopeLow};

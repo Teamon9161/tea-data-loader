@@ -6,6 +6,7 @@ pub(super) use polars::lazy::dsl::{when, Expr};
 pub(super) use polars::prelude::{col, lit, DataFrame, Series, NULL};
 
 pub(super) use super::base::TradingDate;
+pub(super) use super::core_traits::IntoPlFactor;
 pub(super) use super::macros::define_base_fac;
 #[cfg(feature = "map-fac")]
 pub(super) use super::map::base::*;

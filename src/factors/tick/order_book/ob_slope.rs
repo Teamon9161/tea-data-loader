@@ -17,13 +17,13 @@ use crate::factors::export::*;
 /// # Parameters
 /// The `Param` field determines which level of the order book to use:
 /// - If `None`, it defaults to level 5.
-/// - If `Some(n)`, where n is 2 to 5, it uses the nth level of the order book.
+/// - If `Some(n)`, where n is 1 to 5, it uses the nth level of the order book.
 ///
 /// # Formula
 /// The slope is calculated as: (ask_slope + bid_slope)
 /// Where:
-/// - ask_slope = (ASKn - ASK1) / (AskCumVol(n) - ASK1VOL)
-/// - bid_slope = (BIDn - BID1) / (BidCumVol(n) - BID1VOL)
+/// - ask_slope = (ASKn - MID) / AskCumVol(n)
+/// - bid_slope = (BIDn - MID) / BidCumVol(n)
 ///
 /// Note: The bid slope is typically negative, so adding it to the ask slope
 /// effectively subtracts its absolute value.
@@ -37,44 +37,79 @@ impl PlFactor for ObSlope {
         } else {
             self.0.as_usize()
         };
-        let ask_slope = match level {
-            2 => ASK2
-                .sub(ASK1)
-                .expr()
-                .protect_div(AskCumVol::new(2).sub(ASK1_VOL).expr()),
-            3 => ASK3
-                .sub(ASK1)
-                .expr()
-                .protect_div(AskCumVol::new(3).sub(ASK1_VOL).expr()),
-            4 => ASK4
-                .sub(ASK1)
-                .expr()
-                .protect_div(AskCumVol::new(4).sub(ASK1_VOL).expr()),
-            5 => ASK5
-                .sub(ASK1)
-                .expr()
-                .protect_div(AskCumVol::new(5).sub(ASK1_VOL).expr()),
-            _ => bail!("level must be 2,3,4,5"),
+        let ask_slope = Ask::new(level).sub(MID).div(AskCumVol::new(level));
+        let bid_slope = Bid::new(level).sub(MID).div(BidCumVol::new(level));
+        // 因为bid slope为负值，所以直接加上bid slope即可
+        let expr = ask_slope.add(bid_slope);
+        // 避免量纲过小
+        expr.mul(1e9.lit().into_pl_factor()).try_expr()
+    }
+}
+
+const SLOPE_FINE_PARAM: f64 = 2. / 3.;
+
+/// Represents a refined version of the order book slope calculation.
+///
+/// This factor calculates a more detailed slope of the order book by considering
+/// multiple levels and using a weighted approach.
+///
+/// # Parameters
+/// The `Param` field determines the maximum level of the order book to use:
+/// - If `None`, it defaults to level 5.
+/// - If `Some(n)`, where n is 1 to 5, it uses levels 1 to n of the order book.
+///
+/// # Formula
+/// The slope is calculated using a weighted sum approach across multiple levels,
+/// considering both ask and bid sides. The exact formula is more complex than
+/// the basic `ObSlope` and involves cumulative volumes at each level.
+#[derive(FactorBase, Default, Clone)]
+pub struct ObSlopeFine(pub Param);
+
+impl PlFactor for ObSlopeFine {
+    fn try_expr(&self) -> Result<Expr> {
+        let max_level = if self.0.is_none() {
+            5
+        } else {
+            self.0.as_usize()
         };
-        let bid_slope = match level {
-            2 => BID2
-                .sub(BID1)
-                .expr()
-                .protect_div(BidCumVol::new(2).sub(BID1_VOL).expr()),
-            3 => BID3
-                .sub(BID1)
-                .expr()
-                .protect_div(BidCumVol::new(3).sub(BID1_VOL).expr()),
-            4 => BID4
-                .sub(BID1)
-                .expr()
-                .protect_div(BidCumVol::new(4).sub(BID1_VOL).expr()),
-            5 => BID5
-                .sub(BID1)
-                .expr()
-                .protect_div(BidCumVol::new(5).sub(BID1_VOL).expr()),
-            _ => bail!("level must be 2,3,4,5"),
-        };
+        let ask_slope = SLOPE_FINE_PARAM.lit()
+            * (1..=max_level)
+                .map(|level| {
+                    let vi = AskCumVol::new(level).expr();
+                    let vi_1 = AskCumVol::new(level - 1).expr();
+                    Ask::new(level).sub(MID).expr() * (vi.clone().pow(2) - vi_1.clone().pow(2))
+                })
+                .reduce(|a, b| a + b)
+                .unwrap()
+                .protect_div(
+                    (1..=max_level)
+                        .map(|level| {
+                            let vi = AskCumVol::new(level).expr();
+                            let vi_1 = AskCumVol::new(level - 1).expr();
+                            vi.clone().pow(3) - vi_1.clone().pow(3)
+                        })
+                        .reduce(|a, b| a + b)
+                        .unwrap(),
+                );
+        let bid_slope = SLOPE_FINE_PARAM.lit()
+            * (1..=max_level)
+                .map(|level| {
+                    let vi = BidCumVol::new(level).expr();
+                    let vi_1 = BidCumVol::new(level - 1).expr();
+                    Bid::new(level).sub(MID).expr() * (vi.clone().pow(2) - vi_1.clone().pow(2))
+                })
+                .reduce(|a, b| a + b)
+                .unwrap()
+                .protect_div(
+                    (1..=max_level)
+                        .map(|level| {
+                            let vi = BidCumVol::new(level).expr();
+                            let vi_1 = BidCumVol::new(level - 1).expr();
+                            vi.clone().pow(3) - vi_1.clone().pow(3)
+                        })
+                        .reduce(|a, b| a + b)
+                        .unwrap(),
+                );
         // 因为bid slope为负值，所以直接加上bid slope即可
         let expr = ask_slope + bid_slope;
         // 避免量纲过小
@@ -84,5 +119,6 @@ impl PlFactor for ObSlope {
 
 #[ctor::ctor]
 fn register() {
-    register_pl_fac::<ObSlope>().unwrap()
+    register_pl_fac::<ObSlope>().unwrap();
+    register_pl_fac::<ObSlopeFine>().unwrap();
 }

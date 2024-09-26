@@ -1,4 +1,3 @@
-use anyhow::ensure;
 use polars::prelude::*;
 
 use crate::factors::export::*;
@@ -56,7 +55,10 @@ pub struct CumObOfi(pub Param);
 impl PlFactor for CumObOfi {
     fn try_expr(&self) -> Result<Expr> {
         let (of_buy, of_sell) = get_ob_of_buy_sell();
-        Ok(of_buy.cum_sum(false).imbalance(of_sell.cum_sum(false)))
+        Ok(of_buy
+            .cum_sum(false)
+            .forward_fill(None)
+            .imbalance(of_sell.cum_sum(false).forward_fill(None)))
     }
 }
 

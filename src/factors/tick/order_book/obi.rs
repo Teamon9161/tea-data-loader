@@ -57,7 +57,10 @@ impl PlFactor for CumObi {
         };
         let bid_cum_vol = CumBidCumVol::new(level).try_expr()?;
         let ask_cum_vol = CumAskCumVol::new(level).try_expr()?;
-        Ok(bid_cum_vol.imbalance(ask_cum_vol))
+        Ok(bid_cum_vol
+            .imbalance(ask_cum_vol)
+            .ts_zscore(self.0.as_usize(), None)
+            .over([col(&TradingDate::fac_name())]))
     }
 }
 

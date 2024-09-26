@@ -1,4 +1,3 @@
-use std::iter::once;
 use std::ops::Index;
 
 use anyhow::Result;
@@ -6,7 +5,7 @@ use polars::prelude::*;
 use smartstring::alias::String;
 use tea_strategy::tevec::export::arrow::legacy::utils::CustomIterTools;
 
-use crate::prelude::{CRate, DataLoader};
+use crate::prelude::DataLoader;
 
 #[derive(Clone, Debug)]
 pub struct Summary {
@@ -429,21 +428,5 @@ impl FacSummary {
             .build()
             .write_html(save_path.to_str().unwrap());
         Ok(())
-    }
-
-    pub fn group_analyse(&self, c_rate: CRate) -> Result<usize> {
-        // 先转化为每期平均收益
-        let _df: DataFrame = self
-            .group_rets
-            .clone()
-            .unwrap()
-            .get_columns()
-            .into_iter()
-            .map(|s| {
-                let periods = super::utils::infer_label_periods(once(s.name()))[0];
-                s / periods
-            })
-            .collect();
-        todo!()
     }
 }

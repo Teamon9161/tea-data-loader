@@ -156,7 +156,7 @@ impl DataLoader {
         out.dfs = self
             .into_iter()
             .map(|(symbol, df)| {
-                df.join(
+                let df = df.join(
                     trade_df
                         .clone()
                         .filter(col("symbol").eq(symbol.lit()))?
@@ -172,6 +172,29 @@ impl DataLoader {
                         }),
                         ..Default::default()
                     },
+                )?;
+                // 对于同一笔交易，保证只拼到第一个盘口
+                let trade_columns = [
+                    ORDER_TIME.name(),
+                    ORDER_AMT.name(),
+                    ORDER_PRICE.name(),
+                    ORDER_YTM.name(),
+                ];
+                let ot = col(&ORDER_TIME.name());
+                let duplicate_cond = ot
+                    .clone()
+                    .eq(ot.clone().shift(1.lit()))
+                    .and(ot.is_not_null());
+                df.with_columns(
+                    trade_columns
+                        .into_iter()
+                        .map(|f| {
+                            when(duplicate_cond.clone())
+                                .then(NULL.lit())
+                                .otherwise(col(&f))
+                                .alias(&f)
+                        })
+                        .collect::<Vec<_>>(),
                 )?
                 .with_column(get_is_buy_expr())
             })

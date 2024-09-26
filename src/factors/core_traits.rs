@@ -98,6 +98,28 @@ impl PlFactor for Arc<dyn PlFactor> {
     }
 }
 
+#[derive(Clone)]
+pub struct PlExprFactor(pub Expr);
+
+impl std::fmt::Debug for PlExprFactor {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "PlExprFactor({})",
+            self.0.clone().meta().output_name().unwrap().to_string()
+        )
+    }
+}
+
+impl GetName for PlExprFactor {}
+
+impl PlFactor for PlExprFactor {
+    #[inline]
+    fn try_expr(&self) -> Result<Expr> {
+        Ok(self.0.clone())
+    }
+}
+
 /// Trait for factors that can be computed directly from a DataFrame.
 ///
 /// This trait is implemented by factors that can be calculated using the data
@@ -140,5 +162,23 @@ impl TFactor for Arc<dyn TFactor> {
     #[inline]
     fn t_dyn(self) -> Arc<dyn TFactor> {
         self
+    }
+}
+
+pub trait IntoPlFactor {
+    fn into_pl_factor(self) -> impl PlFactor;
+}
+
+impl<F: PlFactor> IntoPlFactor for F {
+    #[inline]
+    fn into_pl_factor(self) -> impl PlFactor {
+        self
+    }
+}
+
+impl IntoPlFactor for Expr {
+    #[inline]
+    fn into_pl_factor(self) -> impl PlFactor {
+        PlExprFactor(self)
     }
 }

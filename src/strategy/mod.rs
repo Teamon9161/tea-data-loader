@@ -5,7 +5,7 @@ mod signals;
 pub mod stop_filters;
 mod strategy_work;
 
-pub use core_trait::{Strategy, StrategyBase};
+pub use core_trait::{GetStrategyParamName, Strategy, StrategyBase};
 pub use filters::{Filter, Filters};
 pub use register::{register_strategy, STRATEGY_MAP};
 pub use signals::*;

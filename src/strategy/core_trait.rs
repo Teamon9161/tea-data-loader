@@ -5,7 +5,7 @@ use crate::prelude::{GetName, Params};
 /// Defines the base structure for a strategy.
 ///
 /// This trait is essential for all strategies, providing methods for naming and creation.
-pub trait StrategyBase: Sized {
+pub trait StrategyBase: From<Params> + GetStrategyParamName + Sized {
     /// Returns the name of the strategy.
     ///
     /// This method should return a unique identifier for the strategy.
@@ -20,7 +20,11 @@ pub trait StrategyBase: Sized {
     /// # Returns
     ///
     /// Returns a new instance of the strategy initialized with the provided parameters.
-    fn new(params: impl Into<Params>) -> Self;
+    #[inline]
+    fn new(params: impl Into<Params>) -> Self {
+        let params: Params = params.into();
+        params.into()
+    }
 }
 
 /// Defines the core functionality for a strategy.
@@ -39,7 +43,8 @@ pub trait Strategy: GetName + Send + Sync + 'static {
     /// # Returns
     ///
     /// A `Result` containing the evaluated Series or an error.
-    fn eval_to_fac(&self, _fac: &Series, _filters: Option<DataFrame>) -> Result<Series> {
+    #[allow(unused_variables)]
+    fn eval_to_fac(&self, fac: &Series, filters: Option<DataFrame>) -> Result<Series> {
         bail!("eval_to_fac is not implemented for {}", self.name())
     }
 
@@ -79,4 +84,8 @@ pub trait Strategy: GetName + Send + Sync + 'static {
             self.eval_to_fac(&fac, None)
         }
     }
+}
+
+pub trait GetStrategyParamName {
+    fn get_param_name(&self) -> Arc<str>;
 }

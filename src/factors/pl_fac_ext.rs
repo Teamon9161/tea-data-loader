@@ -95,6 +95,7 @@ pub enum PlExtMethod {
     Sub(Arc<dyn PlFactor>),
     Mul(Arc<dyn PlFactor>),
     Div(Arc<dyn PlFactor>),
+    Pow(Arc<dyn PlFactor>),
 }
 
 impl PlExtMethod {
@@ -118,6 +119,7 @@ impl PlExtMethod {
             PlExtMethod::Sub(fac) => format!("sub_{}", fac.name()).into(),
             PlExtMethod::Mul(fac) => format!("mul_{}", fac.name()).into(),
             PlExtMethod::Div(fac) => format!("div_{}", fac.name()).into(),
+            PlExtMethod::Pow(fac) => format!("pow_{}", fac.name()).into(),
         }
     }
 }
@@ -238,6 +240,11 @@ pub trait PlFactorExt: PlFactor + Sized {
         PlExtFactor::new(self, PlExtMethod::Lag, param, func)
     }
 
+    /// alias for `lag`
+    fn shift(self, p: impl Into<Param>) -> impl PlFactor {
+        self.lag(p)
+    }
+
     /// Calculates the efficiency ratio of the factor.
     fn efficiency(self, p: impl Into<Param>) -> impl PlFactor {
         let param: Param = p.into();
@@ -290,7 +297,7 @@ pub trait PlFactorExt: PlFactor + Sized {
         let other = Arc::new(other);
         let other_expr = other.expr();
 
-        let func = move |expr: Expr| Ok(expr.clone() + other_expr.clone());
+        let func = move |expr: Expr| Ok(expr + other_expr.clone());
         PlExtFactor::new(self, PlExtMethod::Add(other), Param::None, func)
     }
 
@@ -299,7 +306,7 @@ pub trait PlFactorExt: PlFactor + Sized {
         let other = Arc::new(other);
         let other_expr = other.expr();
 
-        let func = move |expr: Expr| Ok(expr.clone() - other_expr.clone());
+        let func = move |expr: Expr| Ok(expr - other_expr.clone());
         PlExtFactor::new(self, PlExtMethod::Sub(other), Param::None, func)
     }
 
@@ -308,7 +315,7 @@ pub trait PlFactorExt: PlFactor + Sized {
         let other = Arc::new(other);
         let other_expr = other.expr();
 
-        let func = move |expr: Expr| Ok(expr.clone() * other_expr.clone());
+        let func = move |expr: Expr| Ok(expr * other_expr.clone());
         PlExtFactor::new(self, PlExtMethod::Mul(other), Param::None, func)
     }
 
@@ -317,9 +324,29 @@ pub trait PlFactorExt: PlFactor + Sized {
         let other = Arc::new(other);
         let other_expr = other.expr();
 
-        let func = move |expr: Expr| Ok(expr.clone().protect_div(other_expr.clone()));
+        let func = move |expr: Expr| Ok(expr.protect_div(other_expr.clone()));
 
         PlExtFactor::new(self, PlExtMethod::Div(other), Param::None, func)
+    }
+
+    /// Raises the factor to the power of another factor.
+    ///
+    /// This method creates a new factor that represents the current factor raised to the power of the provided exponent factor.
+    ///
+    /// # Arguments
+    ///
+    /// * `exponent` - The factor to use as the exponent.
+    ///
+    /// # Returns
+    ///
+    /// A new `PlFactor` representing the result of raising this factor to the power of the exponent factor.
+    fn pow(self, exponent: impl PlFactor) -> impl PlFactor {
+        let exponent = Arc::new(exponent);
+        let exponent_expr = exponent.expr();
+
+        let func = move |expr: Expr| Ok(expr.pow(exponent_expr.clone()));
+
+        PlExtFactor::new(self, PlExtMethod::Pow(exponent), Param::None, func)
     }
 }
 

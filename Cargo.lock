@@ -2186,9 +2186,9 @@ checksum = "c1bbb9f3c5c463a01705937a24fdabc5047929ac764b2d5b9cf681c1f5041ed5"
 
 [[package]]
 name = "tea-agg"
-version = "0.4.3"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3fdcd374c0a7f1083fa356561e3a9d7621b89ba511d04653cd3937d7c591dc52"
+checksum = "65aa84cad218b0d0497471cdbe9a9a80dfa66bc94c4453110eb08ac62a1ed4b6"
 dependencies = [
  "tea-core",
 ]
@@ -2207,9 +2207,9 @@ dependencies = [
 
 [[package]]
 name = "tea-core"
-version = "0.4.3"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "71ee961f7003c2bc71f9ccf8c2a92da44d7848c26b1b1c70a5707a2c4cd1ef89"
+checksum = "f329831daee19ad06eff7ab5901da2ea66f5b424123a6ffb469cb85cf00c13d7"
 dependencies = [
  "num-traits",
  "serde",
@@ -2247,9 +2247,9 @@ dependencies = [
 
 [[package]]
 name = "tea-deps"
-version = "0.4.3"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d8f9e8b523868e1722e4e603e9aadeabd7d909cd23059a941d810a072c51b1c"
+checksum = "eb4dac2648752f93beb3ff1d0e81a09535d87daed4bcb62f2fe3ffd2e6483719"
 dependencies = [
  "chrono",
  "polars",
@@ -2257,9 +2257,9 @@ dependencies = [
 
 [[package]]
 name = "tea-dtype"
-version = "0.4.3"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4df24a49c61bfdeef9a03f85674fd77da5fc2738b717571aef096cab185e7f4f"
+checksum = "febe50aae83ed2aea81fc3ae5a783cb6aa0869a63f03bf8194d16b9188c23906"
 dependencies = [
  "num-traits",
  "tea-deps",
@@ -2268,19 +2268,19 @@ dependencies = [
 
 [[package]]
 name = "tea-error"
-version = "0.4.3"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e5fe36a293f9edbc85f67c2803b602bb1849c6d9493c7c895bd6de8081ff0cbb"
+checksum = "ebfcbc2dc2190df8de74052b4201c6d2f4c1b584734248c325948d7863133c65"
 dependencies = [
- "anyhow",
+ "tea-deps",
  "thiserror",
 ]
 
 [[package]]
 name = "tea-macros"
-version = "0.4.3"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a59dd1cd8bde988778b2228abe1ea7f3d7788ad75e859e43b0494911fccb480e"
+checksum = "3e6e8aa5d1f111ba836e4e6342681643244f9d764029048f1ea07fbc16ca64b4"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2289,11 +2289,10 @@ dependencies = [
 
 [[package]]
 name = "tea-map"
-version = "0.4.3"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd3cd6894fbe629edbdd912f4e9f6f9151419c1cd8796f835833af715c96e2c3"
+checksum = "15e2c50f5d1b3cf22391d677f902f1b8e025188c4d950ec9e7b6c30a8643fef4"
 dependencies = [
- "anyhow",
  "itertools",
  "num-traits",
  "tea-core",
@@ -2301,9 +2300,9 @@ dependencies = [
 
 [[package]]
 name = "tea-rolling"
-version = "0.4.3"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e1e972dda49f22461cca48c1734d0648a2fc73a4d3b46e16480504318548c896"
+checksum = "49583d077e491ec910b8875b3f3f00c5e27b8a0e6249cab01aaa9dcad55cf4a0"
 dependencies = [
  "num-traits",
  "tea-core",
@@ -2312,9 +2311,9 @@ dependencies = [
 
 [[package]]
 name = "tea-time"
-version = "0.4.3"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b3220f43f4881bbe0cc871367231101d735c0af877c95778e9801a712fd8a37f"
+checksum = "f0d2726ffc4d5761ecb829a6664d17675ac5dc78e4e2743d97739e43c12d2582"
 dependencies = [
  "chrono",
  "serde",
@@ -2326,20 +2325,19 @@ dependencies = [
 [[package]]
 name = "tea_strategy"
 version = "0.1.0"
-source = "git+https://github.com/Teamon9161/tea_strategy.git?branch=master#4bd4e512b0d7945a2591ce9099c6c26e1ff43dfa"
+source = "git+https://github.com/Teamon9161/tea_strategy.git?branch=master#3f6bd0a16e030b3cf18758f21454c8a21e4fa65b"
 dependencies = [
  "derive_more",
  "itertools",
- "polars",
  "serde",
  "tevec",
 ]
 
 [[package]]
 name = "tevec"
-version = "0.4.3"
+version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "30905a827c762fb8f8ec4203b223a8768d950778ed0a52348479a2e1a04c99ef"
+checksum = "44c9ae99ed769cb61fe01f0de118d2aaf6e1c3cd6a38b64ad1835f8610e10935"
 dependencies = [
  "derive_more",
  "tea-agg",

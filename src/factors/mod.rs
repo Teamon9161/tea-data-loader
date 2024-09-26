@@ -11,7 +11,7 @@ mod pl_fac_ext;
 mod register;
 pub mod tick;
 
-pub use core_traits::{FactorBase, GetName, PlFactor, TFactor};
+pub use core_traits::{FactorBase, GetName, IntoPlFactor, PlFactor, TFactor};
 pub use param::{Param, Params};
 pub use parse::{parse_pl_fac, parse_t_fac};
 #[cfg(feature = "fac-ext")]

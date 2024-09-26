@@ -1,3 +1,4 @@
+use anyhow::{bail, Result};
 use polars::lazy::dsl::{Expr, GetOutput};
 use polars::prelude::{DataType, *};
 
@@ -674,4 +675,8 @@ impl ExprExt for Expr {
             GetOutput::from_type(DataType::Int32),
         )
     }
+}
+
+pub fn where_(cond: impl Into<Expr>, then: impl Into<Expr>, otherwise: impl Into<Expr>) -> Expr {
+    when(cond).then(then).otherwise(otherwise)
 }

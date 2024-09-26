@@ -10,8 +10,13 @@ impl PlFactor for BuyObChgSpeed {
         let p_diff = BID1.expr().diff(1, Default::default());
         let time_diff = crate::factors::base::TIME
             .expr()
-            .diff(1, Default::default());
-        Ok(p_diff.protect_div(time_diff.to_physical()))
+            .diff(1, Default::default())
+            .to_physical()
+            / 1_000_000_000.lit();
+        let fac = when(time_diff.clone().lt_eq(30 * 60))
+            .then(p_diff.protect_div(time_diff))
+            .otherwise(lit(NULL));
+        Ok(fac)
     }
 }
 

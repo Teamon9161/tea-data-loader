@@ -85,11 +85,15 @@ impl PlFactor for CumOfi {
     fn try_expr(&self) -> Result<Expr> {
         let is_buy = IS_BUY.expr();
         let buy_vol = (ORDER_AMT.expr() * (when(is_buy.clone()).then(1.lit()).otherwise(0.lit())))
-            .cum_sum(false);
-        let sell_vol =
-            (ORDER_AMT.expr() * when(is_buy.not()).then(1.lit()).otherwise(0.lit())).cum_sum(false);
+            .cum_sum(false)
+            .forward_fill(None);
+        let sell_vol = (ORDER_AMT.expr() * when(is_buy.not()).then(1.lit()).otherwise(0.lit()))
+            .cum_sum(false)
+            .forward_fill(None);
         let ofi = buy_vol.clone().protect_div(buy_vol.abs() + sell_vol.abs());
-        Ok(ofi)
+        Ok(ofi
+            .ts_zscore(self.0.as_usize(), Some(4))
+            .over([col(&TradingDate::fac_name())]))
     }
 }
 

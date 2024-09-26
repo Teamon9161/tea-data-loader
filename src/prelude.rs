@@ -13,5 +13,7 @@ pub use super::factors::{PlExtFactor, PlFactorExt};
 pub use super::frame::PlotOpt;
 pub use super::frame::{EvaluateOpt, Frame, Frames, IntoFrame};
 pub use super::loader::*;
-pub use super::polars_ext::{ExprExt, SeriesExt};
-pub use super::strategy::{register_strategy, Strategy, StrategyBase, StrategyWork, STRATEGY_MAP};
+pub use super::polars_ext::{where_, ExprExt, SeriesExt};
+pub use super::strategy::{
+    register_strategy, GetStrategyParamName, Strategy, StrategyBase, StrategyWork, STRATEGY_MAP,
+};

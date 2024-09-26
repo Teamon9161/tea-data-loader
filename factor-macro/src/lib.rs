@@ -30,16 +30,6 @@ pub fn derive_factor_base(input: TokenStream) -> TokenStream {
             }
         }
 
-        // impl GetName for #name {
-        //     #[inline]
-        //     fn name(&self) -> String {
-        //         match self.0 {
-        //             Param::None => format!("{}", &Self::fac_name()),
-        //             param => format!("{}_{:?}", &Self::fac_name(), param)
-        //         }
-        //     }
-        // }
-
         impl ::std::fmt::Debug for #name {
             fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
                 match self.0 {
@@ -71,17 +61,11 @@ pub fn derive_strategy_base(input: TokenStream) -> TokenStream {
             fn strategy_name() -> ::std::sync::Arc<str> {
                 #snake_name.into()
             }
-
-            #[inline]
-            fn new(params: impl Into<Params>) -> Self {
-                let params: Params = params.into();
-                Self(params.into())
-            }
         }
 
         impl ::std::fmt::Debug for #name {
             fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-                write!(f, "{}_{:?}", &Self::strategy_name(), self.0.params)
+                write!(f, "{}_{:?}", &Self::strategy_name(), self.get_param_name())
             }
         }
 

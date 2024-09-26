@@ -13,6 +13,7 @@ pub struct AskCumVol(pub Param);
 impl PlFactor for AskCumVol {
     fn try_expr(&self) -> Result<Expr> {
         match self.0.as_u32() {
+            0 => Ok(0.lit()),
             1 => Ok(ASK1_VOL.expr()),
             2 => Ok(ASK1_VOL.expr() + ASK2_VOL.expr()),
             3 => Ok(ASK1_VOL.expr() + ASK2_VOL.expr() + ASK3_VOL.expr()),
@@ -28,27 +29,15 @@ impl PlFactor for AskCumVol {
 }
 
 #[derive(FactorBase, Default, Clone)]
+/// 注意尚未over trading_date进行分组
 pub struct CumAskCumVol(pub Param);
 
 impl PlFactor for CumAskCumVol {
     fn try_expr(&self) -> Result<Expr> {
-        match self.0.as_u32() {
-            1 => Ok(ASK1_VOL.expr().cum_sum(false)),
-            2 => Ok(ASK1_VOL.expr().cum_sum(false) + ASK2_VOL.expr().cum_sum(false)),
-            3 => Ok(ASK1_VOL.expr().cum_sum(false)
-                + ASK2_VOL.expr().cum_sum(false)
-                + ASK3_VOL.expr().cum_sum(false)),
-            4 => Ok(ASK1_VOL.expr().cum_sum(false)
-                + ASK2_VOL.expr().cum_sum(false)
-                + ASK3_VOL.expr().cum_sum(false)
-                + ASK4_VOL.expr().cum_sum(false)),
-            5 => Ok(ASK1_VOL.expr().cum_sum(false)
-                + ASK2_VOL.expr().cum_sum(false)
-                + ASK3_VOL.expr().cum_sum(false)
-                + ASK4_VOL.expr().cum_sum(false)
-                + ASK5_VOL.expr().cum_sum(false)),
-            _ => bail!("invalid param for ask_cum_vol: {}", self.0.as_u32()),
-        }
+        Ok(AskCumVol::new(self.0)
+            .try_expr()?
+            .cum_sum(false)
+            .forward_fill(None))
     }
 }
 

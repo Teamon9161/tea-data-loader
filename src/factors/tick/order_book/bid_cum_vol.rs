@@ -13,6 +13,7 @@ pub struct BidCumVol(pub Param);
 impl PlFactor for BidCumVol {
     fn try_expr(&self) -> Result<Expr> {
         match self.0.as_u32() {
+            0 => Ok(0.lit()),
             1 => Ok(BID1_VOL.expr()),
             2 => Ok(BID1_VOL.expr() + BID2_VOL.expr()),
             3 => Ok(BID1_VOL.expr() + BID2_VOL.expr() + BID3_VOL.expr()),
@@ -28,27 +29,15 @@ impl PlFactor for BidCumVol {
 }
 
 #[derive(FactorBase, Default, Clone)]
+/// 注意尚未over trading_date进行分组
 pub struct CumBidCumVol(pub Param);
 
 impl PlFactor for CumBidCumVol {
     fn try_expr(&self) -> Result<Expr> {
-        match self.0.as_u32() {
-            1 => Ok(BID1_VOL.expr().cum_sum(false)),
-            2 => Ok(BID1_VOL.expr().cum_sum(false) + BID2_VOL.expr().cum_sum(false)),
-            3 => Ok(BID1_VOL.expr().cum_sum(false)
-                + BID2_VOL.expr().cum_sum(false)
-                + BID3_VOL.expr().cum_sum(false)),
-            4 => Ok(BID1_VOL.expr().cum_sum(false)
-                + BID2_VOL.expr().cum_sum(false)
-                + BID3_VOL.expr().cum_sum(false)
-                + BID4_VOL.expr().cum_sum(false)),
-            5 => Ok(BID1_VOL.expr().cum_sum(false)
-                + BID2_VOL.expr().cum_sum(false)
-                + BID3_VOL.expr().cum_sum(false)
-                + BID4_VOL.expr().cum_sum(false)
-                + BID5_VOL.expr().cum_sum(false)),
-            _ => bail!("invalid param for bid_cum_vol: {}", self.0.as_u32()),
-        }
+        Ok(BidCumVol::new(self.0)
+            .try_expr()?
+            .cum_sum(false)
+            .forward_fill(None))
     }
 }
 
