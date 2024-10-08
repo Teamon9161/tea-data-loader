@@ -9,24 +9,14 @@ use crate::factors::export::*;
 /// over the given time window.
 ///
 /// The `Param` field represents the number of periods to consider for the VWAP calculation.
-#[derive(FactorBase, Default, Clone)]
-pub struct Vwap(pub Param);
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
+pub struct Vwap(pub usize);
 
 impl PlFactor for Vwap {
     fn try_expr(&self) -> Result<Expr> {
-        let n = self.0.as_usize();
-        let vwap = (ORDER_PRICE.expr() * ORDER_AMT.expr())
-            .rolling_sum(RollingOptionsFixedWindow {
-                window_size: n,
-                min_periods: 1,
-                ..Default::default()
-            })
-            .protect_div(ORDER_AMT.expr().rolling_sum(RollingOptionsFixedWindow {
-                window_size: n,
-                min_periods: 1,
-                ..Default::default()
-            }));
-        Ok(vwap)
+        let n = self.0;
+        let vwap = (ORDER_PRICE * ORDER_AMT).sum_opt(n, 1) / (ORDER_AMT.sum_opt(n, 1));
+        vwap.try_expr()
     }
 }
 

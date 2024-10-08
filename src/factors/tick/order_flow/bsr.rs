@@ -8,31 +8,16 @@ use crate::factors::export::*;
 /// It provides insight into the buying and selling pressure in the market.
 ///
 /// The BSR is calculated as buy_count / (buy_count + sell_count).
-#[derive(FactorBase, Default, Clone)]
-pub struct Bsr(pub Param);
+#[derive(FactorBase, FromParam, Default, Clone)]
+pub struct Bsr(pub usize);
 
 impl PlFactor for Bsr {
     fn try_expr(&self) -> Result<Expr> {
-        let n = self.0.as_usize();
-        let is_buy = IS_BUY.expr();
-        let buy_count = when(is_buy.clone())
-            .then(1.lit())
-            .otherwise(0.lit())
-            .rolling_sum(RollingOptionsFixedWindow {
-                window_size: n,
-                min_periods: 1,
-                ..Default::default()
-            });
-        let sell_count = when(is_buy.not())
-            .then(1.lit())
-            .otherwise(0.lit())
-            .rolling_sum(RollingOptionsFixedWindow {
-                window_size: n,
-                min_periods: 1,
-                ..Default::default()
-            });
-        let bsr = buy_count.clone().protect_div(buy_count + sell_count);
-        Ok(bsr)
+        let n = self.0;
+        let buy_count = iif(IS_BUY, 1, 0).sum_opt(n, 1);
+        let sell_count = iif(!IS_BUY, 1, 0).sum_opt(n, 1);
+        let bsr = buy_count / (buy_count + sell_count);
+        bsr.try_expr()
     }
 }
 

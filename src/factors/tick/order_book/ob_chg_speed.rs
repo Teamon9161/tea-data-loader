@@ -1,35 +1,43 @@
 use polars::prelude::*;
 
+use crate::factors::base::TIME;
 use crate::factors::export::*;
 
-#[derive(FactorBase, Default, Clone)]
-pub struct BuyObChgSpeed(pub Param);
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
+pub struct BuyObChgSpeed;
+
+const NANOS_PER_SEC: i64 = 1_000_000_000;
+
+const SEC_PER_MIN: i64 = 60;
 
 impl PlFactor for BuyObChgSpeed {
     fn try_expr(&self) -> Result<Expr> {
-        let p_diff = BID1.expr().diff(1, Default::default());
-        let time_diff = crate::factors::base::TIME
-            .expr()
-            .diff(1, Default::default())
-            .to_physical()
-            / 1_000_000_000.lit();
-        let fac = when(time_diff.clone().lt_eq(30 * 60))
-            .then(p_diff.protect_div(time_diff))
-            .otherwise(lit(NULL));
-        Ok(fac)
+        let p_diff = BID1.diff(1);
+        let time_diff: ExprFactor =
+            (TIME.diff(1).expr().to_physical() / NANOS_PER_SEC.lit()).into();
+        let fac = iif(
+            time_diff.clone().lt_eq(30 * SEC_PER_MIN),
+            p_diff / time_diff,
+            NONE,
+        );
+        fac.try_expr()
     }
 }
 
-#[derive(FactorBase, Default, Clone)]
-pub struct SellObChgSpeed(pub Param);
+#[derive(FactorBase, FromParam, Default, Clone)]
+pub struct SellObChgSpeed;
 
 impl PlFactor for SellObChgSpeed {
     fn try_expr(&self) -> Result<Expr> {
-        let p_diff = ASK1.expr().diff(1, Default::default());
-        let time_diff = crate::factors::base::TIME
-            .expr()
-            .diff(1, Default::default());
-        Ok(p_diff.protect_div(time_diff.to_physical()))
+        let p_diff = ASK1.diff(1);
+        let time_diff: ExprFactor =
+            (TIME.diff(1).expr().to_physical() / NANOS_PER_SEC.lit()).into();
+        let fac = iif(
+            time_diff.clone().lt_eq(30 * SEC_PER_MIN),
+            p_diff / time_diff,
+            NONE,
+        );
+        fac.try_expr()
     }
 }
 

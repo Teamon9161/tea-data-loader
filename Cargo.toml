@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-default = ["io", "fac-analyse", "tick-fac", "plotlars-plot"]
+default = ["io", "fac-analyse", "tick-fac", "tick-future-fac", "plotlars-plot"]
 
 serde = ["polars/serde", "polars/serde-lazy", "tea_strategy/serde"]
 serde_par = []
@@ -23,6 +23,7 @@ fac-ext = []
 fac-analyse = []                                           # 基础因子扩展方法
 map-fac = ["fac-ext"]
 tick-fac = ["order-book-fac", "order-flow-fac", "fac-ext"]
+tick-future-fac = ["fac-ext"]
 order-book-fac = ["fac-ext"]
 order-flow-fac = ["fac-ext"]
 

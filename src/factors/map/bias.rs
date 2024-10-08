@@ -19,16 +19,14 @@ use super::super::export::*;
 ///
 /// 使用注意：
 /// - 乖离率常用于判断市场的超买超卖状态
-#[derive(FactorBase, Default, Clone)]
-pub struct Bias(pub Param);
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
+pub struct Bias(pub usize);
 
 impl PlFactor for Bias {
     #[inline]
     fn try_expr(&self) -> Result<Expr> {
-        let close = CLOSE.try_expr()?;
-        let ma = close.clone().rolling_mean(self.0.into());
-        let bias = close / ma - lit(1.);
-        Ok(bias)
+        let bias = CLOSE / CLOSE.mean(self.0) - 1.;
+        bias.try_expr()
     }
 }
 

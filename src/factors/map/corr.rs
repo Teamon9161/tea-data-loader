@@ -16,17 +16,13 @@ use super::super::export::*;
 /// - 正相关：价格上涨时成交量增加，下跌时成交量减少，可能表示趋势较强
 /// - 负相关：价格上涨时成交量减少，下跌时成交量增加，可能表示市场存在分歧
 /// - 接近零：价格和成交量之间没有明显的相关性
-#[derive(FactorBase, Default, Clone)]
-pub struct PVCorr(pub Param);
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
+pub struct PVCorr(pub usize);
 
 impl PlFactor for PVCorr {
     #[inline]
     fn try_expr(&self) -> Result<Expr> {
-        Ok(dsl::rolling_corr(
-            CLOSE.expr(),
-            VOLUME.expr(),
-            self.0.into(),
-        ))
+        CLOSE.corr(VOLUME, self.0).try_expr()
     }
 }
 
@@ -41,17 +37,13 @@ impl PlFactor for PVCorr {
 /// - Price Return: 收盘价的百分比变化
 /// - Volume Return: 成交量的百分比变化
 /// - N: 滚动窗口大小，由 Param 参数指定
-#[derive(FactorBase, Default, Clone)]
-pub struct PrVrCorr(pub Param);
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
+pub struct PrVrCorr(pub usize);
 
 impl PlFactor for PrVrCorr {
     #[inline]
     fn try_expr(&self) -> Result<Expr> {
-        Ok(dsl::rolling_corr(
-            CLOSE.expr().pct_change(lit(1)),
-            VOLUME.expr().pct_change(lit(1)),
-            self.0.into(),
-        ))
+        CLOSE.pct(1).corr(VOLUME.pct(1), self.0).try_expr()
     }
 }
 
@@ -66,17 +58,13 @@ impl PlFactor for PrVrCorr {
 /// - Price Return: 收盘价的百分比变化
 /// - Volume: 成交量
 /// - N: 滚动窗口大小，由 Param 参数指定
-#[derive(FactorBase, Default, Clone)]
-pub struct PrVCorr(pub Param);
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
+pub struct PrVCorr(pub usize);
 
 impl PlFactor for PrVCorr {
     #[inline]
     fn try_expr(&self) -> Result<Expr> {
-        Ok(dsl::rolling_corr(
-            CLOSE.expr().pct_change(lit(1)),
-            VOLUME.expr(),
-            self.0.into(),
-        ))
+        CLOSE.pct(1).corr(VOLUME, self.0).try_expr()
     }
 }
 
@@ -91,17 +79,13 @@ impl PlFactor for PrVCorr {
 /// - Price: 收盘价
 /// - Volume Return: 成交量的百分比变化
 /// - N: 滚动窗口大小，由 Param 参数指定
-#[derive(FactorBase, Default, Clone)]
-pub struct PVrCorr(pub Param);
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
+pub struct PVrCorr(pub usize);
 
 impl PlFactor for PVrCorr {
     #[inline]
     fn try_expr(&self) -> Result<Expr> {
-        Ok(dsl::rolling_corr(
-            CLOSE.expr(),
-            VOLUME.expr().pct_change(lit(1)),
-            self.0.into(),
-        ))
+        CLOSE.corr(VOLUME.pct(1), self.0).try_expr()
     }
 }
 

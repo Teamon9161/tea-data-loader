@@ -24,17 +24,16 @@ use super::super::export::*;
 /// 使用注意：
 /// - CCI对于发现周期性的市场极端具有重要意义
 /// - 可以用来辨别市场趋势的强弱、超买超卖，以及可能的反转点
-#[derive(FactorBase, Default, Clone)]
-pub struct Cci(pub Param);
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
+pub struct Cci(pub usize);
 
 impl PlFactor for Cci {
     #[inline]
     fn try_expr(&self) -> Result<Expr> {
-        let typ = TYP.try_expr()?;
-        let ma = typ.clone().rolling_mean(self.0.into());
-        let md = (typ.clone() - ma.clone()).abs().rolling_mean(self.0.into());
-        let cci = (typ - ma) / (lit(0.015) * md);
-        Ok(cci)
+        let ma = TYP.mean(self.0);
+        let md = (TYP - ma).abs().mean(self.0);
+        let cci: Factor<_> = (TYP - ma) / (0.015 * md);
+        cci.try_expr()
     }
 }
 

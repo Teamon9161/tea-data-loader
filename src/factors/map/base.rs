@@ -11,7 +11,7 @@ define_base_fac!(
 );
 
 /// 典型价格
-pub const TYP: Typ = Typ(Param::None);
+pub const TYP: Factor<Typ> = Factor(Typ);
 
 /// 收益率
-pub const RET: Ret = Ret(Param::None);
+pub const RET: Factor<Ret> = Factor(Ret(1));

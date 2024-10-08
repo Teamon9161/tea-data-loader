@@ -33,18 +33,18 @@ use super::super::export::*;
 /// - 当RSI从低于30上穿30时，可能是买入信号
 /// - 当RSI从高于70下穿70时，可能是卖出信号
 /// - RSI还可以用来判断趋势强度和寻找背离
-#[derive(FactorBase, Default, Clone)]
-pub struct Rsi(pub Param);
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
+pub struct Rsi(pub usize);
 
 impl PlFactor for Rsi {
     #[inline]
     fn try_expr(&self) -> Result<Expr> {
-        let diff = CLOSE.expr().diff(1, Default::default());
-        let up = when(diff.clone().gt(0)).then(diff.clone()).otherwise(0);
-        let down = when(diff.clone().lt(0)).then(diff.abs()).otherwise(0);
-        let up_ma = up.rolling_mean(self.0.into());
-        let down_ma = down.rolling_mean(self.0.into());
-        Ok(up_ma.clone() / (up_ma + down_ma))
+        let diff = CLOSE.diff(1);
+        let up = iif(diff.gt(0), diff, 0);
+        let down = iif(diff.lt(0), diff.abs(), 0);
+        let up_ma = up.mean(self.0);
+        let down_ma = down.mean(self.0);
+        (up_ma.clone() / (up_ma + down_ma)).try_expr()
     }
 }
 

@@ -2,8 +2,8 @@ macro_rules! define_base_fac {
     ($($fac:ident $(: $doc:expr)?),*) => {
         $(
             $(#[doc = $doc])?
-            #[derive(FactorBase, Default, Clone)]
-            pub struct $fac(pub Param);
+            #[derive(FactorBase, FromParam, Default, Clone, Copy)]
+            pub struct $fac;
 
             impl PlFactor for $fac {
                 #[inline]
@@ -30,8 +30,8 @@ macro_rules! define_base_fac {
             }
 
             paste::paste! {
-                pub const [<$fac:snake:upper>]: $fac = $fac(Param::None);
-                // pub const [<$fac:upper _E>]: ::std::sync::LazyLock<Expr> = ::std::sync::LazyLock::new(|| $fac(Param::None).expr());
+                // pub const [<$fac:snake:upper>]: $fac = $fac(Param::None);
+                pub const [<$fac:snake:upper>]: $crate::prelude::Factor<$fac> = $crate::prelude::Factor::<$fac>($fac);
             }
         )*
 

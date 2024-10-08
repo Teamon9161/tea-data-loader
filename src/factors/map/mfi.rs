@@ -22,24 +22,17 @@ use super::super::export::*;
 /// 使用注意：
 /// - MFI可以用来确认趋势、预测反转和识别超买超卖区域
 /// - 本实现中的典型价格计算包含了开盘价，这可能与某些传统MFI实现有所不同
-#[derive(FactorBase, Default, Clone)]
-pub struct Mfi(pub Param);
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
+pub struct Mfi(pub usize);
 
 impl PlFactor for Mfi {
     #[inline]
     fn try_expr(&self) -> Result<Expr> {
-        let tp = TYP.expr();
-        let vol = VOLUME.expr();
-        let tp_s = tp.clone().shift(lit(1));
-        let mf_in = when(tp.clone().gt(tp_s.clone()))
-            .then(tp.clone() * vol.clone())
-            .otherwise(0.);
-        let mf_out = when(tp.clone().lt(tp_s)).then(tp * vol).otherwise(0.);
-        let mf_in = mf_in.rolling_sum(self.0.into());
-        let mf_out = mf_out.rolling_sum(self.0.into());
-        Ok(when(mf_out.clone().gt(EPS))
-            .then(mf_in / mf_out)
-            .otherwise(lit(NULL)))
+        let tp_s = TYP.shift(1);
+        let mf_in = iif(TYP.gt(tp_s), TYP * VOLUME, 0.).sum_opt(self.0, 1);
+        let mf_out = iif(TYP.lt(tp_s), TYP * VOLUME, 0.).sum_opt(self.0, 1);
+        let mfi = mf_in / mf_out;
+        mfi.try_expr()
     }
 }
 

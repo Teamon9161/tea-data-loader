@@ -3,13 +3,14 @@ use polars::lazy::dsl::Expr;
 use polars::prelude::*;
 
 use super::param::Param;
+use crate::factors::Factor;
 
 /// Trait defining the base functionality for factors.
 ///
 /// This trait provides two essential methods for factors:
 /// - `fac_name`: for obtaining the factor's name
 /// - `new`: for creating a new instance of the factor
-pub trait FactorBase: std::fmt::Debug + Sized {
+pub trait FactorBase: std::fmt::Debug + Clone + Sized {
     /// Returns the name of the factor as an `Arc<str>`.
     fn fac_name() -> Arc<str>;
 
@@ -19,7 +20,32 @@ pub trait FactorBase: std::fmt::Debug + Sized {
     ///
     /// * `param` - A value that can be converted into a `Param`.
     // fn new<P: Into<Param>>(param: P) -> Self;
-    fn new(param: impl Into<Param>) -> Self;
+    fn new(param: impl Into<Param>) -> Self
+    where
+        Self: From<Param>,
+    {
+        let param = param.into();
+        param.into()
+    }
+
+    /// Creates a new `Factor` instance with the given parameter.
+    ///
+    /// This is a convenience method that wraps the factor in a `Factor` struct.
+    ///
+    /// # Arguments
+    ///
+    /// * `param` - A value that can be converted into a `Param`.
+    ///
+    /// # Returns
+    ///
+    /// A `Factor<Self>` instance containing the new factor.
+    #[inline]
+    fn fac(param: impl Into<Param>) -> Factor<Self>
+    where
+        Self: From<Param>,
+    {
+        Factor(Self::new(param))
+    }
 }
 
 /// Trait for retrieving the name of a factor.
@@ -99,9 +125,28 @@ impl PlFactor for Arc<dyn PlFactor> {
 }
 
 #[derive(Clone)]
-pub struct PlExprFactor(pub Expr);
+pub struct ExprFactor(pub Expr);
 
-impl std::fmt::Debug for PlExprFactor {
+impl From<Param> for ExprFactor {
+    #[inline]
+    fn from(_param: Param) -> Self {
+        panic!("ExprFactor::from should not be called directly")
+    }
+}
+
+impl FactorBase for ExprFactor {
+    #[inline]
+    fn fac_name() -> Arc<str> {
+        "expr".into()
+    }
+
+    // #[inline]
+    // fn new(_param: impl Into<Param>) -> Self {
+    //     panic!("ExprFactor::new should not be called directly")
+    // }
+}
+
+impl std::fmt::Debug for ExprFactor {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
@@ -111,9 +156,7 @@ impl std::fmt::Debug for PlExprFactor {
     }
 }
 
-impl GetName for PlExprFactor {}
-
-impl PlFactor for PlExprFactor {
+impl PlFactor for ExprFactor {
     #[inline]
     fn try_expr(&self) -> Result<Expr> {
         Ok(self.0.clone())
@@ -165,20 +208,9 @@ impl TFactor for Arc<dyn TFactor> {
     }
 }
 
-pub trait IntoPlFactor {
-    fn into_pl_factor(self) -> impl PlFactor;
-}
-
-impl<F: PlFactor> IntoPlFactor for F {
+impl From<Expr> for ExprFactor {
     #[inline]
-    fn into_pl_factor(self) -> impl PlFactor {
-        self
-    }
-}
-
-impl IntoPlFactor for Expr {
-    #[inline]
-    fn into_pl_factor(self) -> impl PlFactor {
-        PlExprFactor(self)
+    fn from(expr: Expr) -> Self {
+        ExprFactor(expr)
     }
 }

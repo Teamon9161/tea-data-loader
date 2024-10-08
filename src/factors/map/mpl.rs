@@ -22,15 +22,15 @@ use super::super::export::*;
 /// - 该指标的量纲会受到合约乘数的影响，如果要对不同品种进行比较，需要进行标准化处理
 /// - 可以用来判断市场情绪和潜在的支撑/阻力位
 /// - 结合其他技术指标使用，可以提供更全面的市场分析
-#[derive(FactorBase, Default, Clone)]
-pub struct Mpl(pub Param);
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
+pub struct Mpl(pub usize);
 
 impl PlFactor for Mpl {
     #[inline]
     fn try_expr(&self) -> Result<Expr> {
-        let amt_ema = AMT.expr().ts_ewm(self.0.into(), None);
-        let vol_ema = VOLUME.expr().ts_ewm(self.0.into(), None);
-        Ok(CLOSE.expr() * vol_ema / amt_ema)
+        let amt_ema = AMT.ewm(self.0);
+        let vol_ema = VOLUME.ewm(self.0);
+        (CLOSE * vol_ema / amt_ema).try_expr()
     }
 }
 

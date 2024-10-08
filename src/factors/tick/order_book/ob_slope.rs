@@ -27,22 +27,18 @@ use crate::factors::export::*;
 ///
 /// Note: The bid slope is typically negative, so adding it to the ask slope
 /// effectively subtracts its absolute value.
-#[derive(FactorBase, Default, Clone)]
-pub struct ObSlope(pub Param);
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
+pub struct ObSlope(pub Option<usize>);
 
 impl PlFactor for ObSlope {
     fn try_expr(&self) -> Result<Expr> {
-        let level = if self.0.is_none() {
-            5
-        } else {
-            self.0.as_usize()
-        };
-        let ask_slope = Ask::new(level).sub(MID).div(AskCumVol::new(level));
-        let bid_slope = Bid::new(level).sub(MID).div(BidCumVol::new(level));
+        let level = self.0.unwrap_or(5);
+        let ask_slope = (Ask::fac(level) - MID) / AskCumVol::new(level);
+        let bid_slope = (Bid::fac(level) - MID) / (BidCumVol::new(level));
         // 因为bid slope为负值，所以直接加上bid slope即可
-        let expr = ask_slope.add(bid_slope);
+        let expr = ask_slope + bid_slope;
         // 避免量纲过小
-        expr.mul(1e9.lit().into_pl_factor()).try_expr()
+        (expr * 1e9).try_expr()
     }
 }
 
@@ -62,22 +58,18 @@ const SLOPE_FINE_PARAM: f64 = 2. / 3.;
 /// The slope is calculated using a weighted sum approach across multiple levels,
 /// considering both ask and bid sides. The exact formula is more complex than
 /// the basic `ObSlope` and involves cumulative volumes at each level.
-#[derive(FactorBase, Default, Clone)]
-pub struct ObSlopeFine(pub Param);
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
+pub struct ObSlopeFine(pub Option<usize>);
 
 impl PlFactor for ObSlopeFine {
     fn try_expr(&self) -> Result<Expr> {
-        let max_level = if self.0.is_none() {
-            5
-        } else {
-            self.0.as_usize()
-        };
+        let max_level = self.0.unwrap_or(5);
         let ask_slope = SLOPE_FINE_PARAM.lit()
             * (1..=max_level)
                 .map(|level| {
-                    let vi = AskCumVol::new(level).expr();
-                    let vi_1 = AskCumVol::new(level - 1).expr();
-                    Ask::new(level).sub(MID).expr() * (vi.clone().pow(2) - vi_1.clone().pow(2))
+                    let vi = AskCumVol::fac(level);
+                    let vi_1 = AskCumVol::fac(level - 1);
+                    ((Ask::fac(level) - MID) * (vi.pow(2) - vi_1.pow(2))).expr()
                 })
                 .reduce(|a, b| a + b)
                 .unwrap()
@@ -96,7 +88,7 @@ impl PlFactor for ObSlopeFine {
                 .map(|level| {
                     let vi = BidCumVol::new(level).expr();
                     let vi_1 = BidCumVol::new(level - 1).expr();
-                    Bid::new(level).sub(MID).expr() * (vi.clone().pow(2) - vi_1.clone().pow(2))
+                    (Bid::fac(level) - MID).expr() * (vi.pow(2) - vi_1.pow(2))
                 })
                 .reduce(|a, b| a + b)
                 .unwrap()

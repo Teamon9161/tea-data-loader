@@ -48,18 +48,9 @@ impl PlExtFactor {
     }
 }
 
-// impl GetName for PlExtFactor {
-//     fn name(&self) -> String {
-//         match self.info.1 {
-//             Param::None => format!("{}_{}", self.fac.name(), self.info.0.name()),
-//             param => format!("{}_{}_{:?}", self.fac.name(), self.info.0.name(), param),
-//         }
-//     }
-// }
-
 impl std::fmt::Debug for PlExtFactor {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self.info.1 {
+        match &self.info.1 {
             Param::None => write!(f, "{}_{}", self.fac.name(), self.info.0.name()),
             param => write!(f, "{}_{}_{:?}", self.fac.name(), self.info.0.name(), param),
         }
@@ -128,116 +119,130 @@ pub trait PlFactorExt: PlFactor + Sized {
     /// Calculates the rolling mean of the factor.
     fn mean(self, p: impl Into<Param>) -> impl PlFactor {
         let param: Param = p.into();
+        let param_clone = param.clone();
         let func = move |expr: Expr| {
             if param.as_i32() == 1 {
                 Ok(expr)
             } else {
-                Ok(expr.rolling_mean(param.into()))
+                Ok(expr.rolling_mean(param.clone().into()))
             }
         };
-        PlExtFactor::new(self, PlExtMethod::Mean, param, func)
+        PlExtFactor::new(self, PlExtMethod::Mean, param_clone, func)
     }
 
     /// Calculates the bias of the factor relative to its rolling mean.
     fn bias(self, p: impl Into<Param>) -> impl PlFactor {
         let param: Param = p.into();
+        let param_clone = param.clone();
         let func = move |expr: Expr| {
-            let ma = expr.clone().rolling_mean(param.into());
+            let ma = expr.clone().rolling_mean(param.clone().into());
             Ok(expr / ma - lit(1.))
         };
-        PlExtFactor::new(self, PlExtMethod::Bias, param, func)
+        PlExtFactor::new(self, PlExtMethod::Bias, param_clone, func)
     }
 
     /// Calculates the rolling standard deviation (volatility) of the factor.
     fn vol(self, p: impl Into<Param>) -> impl PlFactor {
         let param: Param = p.into();
-        let func = move |expr: Expr| Ok(expr.rolling_std(param.into()));
+        let param_clone = param.clone();
+        let func = move |expr: Expr| Ok(expr.rolling_std(param.clone().into()));
 
-        PlExtFactor::new(self, PlExtMethod::Vol, param, func)
+        PlExtFactor::new(self, PlExtMethod::Vol, param_clone, func)
     }
 
     /// Calculates the pure volatility (standard deviation divided by mean) of the factor.
     fn pure_vol(self, p: impl Into<Param>) -> impl PlFactor {
         let param: Param = p.into();
+        let param_clone = param.clone();
         let func = move |expr: Expr| {
-            let vol = expr.clone().rolling_std(param.into());
+            let vol = expr.clone().rolling_std(param.clone().into());
 
-            let ma = expr.rolling_mean(param.into());
+            let ma = expr.rolling_mean(param.clone().into());
             Ok(vol / ma)
         };
-        PlExtFactor::new(self, PlExtMethod::PureVol, param, func)
+        PlExtFactor::new(self, PlExtMethod::PureVol, param_clone, func)
     }
 
     fn zscore(self, p: impl Into<Param>) -> impl PlFactor {
         let param: Param = p.into();
+        let param_clone = param.clone();
         let func = move |expr: Expr| {
-            let ma = expr.clone().rolling_mean(param.into());
-            let vol = expr.clone().rolling_std(param.into());
+            let ma = expr.clone().rolling_mean(param.clone().into());
+            let vol = expr.clone().rolling_std(param.clone().into());
             Ok((expr - ma).protect_div(vol))
         };
 
-        PlExtFactor::new(self, PlExtMethod::Zscore, param, func)
+        PlExtFactor::new(self, PlExtMethod::Zscore, param_clone, func)
     }
 
     /// Calculates the skewness of the factor.
     fn skew(self, p: impl Into<Param>) -> impl PlFactor {
         let param: Param = p.into();
+        let param_clone = param.clone();
         let func = move |expr: Expr| {
             let skew = expr.ts_skew(param.as_usize(), None);
             Ok(skew)
         };
-        PlExtFactor::new(self, PlExtMethod::Skew, param, func)
+        PlExtFactor::new(self, PlExtMethod::Skew, param_clone, func)
     }
 
     /// Calculates the kurtosis of the factor.
     fn kurt(self, p: impl Into<Param>) -> impl PlFactor {
         let param: Param = p.into();
+        let param_clone = param.clone();
         let func = move |expr: Expr| {
             let kurt = expr.ts_kurt(param.as_usize(), None);
             Ok(kurt)
         };
-        PlExtFactor::new(self, PlExtMethod::Kurt, param, func)
+        PlExtFactor::new(self, PlExtMethod::Kurt, param_clone, func)
     }
 
     /// Normalizes the factor to a 0-1 range based on its rolling min and max.
     fn minmax(self, p: impl Into<Param>) -> impl PlFactor {
         let param: Param = p.into();
+        let param_clone = param.clone();
         let func = move |expr: Expr| {
-            let min = expr.clone().rolling_min(param.into());
-            let max = expr.clone().rolling_max(param.into());
+            let min = expr.clone().rolling_min(param.clone().into());
+            let max = expr.clone().rolling_max(param.clone().into());
             let expr = when(max.clone().gt(min.clone()))
                 .then((expr - min.clone()) / (max - min))
                 .otherwise(lit(NULL));
             Ok(expr)
         };
-        PlExtFactor::new(self, PlExtMethod::Minmax, param, func)
+        PlExtFactor::new(self, PlExtMethod::Minmax, param_clone, func)
     }
 
     /// Calculates the rank of the factor's volatility.
     fn vol_rank(self, p: impl Into<Param>) -> impl PlFactor {
         let param: Param = p.into();
+        let param_clone = param.clone();
         let func = move |expr: Expr| {
-            Ok(expr
-                .rolling_std(param.into())
-                .ts_rank(5 * param.as_usize(), None, true, false))
+            Ok(expr.rolling_std(param.clone().into()).ts_rank(
+                5 * param.as_usize(),
+                None,
+                true,
+                false,
+            ))
         };
-        PlExtFactor::new(self, PlExtMethod::VolRank, param, func)
+        PlExtFactor::new(self, PlExtMethod::VolRank, param_clone, func)
     }
 
     /// Calculates the percentage change of the factor.
     fn pct(self, p: impl Into<Param>) -> impl PlFactor {
         let param: Param = p.into();
-        let func = move |expr: Expr| Ok(expr.pct_change(lit(param.as_i32())));
+        let param_clone = param.clone();
+        let func = move |expr: Expr| Ok(expr.pct_change(lit(param.clone().as_i32())));
 
-        PlExtFactor::new(self, PlExtMethod::Pct, param, func)
+        PlExtFactor::new(self, PlExtMethod::Pct, param_clone, func)
     }
 
     /// Shifts the factor by a given number of periods.
     fn lag(self, p: impl Into<Param>) -> impl PlFactor {
         let param: Param = p.into();
-        let func = move |expr: Expr| Ok(expr.shift(lit(param.as_i32())));
+        let param_clone = param.clone();
+        let func = move |expr: Expr| Ok(expr.shift(lit(param.clone().as_i32())));
 
-        PlExtFactor::new(self, PlExtMethod::Lag, param, func)
+        PlExtFactor::new(self, PlExtMethod::Lag, param_clone, func)
     }
 
     /// alias for `lag`
@@ -248,30 +253,35 @@ pub trait PlFactorExt: PlFactor + Sized {
     /// Calculates the efficiency ratio of the factor.
     fn efficiency(self, p: impl Into<Param>) -> impl PlFactor {
         let param: Param = p.into();
+        let param_clone = param.clone();
         let func = move |expr: Expr| {
-            let diff_abs = expr.clone().diff(param.into(), Default::default()).abs();
+            let diff_abs = expr
+                .clone()
+                .diff(param.clone().into(), Default::default())
+                .abs();
             Ok(diff_abs
                 / expr
                     .diff(1, Default::default())
                     .abs()
-                    .rolling_sum(param.into()))
+                    .rolling_sum(param.clone().into()))
         };
-        PlExtFactor::new(self, PlExtMethod::Efficiency, param, func)
+        PlExtFactor::new(self, PlExtMethod::Efficiency, param_clone, func)
     }
 
     /// Calculates the signed efficiency ratio of the factor.
     fn efficiency_sign(self, p: impl Into<Param>) -> impl PlFactor {
         let param: Param = p.into();
+        let param_clone = param.clone();
         let func = move |expr: Expr| {
-            let diff = expr.clone().diff(param.into(), Default::default());
+            let diff = expr.clone().diff(param.clone().into(), Default::default());
 
             Ok(diff
                 / expr
                     .diff(1, Default::default())
                     .abs()
-                    .rolling_sum(param.into()))
+                    .rolling_sum(param.clone().into()))
         };
-        PlExtFactor::new(self, PlExtMethod::EfficiencySign, param, func)
+        PlExtFactor::new(self, PlExtMethod::EfficiencySign, param_clone, func)
     }
 
     /// Calculates the imbalance between two factors.

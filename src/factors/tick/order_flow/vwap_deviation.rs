@@ -9,13 +9,14 @@ use crate::factors::export::*;
 /// the average trading price weighted by volume.
 ///
 /// The deviation is calculated as (ORDER_PRICE - VWAP) / VWAP.
-#[derive(FactorBase, Default, Clone)]
-pub struct VwapDeviation(pub Param);
+#[derive(FactorBase, FromParam, Default, Clone)]
+pub struct VwapDeviation(pub usize);
 
 impl PlFactor for VwapDeviation {
     fn try_expr(&self) -> Result<Expr> {
-        let vwap = Vwap::new(self.0).expr();
-        Ok((ORDER_PRICE.expr() - vwap.clone()).protect_div(vwap))
+        let vwap = Vwap::fac(self.0);
+        let fac = (ORDER_PRICE - vwap) / vwap;
+        fac.try_expr()
     }
 }
 

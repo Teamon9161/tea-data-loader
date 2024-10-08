@@ -6,16 +6,13 @@ use crate::factors::export::*;
 ///
 /// The mid-price is calculated as the average of the best ask and best bid prices.
 /// This factor is useful for providing a central reference point for the current market price.
-///
-/// # Fields
-/// * `Param` - A parameter that can be used to customize the mid-price calculation if needed.
-#[derive(FactorBase, Default, Clone)]
-pub struct Mid(pub Param);
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
+pub struct Mid;
 
 impl PlFactor for Mid {
     fn try_expr(&self) -> Result<Expr> {
-        let mid = (ASK1.expr() + BID1.expr()) * 0.5.lit();
-        Ok(mid)
+        let f = (ASK1 + BID1) * 0.5;
+        f.try_expr()
     }
 }
 
@@ -27,13 +24,13 @@ impl PlFactor for Mid {
 ///
 /// # Fields
 /// * `Param` - A parameter that can be used to customize the mid-price YTM calculation if needed.
-#[derive(FactorBase, Default, Clone)]
-pub struct MidYtm(pub Param);
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
+pub struct MidYtm;
 
 impl PlFactor for MidYtm {
     fn try_expr(&self) -> Result<Expr> {
-        let mid_ytm = (ASK1_YTM.expr() + BID1_YTM.expr()) * 0.5.lit();
-        Ok(mid_ytm)
+        let mid_ytm = (ASK1_YTM + BID1_YTM) * 0.5;
+        mid_ytm.try_expr()
     }
 }
 

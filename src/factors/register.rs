@@ -52,7 +52,7 @@ pub static T_FAC_MAP: LazyLock<Mutex<HashMap<Arc<str>, TFacInitFunc>>> =
 ///
 /// * `Result<()>`: Ok if the registration is successful, Err if the factor already exists.
 #[inline]
-pub fn register_pl_fac<P: FactorBase + PlFactor>() -> Result<()> {
+pub fn register_pl_fac<P: FactorBase + PlFactor + From<Param>>() -> Result<()> {
     if POLARS_FAC_MAP
         .lock()
         .insert(P::fac_name(), Arc::new(|param| Arc::new(P::new(param))))
@@ -80,7 +80,7 @@ pub fn register_pl_fac<P: FactorBase + PlFactor>() -> Result<()> {
 ///
 /// * `Result<()>`: Ok if the registration is successful, Err if the factor already exists.
 #[inline]
-pub fn register_t_fac<P: FactorBase + TFactor>() -> Result<()> {
+pub fn register_t_fac<P: FactorBase + TFactor + From<Param>>() -> Result<()> {
     if T_FAC_MAP
         .lock()
         .insert(P::fac_name(), Arc::new(|param| Arc::new(P::new(param))))
@@ -109,7 +109,7 @@ pub fn register_t_fac<P: FactorBase + TFactor>() -> Result<()> {
 ///
 /// * `Result<()>`: Ok if both registrations are successful, Err if either registration fails.
 #[inline]
-pub fn register_fac<P: FactorBase + PlFactor + TFactor>() -> Result<()> {
+pub fn register_fac<P: FactorBase + PlFactor + TFactor + From<Param>>() -> Result<()> {
     register_pl_fac::<P>()?;
     register_t_fac::<P>()?;
     Ok(())

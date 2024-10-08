@@ -3,14 +3,34 @@ use polars::lazy::dsl::Expr;
 
 use crate::prelude::{FactorBase, Param, PlFactor};
 
-#[derive(Debug, Default, Clone, Copy)]
-pub struct Factor<F: FactorBase> {
-    pub param: Param,
-    fac: std::marker::PhantomData<F>,
+#[derive(Default, Clone)]
+pub struct Factor<F: FactorBase>(pub F);
+
+impl<F: FactorBase> std::fmt::Debug for Factor<F> {
+    #[inline]
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self.0)
+    }
+}
+
+impl<F: FactorBase + Copy> Copy for Factor<F> {}
+
+impl<F: FactorBase> From<F> for Factor<F> {
+    #[inline]
+    fn from(fac: F) -> Self {
+        Factor(fac)
+    }
 }
 
 unsafe impl<F: FactorBase + Send> Send for Factor<F> {}
 unsafe impl<F: FactorBase + Sync> Sync for Factor<F> {}
+
+impl<F: FactorBase + From<Param>> From<Param> for Factor<F> {
+    #[inline]
+    fn from(param: Param) -> Self {
+        Factor(F::from(param))
+    }
+}
 
 impl<F: FactorBase> FactorBase for Factor<F> {
     #[inline]
@@ -18,18 +38,15 @@ impl<F: FactorBase> FactorBase for Factor<F> {
         F::fac_name()
     }
 
-    #[inline]
-    fn new(param: impl Into<Param>) -> Self {
-        Factor {
-            param: param.into(),
-            fac: std::marker::PhantomData,
-        }
-    }
+    // #[inline]
+    // fn new(param: impl Into<Param>) -> Self {
+    //     Factor(F::new(param))
+    // }
 }
 
 impl<F: FactorBase + PlFactor + Send + Sync + 'static> PlFactor for Factor<F> {
+    #[inline]
     fn try_expr(&self) -> Result<Expr> {
-        let fac = F::new(self.param);
-        fac.try_expr()
+        self.0.try_expr()
     }
 }

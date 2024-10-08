@@ -28,29 +28,16 @@ use crate::factors::export::*;
 ///
 /// # Parameters
 /// - Window size: Number of trades or time period for calculation (specified in `Param`)
-#[derive(FactorBase, Default, Clone)]
-pub struct Ofi(pub Param);
+#[derive(FactorBase, FromParam, Default, Clone)]
+pub struct Ofi(pub usize);
 
 impl PlFactor for Ofi {
     fn try_expr(&self) -> Result<Expr> {
-        let n = self.0.as_usize();
-        let is_buy = IS_BUY.expr();
-        let buy_vol = (ORDER_AMT.expr() * (when(is_buy.clone()).then(1.lit()).otherwise(0.lit())))
-            .rolling_sum(RollingOptionsFixedWindow {
-                window_size: n,
-                min_periods: 1,
-                ..Default::default()
-            });
-        let sell_vol = (ORDER_AMT.expr() * when(is_buy.not()).then(1.lit()).otherwise(0.lit()))
-            .rolling_sum(RollingOptionsFixedWindow {
-                window_size: n,
-                min_periods: 1,
-                ..Default::default()
-            });
-        // let ofi = (buy_vol.clone() - sell_vol.clone()).protect_div(buy_vol + sell_vol);
-        let ofi = buy_vol.clone().protect_div(buy_vol + sell_vol);
-        // let ofi = buy_vol;
-        Ok(ofi)
+        let n = self.0;
+        let buy_vol = (ORDER_AMT * iif(IS_BUY, 1, 0)).sum_opt(n, 1);
+        let sell_vol = (ORDER_AMT * iif(!IS_BUY, 1, 0)).sum_opt(n, 1);
+        let ofi = buy_vol.clone() / (buy_vol + sell_vol);
+        ofi.try_expr()
     }
 }
 
@@ -78,7 +65,7 @@ impl PlFactor for Ofi {
 ///
 /// # Parameters
 /// - Param: Used for potential future extensions or configurations
-#[derive(FactorBase, Default, Clone)]
+#[derive(FactorBase, FromParam, Default, Clone)]
 pub struct CumOfi(pub Param);
 
 impl PlFactor for CumOfi {

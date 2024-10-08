@@ -1,16 +1,13 @@
 use polars::prelude::*;
 
-// use super::Mid;
 use crate::factors::export::*;
 
-#[derive(FactorBase, Default, Clone)]
-pub struct BondFutureSpread(pub Param);
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
+pub struct BondFutureSpread;
 
 impl PlFactor for BondFutureSpread {
     fn try_expr(&self) -> Result<Expr> {
-        let bond_mid = MID.try_expr()?;
-        let future_mid = col("mid_f");
-        Ok(future_mid - bond_mid)
+        (MID - MID_F).try_expr()
     }
 }
 

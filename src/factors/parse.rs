@@ -124,6 +124,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[cfg(feature = "map-fac")]
     fn test_parse_pl_fac() {
         let fac = parse_pl_fac("typ_1").unwrap();
         assert_eq!(fac.name(), "typ_1");
@@ -133,6 +134,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "map-fac")]
     fn test_parse_t_fac() {
         let fac = parse_t_fac("typ_1").unwrap();
         assert_eq!(fac.name(), "typ_1");

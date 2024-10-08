@@ -26,18 +26,16 @@ use super::super::export::*;
 /// 注意：
 /// - Williams %R 与 Stochastic Oscillator（随机指标）非常相似，但计算方式略有不同
 /// - 在强势趋势市场中，指标可能长期处于超买或超卖区域
-#[derive(FactorBase, Default, Clone)]
-pub struct Wr(pub Param);
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
+pub struct Wr(pub usize);
 
 impl PlFactor for Wr {
     #[inline]
     fn try_expr(&self) -> Result<Expr> {
-        let hh = HIGH.expr().rolling_max(self.0.into());
-        let ll = LOW.expr().rolling_min(self.0.into());
-        let rsv = when(hh.clone().gt(ll.clone()))
-            .then((CLOSE.expr() - ll.clone()) / (hh - ll))
-            .otherwise(lit(NULL));
-        Ok(rsv)
+        let hh = HIGH.max(self.0);
+        let ll = LOW.min(self.0);
+        let rsv = (CLOSE - ll) / (hh - ll);
+        rsv.try_expr()
     }
 }
 

@@ -35,13 +35,13 @@ use super::super::export::*;
 /// 局限性：
 /// 1. 作为滞后指标，可能在快速变化的市场中反应不够及时
 /// 2. 需要合理选择参数N，以平衡指标的灵敏度和稳定性
-#[derive(FactorBase, Default, Clone)]
-pub struct Rsrs(pub Param);
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
+pub struct Rsrs(pub usize);
 
 impl PlFactor for Rsrs {
     #[inline]
     fn try_expr(&self) -> Result<Expr> {
-        let rsrs = HIGH.expr().ts_regx_beta(LOW.expr(), self.0.into(), None);
+        let rsrs = HIGH.expr().ts_regx_beta(LOW.expr(), self.0, None);
         Ok(rsrs)
     }
 }

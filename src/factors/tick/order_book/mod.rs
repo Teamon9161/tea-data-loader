@@ -22,7 +22,9 @@ pub use bid_cum_vol::{BidCumVol, CumBidCumVol};
 mod spread;
 pub use spread::{Spread, YtmSpread};
 
+#[cfg(feature = "tick-future-fac")]
 mod bond_future_spread;
+#[cfg(feature = "tick-future-fac")]
 pub use bond_future_spread::BondFutureSpread;
 
 mod ob_ofi;

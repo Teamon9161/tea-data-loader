@@ -1,9 +1,10 @@
 use std::fmt::{Debug, Display};
 use std::str::FromStr;
+use std::sync::Arc;
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 use derive_more::{Deref, DerefMut, From};
-use polars::prelude::{RollingCovOptions, RollingOptionsFixedWindow};
+use polars::prelude::{col, Expr, Literal, RollingCovOptions, RollingOptionsFixedWindow, NULL};
 
 /// An enumeration type for factor parameters.
 ///
@@ -38,15 +39,29 @@ use polars::prelude::{RollingCovOptions, RollingOptionsFixedWindow};
 /// let alt_none_param: Param = "none".parse().unwrap();
 /// assert_eq!(alt_none_param, Param::None);
 /// ```
-#[derive(Default, From, Clone, Copy, PartialEq)]
+#[derive(Default, From, Clone, PartialEq)]
 pub enum Param {
     /// Represents an integer parameter.
     I32(i32),
     /// Represents a floating-point parameter.
     F64(f64),
+    /// Represents a string parameter.
+    Str(Arc<str>),
     /// Represents the absence of a parameter. This is the default variant.
     #[default]
     None,
+}
+
+impl From<Param> for Expr {
+    #[inline]
+    fn from(p: Param) -> Self {
+        match p {
+            Param::I32(v) => v.lit(),
+            Param::F64(v) => v.lit(),
+            Param::Str(v) => col(&*v),
+            Param::None => NULL.lit(),
+        }
+    }
 }
 
 impl From<Option<i32>> for Param {
@@ -54,6 +69,16 @@ impl From<Option<i32>> for Param {
     fn from(v: Option<i32>) -> Self {
         match v {
             Some(v) => Param::I32(v),
+            None => Param::None,
+        }
+    }
+}
+
+impl From<Option<usize>> for Param {
+    #[inline]
+    fn from(v: Option<usize>) -> Self {
+        match v {
+            Some(v) => Param::I32(v as i32),
             None => Param::None,
         }
     }
@@ -69,6 +94,13 @@ impl From<Option<f64>> for Param {
     }
 }
 
+impl From<i64> for Param {
+    #[inline]
+    fn from(v: i64) -> Self {
+        Param::I32(v as i32)
+    }
+}
+
 impl FromStr for Param {
     type Err = anyhow::Error;
     #[inline]
@@ -80,7 +112,8 @@ impl FromStr for Param {
         } else if s.is_empty() || (s.to_lowercase().as_str() == "none") {
             Ok(Param::None)
         } else {
-            bail!("Invalid param: {}", s)
+            Ok(Param::Str(s.into()))
+            // bail!("Invalid param: {}", s)
         }
     }
 }
@@ -89,6 +122,20 @@ impl From<usize> for Param {
     #[inline]
     fn from(v: usize) -> Self {
         Param::I32(v as i32)
+    }
+}
+
+impl From<&str> for Param {
+    #[inline]
+    fn from(v: &str) -> Self {
+        Param::Str(v.into())
+    }
+}
+
+impl From<String> for Param {
+    #[inline]
+    fn from(v: String) -> Self {
+        Param::Str(v.into())
     }
 }
 
@@ -113,6 +160,16 @@ impl From<Param> for usize {
     }
 }
 
+impl From<Param> for Option<usize> {
+    #[inline]
+    fn from(p: Param) -> Self {
+        match p {
+            Param::None => None,
+            _ => Some(p.as_usize()),
+        }
+    }
+}
+
 impl From<Param> for u32 {
     #[inline]
     fn from(p: Param) -> Self {
@@ -127,11 +184,26 @@ impl From<Param> for i64 {
     }
 }
 
+impl From<Param> for f64 {
+    #[inline]
+    fn from(p: Param) -> Self {
+        p.as_f64()
+    }
+}
+
+impl From<Param> for Arc<str> {
+    #[inline]
+    fn from(p: Param) -> Self {
+        p.as_str().into()
+    }
+}
+
 impl Debug for Param {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Param::I32(v) => write!(f, "{}", v),
             Param::F64(v) => write!(f, "{}", v),
+            Param::Str(v) => write!(f, "{}", v),
             Param::None => write!(f, ""),
         }
     }
@@ -173,6 +245,12 @@ impl Param {
         }
     }
 
+    /// Converts the parameter to an i64.
+    #[inline]
+    pub fn as_i64(&self) -> i64 {
+        self.as_i32() as i64
+    }
+
     /// Converts the parameter to an f64.
     ///
     /// # Panics
@@ -197,6 +275,15 @@ impl Param {
     #[inline]
     pub fn as_usize(&self) -> usize {
         self.as_i32() as usize
+    }
+
+    #[inline]
+    /// Converts the parameter to str.
+    pub fn as_str(&self) -> &str {
+        match self {
+            Param::Str(v) => &*v,
+            _ => panic!("param is not str"),
+        }
     }
 
     /// Creates a Polars RollingOptionsFixedWindow from the parameter.
