@@ -29,7 +29,7 @@ impl PlFactor for ObOfi {
     }
 }
 
-#[derive(FactorBase, FromParam, Default, Clone)]
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
 pub struct CumObOfi(pub usize);
 
 impl PlFactor for CumObOfi {

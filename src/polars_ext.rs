@@ -139,6 +139,16 @@ pub trait SeriesExt {
     /// A new Series with the valid first non-null value.
     fn vfirst(&self) -> AnyValue<'_>;
 
+    /// Calculates the valid last non-null value.
+    ///
+    /// This function calculates the last non-null value in the Series.
+    /// If the Series is empty or all values are null, it returns null.
+    ///
+    /// # Returns
+    ///
+    /// A new Series with the valid last non-null value.
+    fn vlast(&self) -> AnyValue<'_>;
+
     /// Calculates the half-life of a factor series using autocorrelation.
     ///
     /// The half-life is defined as the lag at which the autocorrelation drops to 0.5.
@@ -443,6 +453,20 @@ impl SeriesExt for Series {
         }
     }
 
+    fn vlast(&self) -> AnyValue<'_> {
+        match self.dtype() {
+            DataType::Float64 => self.f64().unwrap().vlast().into(),
+            DataType::Float32 => self.f32().unwrap().vlast().into(),
+            DataType::Int64 => self.i64().unwrap().vlast().into(),
+            DataType::Int32 => self.i32().unwrap().vlast().into(),
+            DataType::Boolean => self.bool().unwrap().vlast().into(),
+            DataType::String => self.str().unwrap().vlast().into(),
+            DataType::Date => self.date().unwrap().vlast().into(),
+            DataType::Datetime(_, _) => self.datetime().unwrap().vlast().into(),
+            dtype => panic!("dtype {} not supported for vlast", dtype),
+        }
+    }
+
     fn half_life(&self, min_periods: Option<usize>) -> usize {
         match self.dtype() {
             DataType::Float64 => self.f64().unwrap().half_life(min_periods),
@@ -554,6 +578,12 @@ pub trait ExprExt {
     /// ignoring any null values at the beginning.
     fn vfirst(self) -> Self;
 
+    /// Returns the last non-null value in a vector.
+    ///
+    /// This function is useful for obtaining the last valid observation in a series,
+    /// ignoring any null values at the end.
+    fn vlast(self) -> Self;
+
     /// Calculates the half-life of a factor series using autocorrelation.
     ///
     /// The half-life is defined as the lag at which the autocorrelation drops to 0.5.
@@ -664,9 +694,24 @@ impl ExprExt for Expr {
 
     fn vfirst(self) -> Self {
         self.apply(
-            |s| Series::from_any_values(s.name(), &[s.vfirst()], true).map(Some),
+            |s| {
+                Series::from_any_values_and_dtype(s.name(), &[s.vfirst()], &s.dtype(), false)
+                    .map(Some)
+            },
             GetOutput::same_type(),
         )
+        .get(0)
+    }
+
+    fn vlast(self) -> Self {
+        self.apply(
+            |s| {
+                Series::from_any_values_and_dtype(s.name(), &[s.vlast()], &s.dtype(), false)
+                    .map(Some)
+            },
+            GetOutput::same_type(),
+        )
+        .get(0)
     }
 
     fn half_life(self, min_periods: Option<usize>) -> Self {

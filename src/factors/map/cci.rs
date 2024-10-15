@@ -30,9 +30,9 @@ pub struct Cci(pub usize);
 impl PlFactor for Cci {
     #[inline]
     fn try_expr(&self) -> Result<Expr> {
-        let ma = TYP.mean(self.0);
+        let ma = TYP.mean_opt(self.0, 1);
         let md = (TYP - ma).abs().mean(self.0);
-        let cci: Factor<_> = (TYP - ma) / (0.015 * md);
+        let cci = (TYP - ma) / (md * 0.015);
         cci.try_expr()
     }
 }

@@ -4,6 +4,8 @@ mod methods;
 #[cfg(feature = "fac-ext")]
 mod ops;
 
+mod agg;
+pub use agg::{FactorAgg, FactorAggMethod, PlAggFactor};
 pub use factor::Factor;
 #[cfg(feature = "fac-ext")]
 pub use methods::*;

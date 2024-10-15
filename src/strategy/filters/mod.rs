@@ -65,6 +65,10 @@ impl Filter {
             "mid_trend" => Ok(self.trend(false, "mid")),
             "mid_trend_rev" => Ok(self.trend(true, "mid")),
             "ytm_spread" => Ok(self.ytm_spread()),
+            "vol" => Ok(self.vol(false, "close")),
+            "vol_rev" => Ok(self.vol(true, "close")),
+            "mid_vol" => Ok(self.vol(false, "mid")),
+            "mid_vol_rev" => Ok(self.vol(true, "mid")),
             _ => bail!("unsupported filter: {}", self.name),
         }
     }
@@ -80,7 +84,7 @@ impl Filter {
     ///
     /// * `[Expr; 2]` - An array of two Expr representing long open and short open conditions.
     pub fn trend(&self, rev: bool, fac: &str) -> [Expr; 2] {
-        let n = self.params[0].as_i32() as usize;
+        let n = self.params[0].as_usize();
         let m = if self.params.len() > 1 {
             self.params[1].as_f64()
         } else {
@@ -101,6 +105,31 @@ impl Filter {
             [fac.clone().gt_eq(m), fac.lt_eq(-m)]
         } else {
             [fac.clone().lt_eq(-m), fac.gt_eq(m)]
+        }
+    }
+
+    pub fn vol(&self, rev: bool, fac: &str) -> [Expr; 2] {
+        let n = self.params[0].as_usize();
+        let m = if self.params.len() > 1 {
+            self.params[1].as_f64()
+        } else {
+            0.
+        };
+        let vol = col(fac).rolling_std(RollingOptionsFixedWindow {
+            window_size: n,
+            min_periods: n / 2,
+            ..Default::default()
+        });
+        let vol_mean = vol.clone().rolling_mean(RollingOptionsFixedWindow {
+            window_size: 5 * n,
+            min_periods: 5 * n / 2,
+            ..Default::default()
+        });
+        let fac = vol - vol_mean;
+        if !rev {
+            [fac.clone().lt_eq(m), fac.lt_eq(m)]
+        } else {
+            [fac.clone().gt_eq(m), fac.gt_eq(m)]
         }
     }
 

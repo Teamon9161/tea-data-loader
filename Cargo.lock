@@ -2325,7 +2325,7 @@ dependencies = [
 [[package]]
 name = "tea_strategy"
 version = "0.1.0"
-source = "git+https://github.com/Teamon9161/tea_strategy.git?branch=master#3f6bd0a16e030b3cf18758f21454c8a21e4fa65b"
+source = "git+https://github.com/Teamon9161/tea_strategy.git?branch=master#3a91d18e8bbd72177f0ba50efb1b1253946dcb63"
 dependencies = [
  "derive_more",
  "itertools",

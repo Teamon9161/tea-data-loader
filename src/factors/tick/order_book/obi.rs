@@ -15,7 +15,7 @@ use crate::factors::export::*;
 /// # Examples
 /// - Param(1) or None: (BidVol1 - AskVol1) / (BidVol1 + AskVol1)
 /// - Param(3): (Sum of top 3 BidVols - Sum of top 3 AskVols) / (Sum of top 3 BidVols + Sum of top 3 AskVols)
-#[derive(FactorBase, FromParam, Default, Clone)]
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
 pub struct Obi(pub Option<usize>);
 
 impl PlFactor for Obi {
@@ -41,7 +41,7 @@ impl PlFactor for Obi {
 ///
 /// CumOBI provides a longer-term view of order book imbalance compared to the standard OBI,
 /// with the added normalization through z-score calculation.
-#[derive(FactorBase, FromParam, Default, Clone)]
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
 pub struct CumObi(pub usize);
 
 impl PlFactor for CumObi {

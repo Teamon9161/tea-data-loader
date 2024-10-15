@@ -4,7 +4,14 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-default = ["io", "fac-analyse", "tick-fac", "tick-future-fac", "plotlars-plot"]
+default = [
+    "io",
+    "fac-analyse",
+    "tick-fac",
+    "tick-future-fac",
+    "map-fac",
+    "plotlars-plot",
+]
 
 serde = ["polars/serde", "polars/serde-lazy", "tea_strategy/serde"]
 serde_par = []

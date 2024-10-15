@@ -6,6 +6,7 @@ mod diff;
 mod efficiency;
 mod efficiency_sign;
 mod ewm;
+mod fill;
 mod iif;
 mod imbalance;
 mod kurt;
@@ -23,6 +24,7 @@ mod vol;
 mod vol_rank;
 mod zscore;
 
+use crate::factors::base::Null;
 use crate::prelude::*;
 
 pub type BiasFactor<F> = Factor<bias::FactorBias<F>>;
@@ -49,6 +51,7 @@ pub type LogFactor<F> = Factor<log::FactorLog<F>>;
 pub type CorrFactor<F, G> = Factor<corr::FactorCorr<F, G>>;
 pub use compare::FactorCmpExt;
 pub use iif::iif;
+use polars::prelude::FillNullStrategy;
 
 /// Extension trait for factors providing additional methods for factor manipulation and analysis.
 ///
@@ -94,6 +97,83 @@ pub trait FactorExt: FactorBase {
             fac: self,
             param,
             min_periods: None,
+        }
+        .into()
+    }
+
+    /// Fills null values in the factor using forward fill strategy.
+    ///
+    /// This method replaces null values with the last non-null value that came before them.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Factor<fill::FactorFill<Self, Null>>` instance with forward fill strategy applied.
+    #[inline]
+    fn ffill(self) -> Factor<fill::FactorFill<Self, Null>> {
+        fill::FactorFill {
+            fac: self,
+            strategy: Some(FillNullStrategy::Forward(None)),
+            value: None,
+        }
+        .into()
+    }
+
+    /// Fills null values in the factor using backward fill strategy.
+    ///
+    /// This method replaces null values with the next non-null value that comes after them.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Factor<fill::FactorFill<Self, Null>>` instance with backward fill strategy applied.
+    #[inline]
+    fn bfill(self) -> Factor<fill::FactorFill<Self, Null>> {
+        fill::FactorFill {
+            fac: self,
+            strategy: Some(FillNullStrategy::Backward(None)),
+            value: None,
+        }
+        .into()
+    }
+
+    /// Fills null values in the factor with a specified value.
+    ///
+    /// # Arguments
+    ///
+    /// * `value` - The value to use for filling null values. It must implement `FactorBase`.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Factor<fill::FactorFill<Self, G>>` instance with the specified value used for filling null values.
+    #[inline]
+    fn fill<G: FactorBase>(self, value: G) -> Factor<fill::FactorFill<Self, G>> {
+        fill::FactorFill {
+            fac: self,
+            strategy: None,
+            value: Some(value),
+        }
+        .into()
+    }
+
+    /// Fills null values in the factor using a specified strategy.
+    ///
+    /// This method allows for more flexible null-filling strategies compared to `ffill`, `bfill`, or `fill`.
+    ///
+    /// # Arguments
+    ///
+    /// * `strategy` - A `FillNullStrategy` enum value specifying the strategy to use for filling null values.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Factor<fill::FactorFill<Self, Null>>` instance with the specified strategy applied for filling null values.
+    #[inline]
+    fn fill_null_with_strategy(
+        self,
+        strategy: FillNullStrategy,
+    ) -> Factor<fill::FactorFill<Self, Null>> {
+        fill::FactorFill {
+            fac: self,
+            strategy: Some(strategy),
+            value: None,
         }
         .into()
     }

@@ -125,6 +125,15 @@ pub fn derive_from_param(input: TokenStream) -> TokenStream {
                                 }
                             }
                         },
+                        syn::Type::Path(type_path) if type_path.path.is_ident("String") => {
+                            quote! {
+                                impl From<Param> for #name {
+                                    fn from(p: Param) -> Self {
+                                        Self(p.as_str().to_string())
+                                    }
+                                }
+                            }
+                        },
                         syn::Type::Path(type_path) if type_path.path.is_ident("Param") => {
                             quote! {
                                 impl From<Param> for #name {

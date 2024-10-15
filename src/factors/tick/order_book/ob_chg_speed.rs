@@ -24,7 +24,7 @@ impl PlFactor for BuyObChgSpeed {
     }
 }
 
-#[derive(FactorBase, FromParam, Default, Clone)]
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
 pub struct SellObChgSpeed;
 
 impl PlFactor for SellObChgSpeed {

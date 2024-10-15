@@ -81,3 +81,41 @@ impl From<Null> for Param {
         Param::None
     }
 }
+
+#[derive(FromParam, Clone)]
+pub struct Direct(pub String);
+
+impl std::fmt::Debug for Direct {
+    #[inline]
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl FactorBase for Direct {
+    #[inline]
+    fn fac_name() -> Arc<str> {
+        "Direct".into()
+    }
+}
+
+impl From<String> for Direct {
+    #[inline]
+    fn from(value: String) -> Self {
+        Self(value)
+    }
+}
+
+impl From<&str> for Direct {
+    #[inline]
+    fn from(value: &str) -> Self {
+        Self(value.to_string())
+    }
+}
+
+impl PlFactor for Direct {
+    #[inline]
+    fn try_expr(&self) -> Result<Expr> {
+        Ok(col(self.0.as_str()))
+    }
+}

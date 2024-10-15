@@ -63,6 +63,24 @@ impl PlFactor for Ask {
         }
     }
 }
+/// Represents the ask (sell) volume at a specific level in the order book.
+///
+/// The `Param` field specifies the level (1-5) of the ask volume to retrieve.
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
+pub struct AskVol(pub usize);
+
+impl PlFactor for AskVol {
+    fn try_expr(&self) -> Result<Expr> {
+        match self.0 {
+            1 => Ok(ASK1_VOL.expr()),
+            2 => Ok(ASK2_VOL.expr()),
+            3 => Ok(ASK3_VOL.expr()),
+            4 => Ok(ASK4_VOL.expr()),
+            5 => Ok(ASK5_VOL.expr()),
+            p => bail!("level must be 1,2,3,4,5, find {}", p),
+        }
+    }
+}
 
 /// Represents the bid (buy) price at a specific level in the order book.
 ///
@@ -78,6 +96,25 @@ impl PlFactor for Bid {
             3 => Ok(BID3.expr()),
             4 => Ok(BID4.expr()),
             5 => Ok(BID5.expr()),
+            p => bail!("level must be 1,2,3,4,5, find {}", p),
+        }
+    }
+}
+
+/// Represents the bid (buy) volume at a specific level in the order book.
+///
+/// The `Param` field specifies the level (1-5) of the bid volume to retrieve.
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
+pub struct BidVol(pub usize);
+
+impl PlFactor for BidVol {
+    fn try_expr(&self) -> Result<Expr> {
+        match self.0 {
+            1 => Ok(BID1_VOL.expr()),
+            2 => Ok(BID2_VOL.expr()),
+            3 => Ok(BID3_VOL.expr()),
+            4 => Ok(BID4_VOL.expr()),
+            5 => Ok(BID5_VOL.expr()),
             p => bail!("level must be 1,2,3,4,5, find {}", p),
         }
     }

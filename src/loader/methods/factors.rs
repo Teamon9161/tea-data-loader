@@ -6,6 +6,7 @@ use polars::series::Series;
 use rayon::prelude::*;
 use tea_strategy::tevec::prelude::CollectTrustedToVec;
 
+use crate::factors::PlAggFactor;
 use crate::prelude::*;
 
 impl DataLoader {
@@ -172,5 +173,27 @@ impl DataLoader {
     pub fn with_t_fac(self, fac: impl TFactor) -> Result<Self> {
         let facs: Vec<Arc<dyn TFactor>> = vec![Arc::new(fac)];
         self.with_t_facs(&facs)
+    }
+
+    pub fn with_pl_agg_facs<F: AsRef<dyn PlAggFactor>, E: AsRef<[Expr]>>(
+        self,
+        rule: &str,
+        facs: &[F],
+        agg_exprs: E,
+        opt: GroupByTimeOpt,
+    ) -> Result<Self> {
+        let facs = facs.into_iter().map(|f| f.as_ref()).collect_vec();
+        let exprs = facs
+            .iter()
+            .map(|f| f.fac_expr().map(|e| e.alias(&f.fac_name())))
+            .collect::<Result<Vec<_>>>()?;
+        let dl = self.with_columns(&exprs)?;
+        let dl = dl.group_by_time(rule, opt)?.agg(
+            facs.iter()
+                .map(|f| f.agg_expr().alias(&f.name()))
+                .chain(agg_exprs.as_ref().iter().cloned())
+                .collect_vec(),
+        );
+        Ok(dl)
     }
 }

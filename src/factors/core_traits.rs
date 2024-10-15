@@ -3,6 +3,7 @@ use polars::lazy::dsl::Expr;
 use polars::prelude::*;
 
 use super::param::Param;
+use crate::factors::factor_struct::{FactorAgg, FactorAggMethod};
 use crate::factors::Factor;
 
 /// Trait defining the base functionality for factors.
@@ -45,6 +46,25 @@ pub trait FactorBase: std::fmt::Debug + Clone + Sized {
         Self: From<Param>,
     {
         Factor(Self::new(param))
+    }
+
+    /// Aggregates the factor using the specified method.
+    ///
+    /// This method creates a `FactorAgg` instance, which represents an aggregated version of the factor.
+    ///
+    /// # Arguments
+    ///
+    /// * `method` - The aggregation method to be applied, specified as a `FactorAggMethod`.
+    ///
+    /// # Returns
+    ///
+    /// A `FactorAgg<Self>` instance containing the factor and the specified aggregation method.
+    #[inline]
+    fn agg(self, method: FactorAggMethod) -> FactorAgg<Self>
+    where
+        Self: Sized,
+    {
+        FactorAgg { fac: self, method }
     }
 }
 

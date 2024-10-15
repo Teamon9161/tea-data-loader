@@ -141,9 +141,144 @@ impl Strategy for BollShort {
     }
 }
 
+#[derive(Clone)]
+pub struct BollDirectKwargs(pub BollKwargs);
+
+impl From<BollKwargs> for BollDirectKwargs {
+    fn from(kwargs: BollKwargs) -> Self {
+        let mut kwargs = kwargs;
+        kwargs.zscore = false;
+        BollDirectKwargs(kwargs)
+    }
+}
+
+impl From<Params> for BollDirectKwargs {
+    fn from(value: Params) -> Self {
+        let mut kwargs = BollKwargs::from(value);
+        kwargs.zscore = false;
+        BollDirectKwargs(kwargs)
+    }
+}
+
+impl From<Params> for BollDirect {
+    #[inline]
+    fn from(value: Params) -> Self {
+        BollDirect(BollDirectKwargs::from(value))
+    }
+}
+
+impl GetStrategyParamName for BollDirect {
+    #[inline]
+    fn get_param_name(&self) -> Arc<str> {
+        format!("{:?}", self.0 .0.params).into()
+    }
+}
+#[derive(Clone)]
+pub struct BollDirectLongKwargs(pub BollKwargs);
+
+impl From<BollKwargs> for BollDirectLongKwargs {
+    fn from(kwargs: BollKwargs) -> Self {
+        let mut kwargs = kwargs;
+        kwargs.zscore = false;
+        kwargs.short_signal = kwargs.close_signal;
+        BollDirectLongKwargs(kwargs)
+    }
+}
+
+impl From<Params> for BollDirectLongKwargs {
+    fn from(value: Params) -> Self {
+        let mut kwargs = BollKwargs::from(value);
+        kwargs.zscore = false;
+        kwargs.short_signal = kwargs.close_signal;
+        BollDirectLongKwargs(kwargs)
+    }
+}
+
+impl From<Params> for BollDirectLong {
+    #[inline]
+    fn from(value: Params) -> Self {
+        BollDirectLong(BollDirectLongKwargs::from(value))
+    }
+}
+
+impl GetStrategyParamName for BollDirectLong {
+    #[inline]
+    fn get_param_name(&self) -> Arc<str> {
+        format!("{:?}", self.0 .0.params).into()
+    }
+}
+
+#[derive(StrategyBase, Clone)]
+pub struct BollDirectLong(pub BollDirectLongKwargs);
+
+impl Strategy for BollDirectLong {
+    fn eval_to_fac(&self, fac: &Series, filters: Option<DataFrame>) -> Result<Series> {
+        let strategy = Boll(self.0 .0.clone());
+        strategy.eval_to_fac(fac, filters)
+    }
+}
+
+#[derive(Clone)]
+pub struct BollDirectShortKwargs(pub BollKwargs);
+
+impl From<BollKwargs> for BollDirectShortKwargs {
+    fn from(kwargs: BollKwargs) -> Self {
+        let mut kwargs = kwargs;
+        kwargs.zscore = false;
+        kwargs.long_signal = kwargs.close_signal;
+        BollDirectShortKwargs(kwargs)
+    }
+}
+
+impl From<Params> for BollDirectShortKwargs {
+    fn from(value: Params) -> Self {
+        let mut kwargs = BollKwargs::from(value);
+        kwargs.zscore = false;
+        kwargs.long_signal = kwargs.close_signal;
+        BollDirectShortKwargs(kwargs)
+    }
+}
+
+impl From<Params> for BollDirectShort {
+    #[inline]
+    fn from(value: Params) -> Self {
+        BollDirectShort(BollDirectShortKwargs::from(value))
+    }
+}
+
+impl GetStrategyParamName for BollDirectShort {
+    #[inline]
+    fn get_param_name(&self) -> Arc<str> {
+        format!("{:?}", self.0 .0.params).into()
+    }
+}
+
+#[derive(StrategyBase, Clone)]
+pub struct BollDirectShort(pub BollDirectShortKwargs);
+
+impl Strategy for BollDirectShort {
+    fn eval_to_fac(&self, fac: &Series, filters: Option<DataFrame>) -> Result<Series> {
+        let strategy = Boll(self.0 .0.clone());
+        strategy.eval_to_fac(fac, filters)
+    }
+}
+
+#[derive(StrategyBase, Clone)]
+pub struct BollDirect(pub BollDirectKwargs);
+
+impl Strategy for BollDirect {
+    fn eval_to_fac(&self, fac: &Series, filters: Option<DataFrame>) -> Result<Series> {
+        let strategy = Boll(self.0 .0.clone());
+        strategy.eval_to_fac(fac, filters)
+    }
+}
+
 #[ctor::ctor]
 fn register() {
     register_strategy::<Boll>().unwrap();
     register_strategy::<BollLong>().unwrap();
     register_strategy::<BollShort>().unwrap();
+    register_strategy::<BollDirect>().unwrap();
+    register_strategy::<BollDirectLong>().unwrap();
+    register_strategy::<BollDirectShort>().unwrap();
 }
