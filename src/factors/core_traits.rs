@@ -21,6 +21,7 @@ pub trait FactorBase: std::fmt::Debug + Clone + Sized {
     ///
     /// * `param` - A value that can be converted into a `Param`.
     // fn new<P: Into<Param>>(param: P) -> Self;
+    #[inline]
     fn new(param: impl Into<Param>) -> Self
     where
         Self: From<Param>,
@@ -78,6 +79,7 @@ pub trait GetName: std::fmt::Debug {
     /// # Returns
     ///
     /// A `String` representing the name of the factor.
+    #[inline]
     fn name(&self) -> String {
         format!("{:?}", self)
     }

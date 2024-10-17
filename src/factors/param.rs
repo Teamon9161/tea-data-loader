@@ -41,6 +41,8 @@ use polars::prelude::{col, Expr, Literal, RollingCovOptions, RollingOptionsFixed
 /// ```
 #[derive(Default, From, Clone, PartialEq)]
 pub enum Param {
+    /// Represents a boolean parameter.
+    Bool(bool),
     /// Represents an integer parameter.
     I32(i32),
     /// Represents a floating-point parameter.
@@ -56,10 +58,21 @@ impl From<Param> for Expr {
     #[inline]
     fn from(p: Param) -> Self {
         match p {
+            Param::Bool(v) => v.lit(),
             Param::I32(v) => v.lit(),
             Param::F64(v) => v.lit(),
             Param::Str(v) => col(&*v),
             Param::None => NULL.lit(),
+        }
+    }
+}
+
+impl From<Option<bool>> for Param {
+    #[inline]
+    fn from(v: Option<bool>) -> Self {
+        match v {
+            Some(v) => Param::Bool(v),
+            None => Param::None,
         }
     }
 }
@@ -201,6 +214,7 @@ impl From<Param> for Arc<str> {
 impl Debug for Param {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Param::Bool(v) => write!(f, "{}", v),
             Param::I32(v) => write!(f, "{}", v),
             Param::F64(v) => write!(f, "{}", v),
             Param::Str(v) => write!(f, "{}", v),
@@ -229,6 +243,22 @@ impl Param {
     #[inline]
     pub fn is_float(&self) -> bool {
         matches!(self, Param::F64(_))
+    }
+
+    /// Checks if the parameter is a boolean.
+    #[inline]
+    pub fn is_bool(&self) -> bool {
+        matches!(self, Param::Bool(_))
+    }
+
+    /// Converts the parameter to a bool.
+    #[inline]
+    pub fn as_bool(&self) -> bool {
+        if let Param::Bool(v) = self {
+            *v
+        } else {
+            panic!("param is not bool")
+        }
     }
 
     /// Converts the parameter to an i32.
@@ -403,7 +433,7 @@ impl FromStr for Params {
             nodes
                 .split(",")
                 .map(|n| n.parse())
-                .try_collect::<Vec<Param>>()?
+                .collect::<Result<Vec<Param>>>()?
         } else {
             vec![s.parse()?]
         };

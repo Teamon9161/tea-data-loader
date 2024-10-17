@@ -45,7 +45,7 @@ impl DataLoader {
         });
         let works = strategies
             .map(|s| s.parse())
-            .try_collect::<Vec<StrategyWork>>()?;
+            .collect::<Result<Vec<StrategyWork>>>()?;
         // calculate factors
         let facs = works
             .iter()

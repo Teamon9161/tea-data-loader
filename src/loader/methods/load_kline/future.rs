@@ -86,7 +86,7 @@ impl DataLoader {
                 }
                 Ok(ldf)
             })
-            .try_collect()?;
+            .collect::<Result<Frames>>()?;
         if self.dfs.is_empty() {
             eprintln!("No data found in the path: {:?}", self.kline_path);
         }

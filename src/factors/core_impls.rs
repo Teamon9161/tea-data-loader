@@ -4,6 +4,24 @@ use polars::prelude::Literal;
 
 use super::export::*;
 
+impl FactorBase for bool {
+    #[inline]
+    fn fac_name() -> Arc<str> {
+        "bool".into()
+    }
+
+    #[inline]
+    fn new(param: impl Into<Param>) -> Self {
+        param.into().as_bool()
+    }
+}
+
+impl PlFactor for bool {
+    fn try_expr(&self) -> Result<Expr> {
+        Ok(self.lit())
+    }
+}
+
 impl FactorBase for usize {
     #[inline]
     fn fac_name() -> Arc<str> {

@@ -56,9 +56,9 @@ impl<F: FactorBase> FactorAgg<F> {
 }
 
 pub trait PlAggFactor: std::fmt::Debug + GetName + 'static {
-    fn fac_expr(&self) -> Result<Expr>;
+    fn fac_expr(&self) -> Result<Option<Expr>>;
 
-    fn agg_expr(&self) -> Expr;
+    fn agg_expr(&self) -> Result<Expr>;
 
     fn fac_name(&self) -> String;
 
@@ -73,8 +73,8 @@ pub trait PlAggFactor: std::fmt::Debug + GetName + 'static {
 
 impl<F: FactorBase + PlFactor> PlAggFactor for FactorAgg<F> {
     #[inline]
-    fn fac_expr(&self) -> Result<Expr> {
-        self.fac.try_expr()
+    fn fac_expr(&self) -> Result<Option<Expr>> {
+        self.fac.try_expr().map(Some)
     }
 
     #[inline]
@@ -82,10 +82,10 @@ impl<F: FactorBase + PlFactor> PlAggFactor for FactorAgg<F> {
         self.fac.name()
     }
 
-    fn agg_expr(&self) -> Expr {
+    fn agg_expr(&self) -> Result<Expr> {
         let name = self.fac.name();
         let expr = col(&name);
-        match self.method {
+        let expr = match self.method {
             FactorAggMethod::Mean => expr.mean(),
             FactorAggMethod::Sum => expr.sum(),
             FactorAggMethod::Min => expr.min(),
@@ -93,20 +93,21 @@ impl<F: FactorBase + PlFactor> PlAggFactor for FactorAgg<F> {
             FactorAggMethod::Median => expr.median(),
             FactorAggMethod::Std => expr.std(1),
             FactorAggMethod::Var => expr.var(1),
-            FactorAggMethod::Skew => expr.skew(false),
-            FactorAggMethod::Kurt => expr.kurtosis(true, false),
+            FactorAggMethod::Skew => expr.skew(false).fill_nan(NONE),
+            FactorAggMethod::Kurt => expr.kurtosis(true, false).fill_nan(NONE),
             FactorAggMethod::Quantile(q) => expr.quantile(q.lit(), QuantileInterpolOptions::Linear),
             FactorAggMethod::First => expr.first(),
             FactorAggMethod::Last => expr.last(),
             FactorAggMethod::Nth(n) => expr.get(n as i32),
             FactorAggMethod::Count => expr.count(),
-        }
+        };
+        Ok(expr)
     }
 }
 
 impl<F: FactorBase> GetName for FactorAgg<F> {
     #[inline]
     fn name(&self) -> String {
-        format!("{}_agg_{:?}", self.fac.name(), self.method)
+        format!("{}_agg({:?})", self.fac.name(), self.method)
     }
 }

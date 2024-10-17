@@ -36,7 +36,37 @@ impl PlFactor for Mfi {
     }
 }
 
+/// 成交额资金流量指标（Amount-based Money Flow Index，AmtMFI）
+///
+/// AmtMFI是MFI的一个变体，使用成交额（AMT）代替了传统MFI中的成交量。
+///
+/// 计算公式：
+/// AmtMFI = Money Flow Ratio = Positive Money Flow / Negative Money Flow
+///
+/// 其中：
+/// - Positive Money Flow: 当典型价格上升时的成交额之和
+/// - Negative Money Flow: 当典型价格下降时的成交额之和
+///
+/// 指标解读：
+/// - AmtMFI > 0.8: 可能表示超买
+/// - AmtMFI < 0.2: 可能表示超卖
+/// - AmtMFI与价格的背离可能预示趋势反转
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
+pub struct AmtMfi(pub usize);
+
+impl PlFactor for AmtMfi {
+    #[inline]
+    fn try_expr(&self) -> Result<Expr> {
+        let tp_s = TYP.shift(1);
+        let mf_in = iif(TYP.gt(tp_s), AMT, 0.).sum_opt(self.0, 1);
+        let mf_out = iif(TYP.lt(tp_s), AMT, 0.).sum_opt(self.0, 1);
+        let mfi = mf_in / mf_out;
+        mfi.try_expr()
+    }
+}
+
 #[ctor::ctor]
 fn register() {
-    register_pl_fac::<Mfi>().unwrap()
+    register_pl_fac::<Mfi>().unwrap();
+    register_pl_fac::<AmtMfi>().unwrap();
 }

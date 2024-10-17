@@ -185,12 +185,12 @@ impl DataLoader {
         let facs = facs.into_iter().map(|f| f.as_ref()).collect_vec();
         let exprs = facs
             .iter()
-            .map(|f| f.fac_expr().map(|e| e.alias(&f.fac_name())))
-            .collect::<Result<Vec<_>>>()?;
+            .filter_map(|f| f.fac_expr().unwrap().map(|e| e.alias(&f.fac_name())))
+            .collect::<Vec<_>>();
         let dl = self.with_columns(&exprs)?;
         let dl = dl.group_by_time(rule, opt)?.agg(
             facs.iter()
-                .map(|f| f.agg_expr().alias(&f.name()))
+                .map(|f| f.agg_expr().unwrap().alias(&f.name()))
                 .chain(agg_exprs.as_ref().iter().cloned())
                 .collect_vec(),
         );

@@ -8,7 +8,7 @@ pub(super) use polars::prelude::{col, lit, DataFrame, Series, NULL as PL_NULL};
 pub(super) use super::base::{Null, TradingDate, NONE, TIME, TRADING_DATE};
 pub(super) use super::factor_struct::{iif, Factor};
 #[cfg(feature = "fac-ext")]
-pub(super) use super::factor_struct::{FactorCmpExt, FactorExt};
+pub(super) use super::factor_struct::{FactorCmpExt, FactorExt, PlAggFactor};
 pub(super) use super::macros::define_base_fac;
 #[cfg(feature = "map-fac")]
 pub(super) use super::map::base::*;

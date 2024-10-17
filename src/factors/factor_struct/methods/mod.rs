@@ -2,6 +2,7 @@ mod abs;
 mod bias;
 mod compare;
 mod corr;
+mod cum_sum;
 mod diff;
 mod efficiency;
 mod efficiency_sign;
@@ -49,6 +50,7 @@ pub type MaxFactor<F> = Factor<max::FactorMax<F>>;
 pub type EwmFactor<F> = Factor<ewm::FactorEwm<F>>;
 pub type LogFactor<F> = Factor<log::FactorLog<F>>;
 pub type CorrFactor<F, G> = Factor<corr::FactorCorr<F, G>>;
+pub type CumSumFactor<F> = Factor<cum_sum::FactorCumSum<F>>;
 pub use compare::FactorCmpExt;
 pub use iif::iif;
 use polars::prelude::FillNullStrategy;
@@ -197,6 +199,18 @@ pub trait FactorExt: FactorBase {
             min_periods: None,
         }
         .into()
+    }
+
+    /// Calculates the cumulative sum of the factor.
+    ///
+    /// This method computes the cumulative sum of the factor values over a specified window.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `CumSumFactor<Self>` instance representing the cumulative sum of the factor.
+    #[inline]
+    fn cum_sum(self) -> CumSumFactor<Self> {
+        cum_sum::FactorCumSum(self).into()
     }
 
     /// Calculates the difference between the current value and a lagged value of the factor.

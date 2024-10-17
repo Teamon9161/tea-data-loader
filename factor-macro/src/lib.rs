@@ -12,7 +12,7 @@ pub fn derive_factor_base(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
     // Get the name of the struct
-    let name = input.ident;
+    let name = &input.ident;
 
     let snake_name = to_snake_case(&name.to_string());
 
@@ -22,12 +22,15 @@ pub fn derive_factor_base(input: TokenStream) -> TokenStream {
             syn::Fields::Unnamed(fields) => fields.unnamed.len(),
             syn::Fields::Unit => 0,
         },
-        _ => panic!("Should only derive FactorBasefor structs"),
+        _ => panic!("Should only derive FactorBase for structs"),
     };
+
+    // Get the generics
+    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
     // Generate the implementation of the FactorBase trait
     let factor_base_impl = quote! {
-        impl FactorBase for #name {
+        impl #impl_generics FactorBase for #name #ty_generics #where_clause {
             #[inline]
             fn fac_name() -> ::std::sync::Arc<str> {
                 #snake_name.into()
@@ -37,7 +40,7 @@ pub fn derive_factor_base(input: TokenStream) -> TokenStream {
 
     let debug_impl = if param_num >= 1 {
         quote! {
-            impl ::std::fmt::Debug for #name {
+            impl #impl_generics ::std::fmt::Debug for #name #ty_generics #where_clause {
                 fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
                     let param: Param = self.0.clone().into();
                     match param {
@@ -49,7 +52,7 @@ pub fn derive_factor_base(input: TokenStream) -> TokenStream {
         }
     } else {
         quote! {
-            impl ::std::fmt::Debug for #name {
+            impl #impl_generics ::std::fmt::Debug for #name #ty_generics #where_clause {
                 fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
                     write!(f, "{}", &Self::fac_name())
                 }
@@ -64,6 +67,34 @@ pub fn derive_factor_base(input: TokenStream) -> TokenStream {
     TokenStream::from(expanded)
 }
 
+#[proc_macro_derive(FactorBaseNoDebug)]
+pub fn derive_factor_base_no_debug(input: TokenStream) -> TokenStream {
+    // Parse the input tokens into a syntax tree
+    let input = parse_macro_input!(input as DeriveInput);
+
+    // Get the name of the struct
+    let name = &input.ident;
+
+    let snake_name = to_snake_case(&name.to_string());
+    // Get the generics
+    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+
+    // Generate the implementation of the FactorBase trait
+    let factor_base_impl = quote! {
+        impl #impl_generics FactorBase for #name #ty_generics #where_clause {
+            #[inline]
+            fn fac_name() -> ::std::sync::Arc<str> {
+                #snake_name.into()
+            }
+        }
+    };
+    let expanded = quote! {
+        #factor_base_impl
+    };
+    // Convert the expanded code back into a TokenStream
+    TokenStream::from(expanded)
+}
+
 #[proc_macro_derive(FromParam)]
 pub fn derive_from_param(input: TokenStream) -> TokenStream {
     // Parse the input tokens into a syntax tree
@@ -71,6 +102,9 @@ pub fn derive_from_param(input: TokenStream) -> TokenStream {
 
     // Get the name of the struct
     let name = input.ident;
+
+    // Get the generics
+    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
 
     // Generate the implementation based on the struct fields
     let expanded = match input.data {
@@ -82,7 +116,7 @@ pub fn derive_from_param(input: TokenStream) -> TokenStream {
                     match ty {
                         syn::Type::Path(type_path) if type_path.path.is_ident("i32") => {
                             quote! {
-                                impl From<Param> for #name {
+                                impl #impl_generics From<Param> for #name #ty_generics #where_clause {
                                     fn from(p: Param) -> Self {
                                         Self(p.as_i32())
                                     }
@@ -91,7 +125,7 @@ pub fn derive_from_param(input: TokenStream) -> TokenStream {
                         },
                         syn::Type::Path(type_path) if type_path.path.is_ident("i64") => {
                             quote! {
-                                impl From<Param> for #name {
+                                impl #impl_generics From<Param> for #name #ty_generics #where_clause {
                                     fn from(p: Param) -> Self {
                                         Self(p.as_i64())
                                     }
@@ -100,7 +134,7 @@ pub fn derive_from_param(input: TokenStream) -> TokenStream {
                         },
                         syn::Type::Path(type_path) if type_path.path.is_ident("f32") => {
                             quote! {
-                                impl From<Param> for #name {
+                                impl #impl_generics From<Param> for #name #ty_generics #where_clause {
                                     fn from(p: Param) -> Self {
                                         Self(p.as_f32())
                                     }
@@ -109,7 +143,7 @@ pub fn derive_from_param(input: TokenStream) -> TokenStream {
                         },
                         syn::Type::Path(type_path) if type_path.path.is_ident("f64") => {
                             quote! {
-                                impl From<Param> for #name {
+                                impl #impl_generics From<Param> for #name #ty_generics #where_clause {
                                     fn from(p: Param) -> Self {
                                         Self(p.as_f64())
                                     }
@@ -118,7 +152,7 @@ pub fn derive_from_param(input: TokenStream) -> TokenStream {
                         },
                         syn::Type::Path(type_path) if type_path.path.is_ident("usize") => {
                             quote! {
-                                impl From<Param> for #name {
+                                impl #impl_generics From<Param> for #name #ty_generics #where_clause {
                                     fn from(p: Param) -> Self {
                                         Self(p.as_usize())
                                     }
@@ -127,7 +161,7 @@ pub fn derive_from_param(input: TokenStream) -> TokenStream {
                         },
                         syn::Type::Path(type_path) if type_path.path.is_ident("String") => {
                             quote! {
-                                impl From<Param> for #name {
+                                impl #impl_generics From<Param> for #name #ty_generics #where_clause {
                                     fn from(p: Param) -> Self {
                                         Self(p.as_str().to_string())
                                     }
@@ -136,7 +170,7 @@ pub fn derive_from_param(input: TokenStream) -> TokenStream {
                         },
                         syn::Type::Path(type_path) if type_path.path.is_ident("Param") => {
                             quote! {
-                                impl From<Param> for #name {
+                                impl #impl_generics From<Param> for #name #ty_generics #where_clause {
                                     fn from(p: Param) -> Self {
                                         Self(p)
                                     }
@@ -156,7 +190,7 @@ pub fn derive_from_param(input: TokenStream) -> TokenStream {
                                             {
                                                 if inner_type.path.is_ident("usize") {
                                                     break 'a quote! {
-                                                        impl From<Param> for #name {
+                                                        impl #impl_generics From<Param> for #name #ty_generics #where_clause {
                                                             fn from(p: Param) -> Self {
                                                                 match p {
                                                                     Param::None => Self(None),
@@ -178,7 +212,7 @@ pub fn derive_from_param(input: TokenStream) -> TokenStream {
                     }
                 } else {
                     quote! {
-                        impl From<Param> for #name {
+                        impl #impl_generics From<Param> for #name #ty_generics #where_clause {
                             fn from(_p: Param) -> Self {
                                 Self()
                             }
@@ -188,7 +222,7 @@ pub fn derive_from_param(input: TokenStream) -> TokenStream {
             },
             syn::Fields::Unit => {
                 quote! {
-                    impl From<Param> for #name {
+                    impl #impl_generics From<Param> for #name #ty_generics #where_clause {
                         fn from(_: Param) -> Self {
                             Self
                         }

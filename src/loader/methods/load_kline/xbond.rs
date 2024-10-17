@@ -77,7 +77,7 @@ impl DataLoader {
                         }
                         Ok(ldf)
                     })
-                    .try_collect()?;
+                    .collect::<Result<_>>()?;
                 if concat {
                     let mut df = dsl::concat(
                         dfs,

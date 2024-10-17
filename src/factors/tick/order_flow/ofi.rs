@@ -1,6 +1,9 @@
+use factor_macro::FactorBaseNoDebug;
 use polars::prelude::*;
 
+use super::{is_order_tier, is_simple_order_tier, OrderTier, SimpleOrderTier};
 use crate::factors::export::*;
+use crate::factors::GetName;
 
 /// Represents the Order Flow Imbalance (OFI) factor.
 ///
@@ -28,7 +31,7 @@ use crate::factors::export::*;
 ///
 /// # Parameters
 /// - Window size: Number of trades or time period for calculation (specified in `Param`)
-#[derive(FactorBase, FromParam, Default, Clone)]
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
 pub struct Ofi(pub usize);
 
 impl PlFactor for Ofi {
@@ -65,22 +68,85 @@ impl PlFactor for Ofi {
 ///
 /// # Parameters
 /// - Param: Used for potential future extensions or configurations
-#[derive(FactorBase, FromParam, Default, Clone)]
-pub struct CumOfi(pub Param);
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
+pub struct CumOfi(pub usize);
 
 impl PlFactor for CumOfi {
     fn try_expr(&self) -> Result<Expr> {
-        let is_buy = IS_BUY.expr();
-        let buy_vol = (ORDER_AMT.expr() * (when(is_buy.clone()).then(1.lit()).otherwise(0.lit())))
-            .cum_sum(false)
-            .forward_fill(None);
-        let sell_vol = (ORDER_AMT.expr() * when(is_buy.not()).then(1.lit()).otherwise(0.lit()))
-            .cum_sum(false)
-            .forward_fill(None);
-        let ofi = buy_vol.clone().protect_div(buy_vol.abs() + sell_vol.abs());
+        let buy_vol = (ORDER_AMT * iif(IS_BUY, 1, 0)).cum_sum().ffill();
+        let sell_vol = (ORDER_AMT * iif(!IS_BUY, 1, 0)).cum_sum().ffill();
+        let ofi = buy_vol / (buy_vol + sell_vol);
         Ok(ofi
-            .ts_zscore(self.0.as_usize(), Some(4))
+            .try_expr()?
+            .ts_zscore(self.0, Some(4))
             .over([col(&TradingDate::fac_name())]))
+    }
+}
+
+#[derive(Default, Debug, Clone, Copy)]
+pub struct AggOfi;
+
+impl GetName for AggOfi {}
+
+impl PlAggFactor for AggOfi {
+    #[inline]
+    fn fac_expr(&self) -> Result<Option<Expr>> {
+        Ok(None)
+    }
+
+    #[inline]
+    fn agg_expr(&self) -> Result<Expr> {
+        let buy_vol = (ORDER_AMT * iif(IS_BUY, 1, 0)).try_expr()?.sum();
+        let sell_vol = (ORDER_AMT * iif(!IS_BUY, 1, 0)).try_expr()?.sum();
+        let ofi = buy_vol.clone() / (buy_vol + sell_vol);
+        Ok(ofi.fill_nan(NONE))
+    }
+
+    #[inline]
+    fn fac_name(&self) -> String {
+        "ofi(agg)".to_string()
+    }
+}
+
+#[derive(FactorBaseNoDebug, Clone, Copy)]
+pub struct TierOfi(pub OrderTier, pub usize);
+
+impl std::fmt::Debug for TierOfi {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "TierOfi({:?}, {})", self.0, self.1)
+    }
+}
+
+impl PlFactor for TierOfi {
+    fn try_expr(&self) -> Result<Expr> {
+        let n = self.1;
+        let buy_vol =
+            (ORDER_AMT * iif(IS_BUY & ExprFactor(is_order_tier(self.0)), 1, 0)).sum_opt(n, 1);
+        let sell_vol =
+            (ORDER_AMT * iif(!IS_BUY & ExprFactor(is_order_tier(self.0)), 1, 0)).sum_opt(n, 1);
+        let ofi = buy_vol.clone() / (buy_vol + sell_vol);
+        ofi.try_expr()
+    }
+}
+
+#[derive(FactorBaseNoDebug, Clone, Copy)]
+pub struct SimpleTierOfi(pub SimpleOrderTier, pub usize);
+
+impl std::fmt::Debug for SimpleTierOfi {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "SimpleTierOfi({:?}, {})", self.0, self.1)
+    }
+}
+
+impl PlFactor for SimpleTierOfi {
+    fn try_expr(&self) -> Result<Expr> {
+        let n = self.1;
+        let buy_vol = (ORDER_AMT * iif(IS_BUY & ExprFactor(is_simple_order_tier(self.0)), 1, 0))
+            .sum_opt(n, 1);
+        let sell_vol = (ORDER_AMT * iif(!IS_BUY & ExprFactor(is_simple_order_tier(self.0)), 1, 0))
+            .sum_opt(n, 1);
+        let ofi = buy_vol.clone() / (buy_vol + sell_vol);
+        ofi.try_expr()
     }
 }
 

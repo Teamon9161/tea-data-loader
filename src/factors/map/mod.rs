@@ -34,7 +34,7 @@ mod rsi;
 pub use rsi::Rsi;
 
 mod mfi;
-pub use mfi::Mfi;
+pub use mfi::{AmtMfi, Mfi};
 
 mod at_time;
 pub use at_time::AtTime;

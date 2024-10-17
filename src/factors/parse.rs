@@ -3,7 +3,8 @@ use std::sync::Arc;
 use anyhow::{bail, Result};
 use regex::Regex;
 
-use super::{Param, PlFactor, PlFactorExt, TFactor, POLARS_FAC_MAP, T_FAC_MAP};
+use super::pl_fac_ext::PlFactorExt;
+use super::{Param, PlFactor, TFactor, POLARS_FAC_MAP, T_FAC_MAP};
 
 /// Parses a string representation of a Polars factor and returns the corresponding `PlFactor`.
 ///

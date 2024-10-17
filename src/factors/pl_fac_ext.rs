@@ -66,6 +66,7 @@ impl PlFactor for PlExtFactor {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub enum PlExtMethod {
     Mean,
@@ -114,6 +115,8 @@ impl PlExtMethod {
         }
     }
 }
+
+#[allow(dead_code)]
 /// A trait providing extension methods for Polars factors.
 pub trait PlFactorExt: PlFactor + Sized {
     /// Calculates the rolling mean of the factor.

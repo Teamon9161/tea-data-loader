@@ -192,7 +192,7 @@ impl Frame {
             "胜率" => strategies.iter().map(|s| -> Result<Option<f64>> {
                 let series = &ret_df[s.as_ref()];
                 Ok(Some(series.gt_eq(0.)?.sum().map(|v| v as f64).unwrap_or(0.) / (series.len() - series.null_count()) as f64))
-            }).try_collect::<Float64Chunked>()?,
+            }).collect::<Result<Float64Chunked>>()?,
             "最大回撤" => &ret_df
                 .clone()
                 .lazy()

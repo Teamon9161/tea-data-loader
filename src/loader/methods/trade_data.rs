@@ -12,17 +12,22 @@ fn get_is_buy_expr() -> Expr {
     use crate::factors::tick::order_book::*;
     use crate::factors::tick::order_flow::*;
     use crate::factors::*;
-    let ask1_ytm = ASK1_YTM.expr();
-    let bid1_ytm = BID1_YTM.expr();
-    let last_ask1_ytm = ask1_ytm.clone().shift(lit(1));
-    let last_bid1_ytm = bid1_ytm.clone().shift(lit(1));
-    let mut is_buy = when(ORDER_YTM.expr().lt_eq(last_ask1_ytm))
-        .then(true)
-        .otherwise(NULL.lit());
-    is_buy = when(ORDER_YTM.expr().gt_eq(last_bid1_ytm))
-        .then(false)
-        .otherwise(is_buy);
-    is_buy.alias("is_buy")
+    let is_buy = iif(ORDER_YTM.lt_eq(ASK1_YTM.shift(1)), true, NONE);
+    let is_buy = iif(ORDER_YTM.gt_eq(BID1_YTM.shift(1)), false, is_buy);
+    is_buy.expr().alias("is_buy")
+}
+
+#[cfg(feature = "tick-fac")]
+fn get_vol_quantile(window: &'static str) -> Vec<Expr> {
+    use crate::factors::tick::order_flow::*;
+    const QUANTILES: [f64; 6] = [0.95, 0.9, 0.8, 0.5, 0.3, 0.2];
+    QUANTILES
+        .into_iter()
+        .map(|q| {
+            let f = OrderAmtQuantile(q, window);
+            f.expr().alias(&f.name())
+        })
+        .collect()
 }
 
 /// 根据price计算交易的ytm
@@ -142,6 +147,7 @@ impl DataLoader {
 
         let trade_df = trade_df
             .into_frame()
+            .with_columns(get_vol_quantile("5d"))?
             .with_columns([
                 when(order_ytm.clone().is_null())
                     .then(col("infer_ytm"))
@@ -196,9 +202,10 @@ impl DataLoader {
                         })
                         .collect::<Vec<_>>(),
                 )?
+                // .with_column(col("order_amt_quantile_*").forward_fill(None))?
                 .with_column(get_is_buy_expr())
             })
-            .try_collect()?;
+            .collect::<Result<Frames>>()?;
         Ok(out)
     }
 }
