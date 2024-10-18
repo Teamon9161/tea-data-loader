@@ -10,3 +10,5 @@ target/
 
 # venv
 .venv
+
+*.pyd
