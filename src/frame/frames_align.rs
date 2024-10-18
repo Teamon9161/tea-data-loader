@@ -54,7 +54,7 @@ impl Frames {
                         &on,
                         JoinArgs {
                             how: how.clone(),
-                            suffix: Some(format!(":{}", r_idx)),
+                            suffix: Some(format!(":{}", r_idx).into()),
                             coalesce: JoinCoalesce::CoalesceColumns,
                             ..Default::default()
                         },
@@ -70,7 +70,7 @@ impl Frames {
         }
         // select-out aligned components from the master frame
         let schema = alignment_frame.schema()?;
-        let aligned_cols = schema.get_names().into_iter().unique().collect_vec();
+        let aligned_cols = schema.iter_names().unique().cloned().collect_vec();
         let aligned_frames: Vec<_> = idx_frames
             .map(|(idx, mut df)| -> Result<_> {
                 let sfx = format!(":{}", idx);
@@ -79,10 +79,10 @@ impl Frames {
                     .iter_names()
                     .map(|c| {
                         let name_with_sfx = format!("{}{}", c, sfx);
-                        if aligned_cols.contains(&name_with_sfx.as_str()) {
-                            col(&name_with_sfx).alias(c)
+                        if aligned_cols.contains(&name_with_sfx.as_str().into()) {
+                            col(&name_with_sfx).alias(c.clone())
                         } else {
-                            col(c)
+                            col(c.clone())
                         }
                     })
                     .collect_vec();

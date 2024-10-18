@@ -59,14 +59,14 @@ mod tests {
             .with_symbols(["A", "CU", "RB"])
             .with_start("2020-01-01")
             .kline(KlineOpt::freq("min"))?
-            .with_noadj(None, false, true)?
+            .with_noadj(None, true)?
             .with_pl_facs(&facs)?
             .with_facs(&["typ_1"], Backend::Polars)?
             .collect(true)?;
         dbg!("{:#?}", &dl["A"]);
         let dl = DataLoader::new("future")
             .kline(KlineOpt::freq("daily"))?
-            .with_noadj(None, false, true)?
+            .with_noadj(None, true)?
             .collect(true)?;
         dbg!("{:#?}", &dl["AG"]);
         Ok(())

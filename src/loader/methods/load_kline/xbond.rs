@@ -22,7 +22,6 @@ impl DataLoader {
     pub(super) fn load_xbond_kline(
         mut self,
         path_config: PathConfig,
-        memory_map: bool,
         concat: bool,
     ) -> Result<Self> {
         let finder = PathFinder::new(path_config)?;
@@ -57,11 +56,11 @@ impl DataLoader {
                             &path,
                             ScanArgsIpc {
                                 rechunk: true,
-                                memory_map,
+                                // memory_map,
                                 ..Default::default()
                             },
                         )?;
-                        let schema = ldf.schema()?;
+                        let schema = ldf.collect_schema()?;
                         if let Some(columns) = columns.as_ref() {
                             if columns.len() != schema.len() {
                                 eprintln!(
@@ -71,7 +70,7 @@ impl DataLoader {
                                     schema.len()
                                 );
                             }
-                            ldf = ldf.select([cols(columns)]);
+                            ldf = ldf.select([cols(columns.clone())]);
                         } else {
                             columns = Some(schema.iter_names().cloned().collect());
                         }

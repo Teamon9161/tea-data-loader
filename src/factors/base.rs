@@ -50,7 +50,7 @@ impl PlFactor for Null {
 impl TFactor for Null {
     #[inline]
     fn eval(&self, df: &DataFrame) -> Result<Series> {
-        Ok(Series::new_null("__null__", df.height()))
+        Ok(Series::new_null("__null__".into(), df.height()))
     }
 }
 

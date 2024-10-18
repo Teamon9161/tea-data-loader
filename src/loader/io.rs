@@ -237,7 +237,6 @@ fn try_read_ipc_path<P: AsRef<Path>>(
         } else {
             let args = ScanArgsIpc {
                 rechunk: true,
-                memory_map,
                 ..Default::default()
             };
             Ok(Some((

@@ -281,7 +281,7 @@ impl Frames {
                 Ok(expr)
             })
             .collect::<PolarsResult<Vec<_>>>()?;
-        Ok(DataFrame::default().lazy().with_columns(exprs).collect()?)
+        Ok(DataFrame::default().lazy().select(exprs).collect()?)
     }
 }
 
@@ -316,8 +316,8 @@ mod tests {
         let result_mean = frames
             .clone()
             .horizontal_agg(&["A", "B"], [AggMethod::Mean, AggMethod::Mean])?;
-        let expected_mean_a = Series::new("A", &[5.5, 11.0, 16.5]);
-        let expected_mean_b = Series::new("B", &[22.0, 27.5, 33.0]);
+        let expected_mean_a = Series::new("A".into(), &[5.5, 11.0, 16.5]);
+        let expected_mean_b = Series::new("B".into(), &[22.0, 27.5, 33.0]);
         assert_series_equal(result_mean.column("A")?, &expected_mean_a)?;
         assert_series_equal(result_mean.column("B")?, &expected_mean_b)?;
 
@@ -330,7 +330,7 @@ mod tests {
             ],
         )?;
         let expected_weight_mean_a = Series::new(
-            "A",
+            "A".into(),
             &[
                 (1.0 * 0.5 + 10.0 * 0.4) / 0.9,
                 (2.0 * 0.3 + 20.0 * 0.4) / 0.7,
@@ -338,7 +338,7 @@ mod tests {
             ],
         );
         let expected_weight_mean_b = Series::new(
-            "B",
+            "B".into(),
             &[
                 (4.0 * 0.5 + 40.0 * 0.4) / 0.9,
                 (5.0 * 0.3 + 50.0 * 0.4) / 0.7,
@@ -352,8 +352,8 @@ mod tests {
         let result_max = frames
             .clone()
             .horizontal_agg(&["A", "B"], [AggMethod::Max, AggMethod::Max])?;
-        let expected_max_a = Series::new("A", &[10.0, 20.0, 30.0]);
-        let expected_max_b = Series::new("B", &[40.0, 50.0, 60.0]);
+        let expected_max_a = Series::new("A".into(), &[10.0, 20.0, 30.0]);
+        let expected_max_b = Series::new("B".into(), &[40.0, 50.0, 60.0]);
         assert_series_equal(result_max.column("A")?, &expected_max_a)?;
         assert_series_equal(result_max.column("B")?, &expected_max_b)?;
 
@@ -361,8 +361,8 @@ mod tests {
         let result_min = frames
             .clone()
             .horizontal_agg(&["A", "B"], [AggMethod::Min, AggMethod::Min])?;
-        let expected_min_a = Series::new("A", &[1.0, 2.0, 3.0]);
-        let expected_min_b = Series::new("B", &[4.0, 5.0, 6.0]);
+        let expected_min_a = Series::new("A".into(), &[1.0, 2.0, 3.0]);
+        let expected_min_b = Series::new("B".into(), &[4.0, 5.0, 6.0]);
         assert_series_equal(result_min.column("A")?, &expected_min_a)?;
         assert_series_equal(result_min.column("B")?, &expected_min_b)?;
 
@@ -370,8 +370,8 @@ mod tests {
         let result_sum = frames
             .clone()
             .horizontal_agg(&["A", "B"], [AggMethod::Sum, AggMethod::Sum])?;
-        let expected_sum_a = Series::new("A", &[11.0, 22.0, 33.0]);
-        let expected_sum_b = Series::new("B", &[44.0, 55.0, 66.0]);
+        let expected_sum_a = Series::new("A".into(), &[11.0, 22.0, 33.0]);
+        let expected_sum_b = Series::new("B".into(), &[44.0, 55.0, 66.0]);
         assert_series_equal(result_sum.column("A")?, &expected_sum_a)?;
         assert_series_equal(result_sum.column("B")?, &expected_sum_b)?;
 
@@ -379,8 +379,8 @@ mod tests {
         let result_first = frames
             .clone()
             .horizontal_agg(&["A", "B"], [AggMethod::First, AggMethod::First])?;
-        let expected_first_a = Series::new("A", &[1.0, 2.0, 3.0]);
-        let expected_first_b = Series::new("B", &[4.0, 5.0, 6.0]);
+        let expected_first_a = Series::new("A".into(), &[1.0, 2.0, 3.0]);
+        let expected_first_b = Series::new("B".into(), &[4.0, 5.0, 6.0]);
         assert_series_equal(result_first.column("A")?, &expected_first_a)?;
         assert_series_equal(result_first.column("B")?, &expected_first_b)?;
 
@@ -388,8 +388,8 @@ mod tests {
         let result_last = frames
             .clone()
             .horizontal_agg(&["A", "B"], [AggMethod::Last, AggMethod::Last])?;
-        let expected_last_a = Series::new("A", &[10.0, 20.0, 30.0]);
-        let expected_last_b = Series::new("B", &[40.0, 50.0, 60.0]);
+        let expected_last_a = Series::new("A".into(), &[10.0, 20.0, 30.0]);
+        let expected_last_b = Series::new("B".into(), &[40.0, 50.0, 60.0]);
         assert_series_equal(result_last.column("A")?, &expected_last_a)?;
         assert_series_equal(result_last.column("B")?, &expected_last_b)?;
 

@@ -245,9 +245,9 @@ impl DataLoader {
                     .iter()
                     .map(|s| s.as_ref())
                     .collect::<Series>()
-                    .with_name("symbol")
+                    .with_name("symbol".into())
             })
-            .unwrap_or_else(|| Series::new("symbol", &vec![None::<&str>; 0]))
+            .unwrap_or_else(|| Series::new("symbol".into(), &vec![None::<&str>; 0]))
     }
 
     /// Collects the data frames in the `DataLoader`.

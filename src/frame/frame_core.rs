@@ -108,7 +108,7 @@ impl Frame {
     pub fn schema(&mut self) -> Result<SchemaRef> {
         match self {
             Frame::Eager(df) => Ok(df.schema().into()),
-            Frame::Lazy(df) => Ok(df.schema()?),
+            Frame::Lazy(df) => Ok(df.collect_schema()?),
         }
     }
 
@@ -166,7 +166,7 @@ impl Frame {
         match self {
             Frame::Eager(mut df) => {
                 for (e, n) in existing.into_iter().zip(new.into_iter()) {
-                    df.rename(e.as_ref(), n.as_ref())?;
+                    df.rename(e.as_ref(), n.as_ref().into())?;
                 }
                 Ok(df.into())
             },
@@ -217,7 +217,7 @@ impl Frame {
     #[inline]
     pub fn sort(
         self,
-        by: impl IntoVec<SmartString>,
+        by: impl IntoVec<PlSmallStr>,
         sort_options: SortMultipleOptions,
     ) -> Result<Self> {
         self.impl_by_lazy(|df| df.sort(by, sort_options))

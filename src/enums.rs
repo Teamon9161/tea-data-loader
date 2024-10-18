@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 /// 复权方式
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Adjust {
@@ -13,6 +15,33 @@ pub enum Tier {
     SubLead,
     All,
     None,
+}
+
+impl FromStr for Adjust {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "none" | "" => Ok(Adjust::None),
+            "pre" => Ok(Adjust::Pre),
+            "post" => Ok(Adjust::Post),
+            _ => Err(()),
+        }
+    }
+}
+
+impl FromStr for Tier {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "hot" | "lead" => Ok(Tier::Lead),
+            "subhot" | "sublead" => Ok(Tier::SubLead),
+            "all" => Ok(Tier::All),
+            "none" | "" => Ok(Tier::None),
+            _ => Err(()),
+        }
+    }
 }
 
 impl Adjust {

@@ -21,7 +21,7 @@ impl DataLoader {
     pub(super) fn load_future_kline(
         mut self,
         path_config: PathConfig,
-        memory_map: bool,
+        // memory_map: bool,
     ) -> Result<Self> {
         let finder = PathFinder::new(path_config)?;
         self.kline_path = Some(finder.path()?);
@@ -57,7 +57,6 @@ impl DataLoader {
                     file,
                     ScanArgsIpc {
                         rechunk: true,
-                        memory_map,
                         ..Default::default()
                     },
                 )?;
@@ -70,8 +69,8 @@ impl DataLoader {
                     ldf = ldf.filter(cond)
                 };
                 ldf = ldf.with_columns(&preprocess_exprs);
-                let ldf_schema = ldf.schema()?;
-                if finder.freq != "tick" && ldf_schema.get_names().contains(&"close") {
+                let ldf_schema = ldf.collect_schema()?;
+                if finder.freq != "tick" && ldf_schema.contains("close") {
                     // calculate return
                     ldf = ldf
                         .with_column(

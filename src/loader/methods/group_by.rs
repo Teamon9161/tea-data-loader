@@ -14,7 +14,7 @@ pub struct DataLoaderGroupBy {
     /// Optional last time column name
     pub last_time: Option<Arc<str>>,
     /// Optional time column name
-    pub time: Option<Arc<str>>,
+    pub time: Option<PlSmallStr>,
 }
 
 /// Options for grouping data by time
@@ -257,7 +257,7 @@ impl DataLoaderGroupBy {
                 let aggs: Vec<_> = aggs
                     .iter()
                     .cloned()
-                    .chain(std::iter::once(col(last_time).last()))
+                    .chain(std::iter::once(col(&**last_time).last()))
                     .collect();
                 self.lgbs
                     .into_iter()
@@ -268,7 +268,7 @@ impl DataLoaderGroupBy {
                     .iter()
                     .cloned()
                     .chain(std::iter::once(
-                        col(last_time).last().name().suffix("_last"),
+                        col(&**last_time).last().name().suffix("_last"),
                     ))
                     .collect();
                 self.lgbs

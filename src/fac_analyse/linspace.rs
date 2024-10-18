@@ -18,7 +18,7 @@ pub fn linspace(start: Expr, end: Expr, num: Expr) -> Expr {
             let end = end.cast(&Float64)?.f64()?.get(0).unwrap();
             let num = num.cast(&Int32)?.i32()?.get(0).unwrap() as usize;
             let arr: Float64Chunked = Vec1Create::linspace(start, end, num);
-            Ok(Some(arr.with_name(name).into_series()))
+            Ok(Some(arr.with_name(name.clone()).into_series()))
         },
         &[end, num],
         GetOutput::map_dtypes(|_dtypes| Ok(Float64)),

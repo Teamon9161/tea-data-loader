@@ -146,7 +146,7 @@ impl DataLoader {
                     let series_vec: Vec<Series> = facs
                         .par_iter()
                         .zip(&fac_names)
-                        .map(|(fac, name)| fac.eval(&df).unwrap().with_name(name))
+                        .map(|(fac, name)| fac.eval(&df).unwrap().with_name(name.into()))
                         .collect();
                     df.hstack_mut(&series_vec).unwrap();
                     df.lazy().into()

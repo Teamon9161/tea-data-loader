@@ -42,7 +42,7 @@ impl PlFactor for CumObOfi {
             .forward_fill(None)
             .imbalance(of_sell.cum_sum(false).forward_fill(None))
             .ts_zscore(self.0, None)
-            .over([col(&TradingDate::fac_name())]))
+            .over([col(&*TradingDate::fac_name())]))
     }
 }
 

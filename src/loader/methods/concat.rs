@@ -24,8 +24,7 @@ impl DataLoader {
             .into_iter()
             .map(|(symbol, mut df)| {
                 let schema = df.schema()?;
-                let columns = schema.get_names();
-                if !columns.contains(&"symbol") {
+                if !schema.contains(&"symbol") {
                     Ok(df.with_column(symbol.lit().alias("symbol"))?.lazy())
                 } else {
                     Ok(df.lazy())

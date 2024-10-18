@@ -38,3 +38,6 @@ pub use price_diff_imb::PriceDiffImb;
 
 mod shape_imb;
 pub use shape_imb::{ShapeSkewImb, ShapeVolImb};
+
+mod ob_reg;
+pub use ob_reg::{ObRegAlpha, ObRegRSquared, ObRegSlope, ObRegSse};

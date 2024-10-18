@@ -58,7 +58,7 @@ impl DataLoader {
                 .map(|w| {
                     let mut res = w.eval(&df).unwrap();
                     if res.name() == "" {
-                        res.rename(w.name.as_ref().unwrap());
+                        res.rename((&**w.name.as_ref().unwrap()).into());
                         res
                     } else {
                         res

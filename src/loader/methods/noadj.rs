@@ -39,7 +39,7 @@ impl DataLoader {
     /// - There's an issue creating the PathFinder or finding the data path.
     /// - There's a problem reading or processing the IPC files.
     /// - Any other IO or data processing error occurs.
-    pub fn with_noadj(mut self, freq: Option<&str>, memory_map: bool, flag: bool) -> Result<Self> {
+    pub fn with_noadj(mut self, freq: Option<&str>, flag: bool) -> Result<Self> {
         if !flag || self.contains("close_noadj") || (self.typ.as_ref() != "future") {
             return Ok(self);
         }
@@ -68,7 +68,6 @@ impl DataLoader {
                     &file_path,
                     ScanArgsIpc {
                         rechunk: true,
-                        memory_map,
                         ..Default::default()
                     },
                 )?;

@@ -139,11 +139,11 @@ impl DataLoader {
     #[inline]
     pub fn sort(
         self,
-        by: impl IntoVec<SmartString>,
+        by: impl IntoVec<PlSmallStr>,
         sort_options: SortMultipleOptions,
     ) -> Result<Self> {
         let by = by.into_vec();
-        self.try_apply(|df| df.sort(&by, sort_options.clone()))
+        self.try_apply(|df| df.sort(by.clone(), sort_options.clone()))
     }
 
     #[inline]

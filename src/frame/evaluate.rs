@@ -69,7 +69,7 @@ fn get_strategy_columns<S: AsRef<str>>(
     schema: &Schema,
     time: &str,
     eval_cols: Option<&[S]>,
-) -> Vec<Arc<str>> {
+) -> Vec<PlSmallStr> {
     eval_cols
         .map(|cols| cols.iter().map(|s| s.as_ref().into()).collect())
         .unwrap_or_else(|| {
@@ -127,7 +127,7 @@ impl Frame {
         opt: EvaluateOpt,
     ) -> Result<Self> {
         let strategies = get_strategy_columns(&self.schema().unwrap(), opt.time, eval_cols);
-        let ret_df = self.with_column(cols(&strategies).fill_nan(lit(NULL)))?;
+        let ret_df = self.with_column(cols(strategies.clone()).fill_nan(lit(NULL)))?;
         let equity_curves: Vec<String> = strategies
             .iter()
             .map(|s| format!("{}{}", s, "_equity_curve"))
@@ -141,15 +141,15 @@ impl Frame {
             };
             ret_df
                 .clone()
-                .with_column(cols(&strategies).fill_null(lit(0.)).cum_sum(false))?
+                .with_column(cols(strategies.clone()).fill_null(lit(0.)).cum_sum(false))?
                 .collect()?
                 .into_frame()
-                .plot(&strategies, &plot_opt)?;
+                .plot(&strategies.clone(), &plot_opt)?;
         }
         // calculate equity curve
         let ret_df = ret_df
             .with_column(
-                (cols(&strategies) + lit(1.))
+                (cols(strategies.clone()) + lit(1.))
                     .cum_prod(false)
                     .name()
                     .suffix("_equity_curve"),
@@ -160,13 +160,13 @@ impl Frame {
         assert_eq!(freq.weeks(), 0, "freq should not be week");
         let n = Duration::parse("252d").duration_ms() as f64 / freq.duration_ms() as f64;
         let mut result = df!(
-            "策略" => strategies.iter().map(|s| s.as_ref()).collect::<Vec<_>>(),
+            "策略" => strategies.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
             "年化收益率" => strategies.iter().map(|s| ret_df[s.as_ref()].mean().map(|v| v * n)).collect::<Float64Chunked>(),
             "年化标准差" => strategies.iter().map(|s| ret_df[s.as_ref()].std(1).map(|v| v * (n.sqrt()))).collect::<Float64Chunked>(),
         )?;
         result.with_column(
             ((&result["年化收益率"] - opt.rf).protect_div(result["年化标准差"].clone()))?
-                .with_name("夏普比率"),
+                .with_name("夏普比率".into()),
         )?;
         let drawdown_expr = cols(&equity_curves)
             / cols(&equity_curves).cumulative_eval(col("").max(), 1, false)
@@ -199,8 +199,8 @@ impl Frame {
                 .select([drawdown_expr.abs().max()])
                 .collect()?
                 .transpose(None, None)?[0],
-            "最大回撤开始时间" => &ret_df.clone().lazy().select(drawdown_start_date_idx_df.get_columns().iter().map(|s| col(opt.time).gather(lit(s.clone())).alias(s.name())).collect::<Vec<_>>()).collect()?[0],
-            "最大回撤结束时间" => &ret_df.clone().lazy().select(drawdown_end_date_idx_df.get_columns().iter().map(|s| col(opt.time).gather(lit(s.clone())).alias(s.name())).collect::<Vec<_>>()).collect()?[0],
+            "最大回撤开始时间" => &ret_df.clone().lazy().select(drawdown_start_date_idx_df.get_columns().iter().map(|s| col(opt.time).gather(lit(s.clone())).alias(s.name().clone())).collect::<Vec<_>>()).collect()?[0],
+            "最大回撤结束时间" => &ret_df.clone().lazy().select(drawdown_end_date_idx_df.get_columns().iter().map(|s| col(opt.time).gather(lit(s.clone())).alias(s.name().clone())).collect::<Vec<_>>()).collect()?[0],
         )?;
         result.hstack_mut(res_expand.get_columns())?;
         if opt.sort {
@@ -250,7 +250,7 @@ impl Frame {
         opt: EvaluateOpt,
     ) -> Result<Self> {
         let strategies = get_strategy_columns(&self.schema().unwrap(), opt.time, eval_cols);
-        let df = self.with_column(cols(&strategies).pct_change(lit(1)))?;
+        let df = self.with_column(cols(strategies.clone()).pct_change(lit(1)))?;
         df.ret_evaluate(Some(&strategies), opt)
     }
 
@@ -290,7 +290,7 @@ impl Frame {
     ) -> Result<Self> {
         let strategies = get_strategy_columns(&self.schema().unwrap(), opt.time, eval_cols);
         let df = self.with_column(
-            (cols(&strategies).cum_sum(false) + init_cash.lit()).pct_change(1.lit()),
+            (cols(strategies.clone()).cum_sum(false) + init_cash.lit()).pct_change(1.lit()),
         )?;
         df.ret_evaluate(Some(&strategies), opt)
     }

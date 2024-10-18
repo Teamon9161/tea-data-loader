@@ -88,12 +88,12 @@ fn get_trade_ytm(
         None
     })
     .collect();
-    Ok(ytm_series.with_name("ytm").into_series())
+    Ok(ytm_series.with_name("ytm".into()).into_series())
 }
 
 impl DataLoader {
     #[cfg(feature = "tick-fac")]
-    pub fn with_trade_data(self, memory_map: bool) -> Result<Self> {
+    pub fn with_trade_data(self) -> Result<Self> {
         use crate::factors::tick::order_flow::*;
         ensure!(
             &*self.typ == "ddb-xbond",
@@ -105,13 +105,7 @@ impl DataLoader {
             parse_rename_config(&CONFIG.loader.rename, Some(&self.typ), Some("trade"), None);
         let filter_cond = self.time_filter_cond("tick")?;
         let preprocess_exprs = get_preprocess_exprs(&self.typ, "trade");
-        let mut trade_df = LazyFrame::scan_ipc(
-            path,
-            ScanArgsIpc {
-                memory_map,
-                ..Default::default()
-            },
-        )?;
+        let mut trade_df = LazyFrame::scan_ipc(path, Default::default())?;
         if let Some(map) = rename_map {
             trade_df = trade_df.rename(map.keys(), map.values().map(|v| v.as_str().unwrap()))
         }
@@ -142,7 +136,7 @@ impl DataLoader {
                 trade_df.column("time").unwrap(),
                 trade_df.column(&ORDER_PRICE.name()).unwrap(),
             )?
-            .with_name("infer_ytm"),
+            .with_name("infer_ytm".into()),
         )?;
 
         let trade_df = trade_df

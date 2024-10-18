@@ -144,7 +144,7 @@ impl FactorBase for &str {
 
 impl PlFactor for &'static str {
     fn try_expr(&self) -> Result<Expr> {
-        Ok(col(self))
+        Ok(col(*self))
     }
 }
 

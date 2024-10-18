@@ -2,9 +2,9 @@ use std::ops::Index;
 
 use anyhow::Result;
 use polars::prelude::*;
-use smartstring::alias::String;
-use tea_strategy::tevec::export::arrow::legacy::utils::CustomIterTools;
 
+// use smartstring::alias::String;
+// use tea_strategy::tevec::export::arrow::legacy::utils::CustomIterTools;
 use crate::prelude::DataLoader;
 
 #[derive(Clone, Debug)]
@@ -56,14 +56,14 @@ impl<'a> Index<&'a String> for SummaryReport {
     }
 }
 
-impl<'a> Index<&'a std::string::String> for SummaryReport {
-    type Output = FacSummary;
+// impl<'a> Index<&'a std::string::String> for SummaryReport {
+//     type Output = FacSummary;
 
-    fn index(&self, index: &'a std::string::String) -> &Self::Output {
-        let idx = self.0.iter().position(|f| &f.fac == index).unwrap();
-        &self.0[idx]
-    }
-}
+//     fn index(&self, index: &'a std::string::String) -> &Self::Output {
+//         let idx = self.0.iter().position(|f| &f.fac == index).unwrap();
+//         &self.0[idx]
+//     }
+// }
 
 impl Index<usize> for SummaryReport {
     type Output = FacSummary;
@@ -296,8 +296,8 @@ impl SummaryReport {
     }
 
     pub fn fac_series(&self) -> Series {
-        let facs: StringChunked = self.0.iter().map(|f| f.fac.as_str()).collect_trusted();
-        facs.into_series().with_name("fac")
+        let facs: StringChunked = self.0.iter().map(|f| f.fac.as_str()).collect();
+        facs.into_series().with_name("fac".into())
     }
 
     pub fn ts_ic(&self) -> Vec<DataFrame> {
@@ -402,7 +402,7 @@ impl SummaryReport {
         let half_life: Float64Chunked = self.0.iter().map(|f| f.half_life).collect();
         DataFrame::new(vec![
             fac_series,
-            half_life.into_series().with_name("half_life"),
+            half_life.into_series().with_name("half_life".into()),
         ])
         .unwrap()
     }

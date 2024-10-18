@@ -3,7 +3,7 @@ use std::iter::once;
 use anyhow::ensure;
 use polars::prelude::*;
 use rayon::prelude::*;
-use smartstring::alias::String;
+// use smartstring::alias::String;
 use tea_strategy::tevec::prelude::*;
 
 use super::summary::Summary;
@@ -76,9 +76,7 @@ impl FacAnalysis {
                         .select(
                             self.labels
                                 .iter()
-                                .map(|label| {
-                                    stable_corr(col(&fac), col(&label), method).alias(label)
-                                })
+                                .map(|label| stable_corr(col(fac), col(label), method).alias(label))
                                 .chain(once(dsl::len().alias("count")))
                                 .collect::<Vec<_>>(),
                         )
@@ -125,7 +123,7 @@ impl FacAnalysis {
                             ..Default::default()
                         },
                     )?
-                    .agg([stable_corr(cols(&self.labels), col(&fac), method)])
+                    .agg([stable_corr(cols(&self.labels), col(fac), method)])
                     .collect(true)?
                     .align([col(daily_col)], None)?
                     .collect(true)
@@ -151,7 +149,7 @@ impl FacAnalysis {
         let symbol_ts_group_rets = POOL
             .install(|| {
                 self.facs.par_iter().map(|fac| {
-                    let group_expr = get_ts_group(col(&fac), group).alias("group");
+                    let group_expr = get_ts_group(col(fac), group).alias("group");
                     self.dl
                         .clone()
                         // 按照日频聚合分组收益
@@ -199,7 +197,7 @@ impl FacAnalysis {
             let symbol_group_rets = POOL
                 .install(|| {
                     self.facs.par_iter().map(|fac| {
-                        let group_expr = get_ts_group(col(&fac), group).alias("group");
+                        let group_expr = get_ts_group(col(fac), group).alias("group");
                         self.dl
                             .clone()
                             .with_column(group_expr)?
@@ -214,9 +212,9 @@ impl FacAnalysis {
                             )?
                             .agg(
                                 [
-                                    col(&fac).min().alias("min"),
-                                    col(&fac).max().alias("max"),
-                                    col(&fac).count().alias("count"),
+                                    col(fac).min().alias("min"),
+                                    col(fac).max().alias("max"),
+                                    col(fac).count().alias("count"),
                                 ]
                                 .into_iter()
                                 .chain(self.labels.iter().map(|n| col(n).mean()))
@@ -252,15 +250,15 @@ impl FacAnalysis {
             let symbol_group_rets = POOL
                 .install(|| {
                     self.facs.par_iter().map(|fac| {
-                        let group_expr = get_ts_group(col(&fac), group).alias("group");
+                        let group_expr = get_ts_group(col(fac), group).alias("group");
                         self.dl
                             .clone()
                             .group_by([group_expr])
                             .agg(
                                 [
-                                    col(&fac).min().alias("min"),
-                                    col(&fac).max().alias("max"),
-                                    col(&fac).count().alias("count"),
+                                    col(fac).min().alias("min"),
+                                    col(fac).max().alias("max"),
+                                    col(fac).count().alias("count"),
                                 ]
                                 .into_iter()
                                 .chain(self.labels.iter().map(|n| col(n).mean()))

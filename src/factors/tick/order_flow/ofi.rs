@@ -79,7 +79,7 @@ impl PlFactor for CumOfi {
         Ok(ofi
             .try_expr()?
             .ts_zscore(self.0, Some(4))
-            .over([col(&TradingDate::fac_name())]))
+            .over([col(&*TradingDate::fac_name())]))
     }
 }
 

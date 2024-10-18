@@ -53,7 +53,7 @@ impl PlFactor for CumObiF {
         Ok(bid_cum_vol
             .imbalance(ask_cum_vol)
             .ts_zscore(self.0, None)
-            .over([col(&TradingDate::fac_name())]))
+            .over([col(&*TradingDate::fac_name())]))
     }
 }
 

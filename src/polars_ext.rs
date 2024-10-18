@@ -436,7 +436,7 @@ impl SeriesExt for Series {
                 dtype
             ),
         };
-        Ok(res.with_name(name).into_series())
+        Ok(res.with_name(name.clone()).into_series())
     }
 
     fn vfirst(&self) -> AnyValue<'_> {
@@ -695,8 +695,13 @@ impl ExprExt for Expr {
     fn vfirst(self) -> Self {
         self.apply(
             |s| {
-                Series::from_any_values_and_dtype(s.name(), &[s.vfirst()], &s.dtype(), false)
-                    .map(Some)
+                Series::from_any_values_and_dtype(
+                    s.name().clone(),
+                    &[s.vfirst()],
+                    &s.dtype(),
+                    false,
+                )
+                .map(Some)
             },
             GetOutput::same_type(),
         )
@@ -706,7 +711,7 @@ impl ExprExt for Expr {
     fn vlast(self) -> Self {
         self.apply(
             |s| {
-                Series::from_any_values_and_dtype(s.name(), &[s.vlast()], &s.dtype(), false)
+                Series::from_any_values_and_dtype(s.name().clone(), &[s.vlast()], &s.dtype(), false)
                     .map(Some)
             },
             GetOutput::same_type(),

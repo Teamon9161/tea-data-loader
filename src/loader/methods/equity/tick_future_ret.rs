@@ -159,7 +159,8 @@ impl DataLoader {
                                 &opt.to_tick_future_ret_kwargs(multiplier),
                             )
                         };
-                        out.with_name(&(f.to_string() + opt.suffix)).into_series()
+                        out.with_name((f.to_string() + opt.suffix).into())
+                            .into_series()
                     })
                     .collect();
                 let ecs: Vec<_> = ecs.into_iter().map(lit).collect();

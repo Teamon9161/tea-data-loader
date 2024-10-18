@@ -66,10 +66,8 @@ impl DataLoader {
         let path_config = opt.path_config(&self.typ);
         self.freq = Some(opt.freq.into());
         match self.typ.as_ref() {
-            "future" | "ddb-future" => self.load_future_kline(path_config, opt.memory_map),
-            "xbond" | "ddb-xbond" => {
-                self.load_xbond_kline(path_config, opt.memory_map, opt.concat_tick_df)
-            },
+            "future" | "ddb-future" => self.load_future_kline(path_config),
+            "xbond" | "ddb-xbond" => self.load_xbond_kline(path_config, opt.concat_tick_df),
             _ => bail!("Load Unsupported typ: {:?} kline", self.typ),
         }
     }

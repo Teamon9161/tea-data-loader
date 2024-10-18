@@ -73,7 +73,7 @@ where
     #[inline]
     fn eval(&self, df: &DataFrame) -> Result<Series> {
         let series = self.0.eval(df)?;
-        let expr = [-col(series.name())];
+        let expr = [-col(series.name().clone())];
         let out = series.into_frame().lazy().select(expr).collect()?[0].clone();
         Ok(out)
     }

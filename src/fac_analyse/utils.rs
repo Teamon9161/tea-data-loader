@@ -26,12 +26,12 @@ pub(super) fn get_ts_group_by_value(fac: Expr, group: usize) -> Expr {
 
     const GROUP_20_LABEL_SERIES: LazyLock<Series> = LazyLock::new(|| {
         let labels: Vec<f64> = GROUP_20_LABELS.into();
-        Series::from_vec("group", labels)
+        Series::from_vec("group".into(), labels)
     });
 
     const GROUP_10_LABEL_SERIES: LazyLock<Series> = LazyLock::new(|| {
         let labels: Vec<f64> = GROUP_10_LABELS.into();
-        Series::from_vec("group", labels)
+        Series::from_vec("group".into(), labels)
     });
 
     let fac_max = fac.clone().max();
@@ -56,7 +56,7 @@ pub(super) fn get_ts_group_by_value(fac: Expr, group: usize) -> Expr {
         ),
         _ => {
             let labels: Vec<f64> = Vec1Create::linspace(Some(-1.), 1., group);
-            let labels = Series::from_vec("group", labels);
+            let labels = Series::from_vec("group".into(), labels);
             fac.cut(bins, labels.lit(), Some(true), Some(false))
         },
     }
@@ -112,7 +112,7 @@ mod tests {
             .collect()
             .unwrap();
 
-        let expected = Series::new("fac", &[1, 1, 2, 2, 3, 3, 4, 4, 5, 5]);
+        let expected = Series::new("fac".into(), &[1, 1, 2, 2, 3, 3, 4, 4, 5, 5]);
         assert_eq!(result.column("fac").unwrap(), &expected);
     }
 }

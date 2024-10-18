@@ -7,7 +7,6 @@ pub struct BondFutureSpread;
 
 impl PlFactor for BondFutureSpread {
     fn try_expr(&self) -> Result<Expr> {
-        // (MID - MID_F).try_expr()
         (MID_F - MID).try_expr()
     }
 }

@@ -13,8 +13,8 @@ pub struct KlineOpt<'a> {
     pub tier: Option<Tier>,
     /// The adjustment type for the data, if any.
     pub adjust: Option<Adjust>,
-    /// Whether to use memory mapping when reading the data files.
-    pub memory_map: bool,
+    // /// Whether to use memory mapping when reading the data files.
+    // pub memory_map: bool,
     /// Whether to concatenate tick dataframes when processing.
     pub concat_tick_df: bool,
 }
@@ -25,7 +25,7 @@ impl Default for KlineOpt<'_> {
             freq: "daily",
             tier: None,
             adjust: None,
-            memory_map: true,
+            // memory_map: true,
             concat_tick_df: false,
         }
     }
