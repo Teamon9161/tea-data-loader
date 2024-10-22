@@ -103,8 +103,8 @@ impl PlAggFactor for AggOfi {
     }
 
     #[inline]
-    fn fac_name(&self) -> String {
-        "ofi(agg)".to_string()
+    fn fac_name(&self) -> Option<String> {
+        Some("ofi(agg)".to_string())
     }
 }
 
@@ -141,10 +141,10 @@ impl std::fmt::Debug for SimpleTierOfi {
 impl PlFactor for SimpleTierOfi {
     fn try_expr(&self) -> Result<Expr> {
         let n = self.1;
-        let buy_vol = (ORDER_AMT * iif(IS_BUY & ExprFactor(is_simple_order_tier(self.0)), 1, 0))
-            .sum_opt(n, 1);
-        let sell_vol = (ORDER_AMT * iif(!IS_BUY & ExprFactor(is_simple_order_tier(self.0)), 1, 0))
-            .sum_opt(n, 1);
+        let buy_vol =
+            (ORDER_AMT * iif(IS_BUY & is_simple_order_tier(self.0).fac(), 1, 0)).sum_opt(n, 1);
+        let sell_vol =
+            (ORDER_AMT * iif(!IS_BUY & is_simple_order_tier(self.0).fac(), 1, 0)).sum_opt(n, 1);
         let ofi = buy_vol.clone() / (buy_vol + sell_vol);
         ofi.try_expr()
     }

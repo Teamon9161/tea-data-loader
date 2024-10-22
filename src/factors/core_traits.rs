@@ -236,3 +236,16 @@ impl From<Expr> for ExprFactor {
         ExprFactor(expr)
     }
 }
+
+pub trait IntoFactor<F: FactorBase> {
+    fn fac(self) -> F
+    where
+        Self: Sized;
+}
+
+impl IntoFactor<Factor<ExprFactor>> for Expr {
+    #[inline]
+    fn fac(self) -> Factor<ExprFactor> {
+        Factor(ExprFactor(self))
+    }
+}

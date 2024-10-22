@@ -42,6 +42,19 @@ impl std::fmt::Debug for FactorAggMethod {
     }
 }
 
+/// Represents an aggregation operation on a factor.
+///
+/// This struct combines a factor with an aggregation method, allowing for
+/// various statistical operations to be performed on the factor.
+///
+/// # Type Parameters
+///
+/// * `F`: The type of the factor, which must implement the `FactorBase` trait.
+///
+/// # Fields
+///
+/// * `fac`: The factor to be aggregated.
+/// * `method`: The method of aggregation to be applied to the factor.
 #[derive(Clone, Debug, Copy)]
 pub struct FactorAgg<F: FactorBase> {
     pub fac: F,
@@ -55,13 +68,32 @@ impl<F: FactorBase> FactorAgg<F> {
     }
 }
 
+/// Trait for aggregation factors in Polars expressions.
+///
+/// This trait defines the interface for factors that can be used in aggregation operations.
 pub trait PlAggFactor: std::fmt::Debug + GetName + 'static {
+    /// Returns the factor expression.
+    ///
+    /// # Returns
+    /// A `Result` containing an `Option<Expr>` representing the factor expression.
     fn fac_expr(&self) -> Result<Option<Expr>>;
 
+    /// Returns the aggregation expression.
+    ///
+    /// # Returns
+    /// A `Result` containing an `Expr` representing the aggregation expression.
     fn agg_expr(&self) -> Result<Expr>;
 
-    fn fac_name(&self) -> String;
+    /// Returns the name of the factor.
+    ///
+    /// # Returns
+    /// A `String` containing the name of the factor.
+    fn fac_name(&self) -> Option<String>;
 
+    /// Converts the factor into a dynamically dispatched trait object.
+    ///
+    /// # Returns
+    /// An `Arc<dyn PlAggFactor>` representing the factor as a trait object.
     #[inline]
     fn pl_dyn(self) -> Arc<dyn PlAggFactor>
     where
@@ -78,8 +110,8 @@ impl<F: FactorBase + PlFactor> PlAggFactor for FactorAgg<F> {
     }
 
     #[inline]
-    fn fac_name(&self) -> String {
-        self.fac.name()
+    fn fac_name(&self) -> Option<String> {
+        Some(self.fac.name())
     }
 
     fn agg_expr(&self) -> Result<Expr> {

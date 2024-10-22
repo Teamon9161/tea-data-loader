@@ -8,7 +8,7 @@ pub(super) use polars::prelude::{col, lit, DataFrame, Series, NULL as PL_NULL};
 pub(super) use super::base::{Null, TradingDate, NONE, TIME, TRADING_DATE};
 pub(super) use super::factor_struct::{iif, Factor};
 #[cfg(feature = "fac-ext")]
-pub(super) use super::factor_struct::{FactorCmpExt, FactorExt, PlAggFactor};
+pub(super) use super::factor_struct::{FactorAggMethod, FactorCmpExt, FactorExt, PlAggFactor};
 pub(super) use super::macros::define_base_fac;
 #[cfg(feature = "map-fac")]
 pub(super) use super::map::base::*;
@@ -19,8 +19,8 @@ pub(super) use super::tick::order_book::base::*;
 #[cfg(feature = "order-flow-fac")]
 pub(super) use super::tick::order_flow::base::*;
 pub(super) use super::{
-    register_fac, register_pl_fac, ExprFactor, FactorBase, Param, PlFactor, TFactor,
+    register_fac, register_pl_fac, ExprFactor, FactorBase, IntoFactor, Param, PlFactor, TFactor,
 };
 pub(super) use crate::export::tevec::prelude::EPS;
-// pub(super) use crate::factors::PlFactorExt;
+pub(super) use crate::factors::GetName;
 pub(super) use crate::polars_ext::ExprExt;

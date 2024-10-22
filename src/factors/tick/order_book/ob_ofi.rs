@@ -17,6 +17,13 @@ fn get_ob_of_buy_sell() -> (impl FactorBase + PlFactor, impl FactorBase + PlFact
     (of_buy, of_sell)
 }
 
+/// Represents the Order Book Order Flow Imbalance (OB OFI) factor.
+///
+/// This factor calculates the imbalance between buy and sell order flow
+/// over a specified number of periods.
+///
+/// The `usize` parameter determines the number of periods to consider
+/// when calculating the OB OFI.
 #[derive(FactorBase, FromParam, Default, Clone, Copy)]
 pub struct ObOfi(pub usize);
 
@@ -29,6 +36,13 @@ impl PlFactor for ObOfi {
     }
 }
 
+/// Represents the Cumulative Order Book Order Flow Imbalance (Cum OB OFI) factor.
+///
+/// This factor calculates the cumulative imbalance between buy and sell order flow
+/// over a specified number of periods, and then applies a time series z-score normalization.
+///
+/// The `usize` parameter determines the number of periods to consider
+/// when calculating the z-score of the cumulative OB OFI.
 #[derive(FactorBase, FromParam, Default, Clone, Copy)]
 pub struct CumObOfi(pub usize);
 

@@ -1,3 +1,4 @@
+pub mod agg;
 pub mod base;
 mod core_impls;
 mod core_traits;
@@ -14,7 +15,7 @@ mod register;
 pub mod tick;
 
 pub use base::{Direct, NONE};
-pub use core_traits::{ExprFactor, FactorBase, GetName, PlFactor, TFactor};
+pub use core_traits::{ExprFactor, FactorBase, GetName, IntoFactor, PlFactor, TFactor};
 pub use factor_struct::*;
 pub use param::{Param, Params};
 pub use parse::{parse_pl_fac, parse_t_fac};

@@ -1,6 +1,9 @@
 use polars::lazy::dsl::{cols, when};
 use polars::prelude::*;
 use tea_strategy::tevec::prelude::{Cast, DateTime};
+
+const DDB_XBOND_MULTIPLIER: f64 = 10_000_000.0;
+
 /// Utility functions for preprocessing and filtering data in the DataLoader.
 
 /// Returns preprocessing expressions based on the given data type.
@@ -42,8 +45,19 @@ fn get_preprocess_exprs_impl(typ: &str, freq: &str) -> Vec<Expr> {
         },
         "xbond" => vec![],
         "ddb-xbond" => match freq {
-            "trade" => vec![],
-            "tick" => vec![],
+            "trade" => vec![col("order_vol") / DDB_XBOND_MULTIPLIER.lit()],
+            "tick" => vec![
+                col("bid1_vol") / DDB_XBOND_MULTIPLIER.lit(),
+                col("bid2_vol") / DDB_XBOND_MULTIPLIER.lit(),
+                col("bid3_vol") / DDB_XBOND_MULTIPLIER.lit(),
+                col("bid4_vol") / DDB_XBOND_MULTIPLIER.lit(),
+                col("bid5_vol") / DDB_XBOND_MULTIPLIER.lit(),
+                col("ask1_vol") / DDB_XBOND_MULTIPLIER.lit(),
+                col("ask2_vol") / DDB_XBOND_MULTIPLIER.lit(),
+                col("ask3_vol") / DDB_XBOND_MULTIPLIER.lit(),
+                col("ask4_vol") / DDB_XBOND_MULTIPLIER.lit(),
+                col("ask5_vol") / DDB_XBOND_MULTIPLIER.lit(),
+            ],
             _ => vec![],
         },
         "ddb-future" => vec![],

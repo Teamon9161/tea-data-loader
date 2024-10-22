@@ -41,3 +41,6 @@ pub use shape_imb::{ShapeSkewImb, ShapeVolImb};
 
 mod ob_reg;
 pub use ob_reg::{ObRegAlpha, ObRegRSquared, ObRegSlope, ObRegSse};
+
+mod bs_pressure;
+pub use bs_pressure::BsPressure;

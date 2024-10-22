@@ -18,7 +18,7 @@ fn get_is_buy_expr() -> Expr {
 }
 
 #[cfg(feature = "tick-fac")]
-fn get_vol_quantile(window: &'static str) -> Vec<Expr> {
+fn get_amt_quantile(window: &'static str) -> Vec<Expr> {
     use crate::factors::tick::order_flow::*;
     const QUANTILES: [f64; 6] = [0.95, 0.9, 0.8, 0.5, 0.3, 0.2];
     QUANTILES
@@ -113,15 +113,15 @@ impl DataLoader {
         if let Some(cond) = filter_cond.clone() {
             trade_df = trade_df.filter(cond)
         };
-        let order_amt = ORDER_AMT.expr();
+        let order_vol = ORDER_VOL.expr();
         let order_price = ORDER_PRICE.expr();
         let order_ytm = ORDER_YTM.expr();
         let mut trade_df = trade_df
             .with_columns(&preprocess_exprs)
             .group_by_stable([col("symbol"), col("time")])
             .agg([
-                order_amt.clone().sum().alias(&ORDER_AMT.name()),
-                ((order_price.clone() * order_amt.clone()).sum() / order_amt.sum())
+                order_vol.clone().sum().alias(&ORDER_VOL.name()),
+                ((order_price.clone() * order_vol.clone()).sum() / order_vol.sum())
                     .alias(&ORDER_PRICE.name()),
                 when(order_ytm.clone().count().eq(1))
                     .then(order_ytm.clone().first())
@@ -141,14 +141,19 @@ impl DataLoader {
 
         let trade_df = trade_df
             .into_frame()
-            .with_columns(get_vol_quantile("5d"))?
+            .with_column(
+                (ORDER_VOL.expr() * ORDER_PRICE.expr() * 100_000.lit())
+                    .cast(DataType::Float64)
+                    .alias("order_amt"),
+            )?
+            .with_columns(get_amt_quantile("5d"))?
             .with_columns([
                 when(order_ytm.clone().is_null())
                     .then(col("infer_ytm"))
                     .otherwise(order_ytm)
                     .alias(&ORDER_YTM.name()),
                 col("time").alias("order_time"),
-                ORDER_AMT.expr().cast(DataType::Float64), // 调整数据类型，i32类型如果对较长窗口滚动求和，可能会溢出
+                ORDER_VOL.expr().cast(DataType::Float64), // 调整数据类型，i32类型如果对较长窗口滚动求和，可能会溢出
             ])?
             .drop(["infer_ytm"])?;
         // 拼接trade_df
@@ -176,9 +181,10 @@ impl DataLoader {
                 // 对于同一笔交易，保证只拼到第一个盘口
                 let trade_columns = [
                     ORDER_TIME.name(),
-                    ORDER_AMT.name(),
+                    ORDER_VOL.name(),
                     ORDER_PRICE.name(),
                     ORDER_YTM.name(),
+                    ORDER_AMT.name(),
                 ];
                 let ot = col(&ORDER_TIME.name());
                 let duplicate_cond = ot
@@ -196,7 +202,6 @@ impl DataLoader {
                         })
                         .collect::<Vec<_>>(),
                 )?
-                // .with_column(col("order_amt_quantile_*").forward_fill(None))?
                 .with_column(get_is_buy_expr())
             })
             .collect::<Result<Frames>>()?;

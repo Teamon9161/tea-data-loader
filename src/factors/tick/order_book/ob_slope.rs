@@ -8,11 +8,11 @@ use crate::factors::export::*;
 /// and price differences between bid and ask levels.
 ///
 /// # Interpretation
-/// - A larger buy-side slope indicates lower demand elasticity, suggesting buyers are
-///   less sensitive to price changes. This implies a higher expected return for the stock.
-/// - A smaller sell-side slope indicates higher supply elasticity, meaning a small price
-///   decrease could lead to a significant reduction in sell orders. This suggests sellers
-///   are reluctant to lower prices, also implying a higher expected return for the stock.
+/// - A larger buy-side slope (in absolute value) indicates lower buying pressure. This could be due to
+///   buyers placing orders at lower prices or having smaller order volumes, suggesting a potential
+///   downward price movement.
+/// - A larger sell-side slope indicates higher selling pressure. This implies sellers are placing
+///   orders at higher prices or with larger volumes, also suggesting a potential downward price movement.
 ///
 /// # Parameters
 /// The `Param` field determines which level of the order book to use:
@@ -25,8 +25,8 @@ use crate::factors::export::*;
 /// - ask_slope = (ASKn - MID) / AskCumVol(n)
 /// - bid_slope = (BIDn - MID) / BidCumVol(n)
 ///
-/// Note: The bid slope is typically negative, so adding it to the ask slope
-/// effectively subtracts its absolute value.
+/// Note: The bid slope is typically negative. A larger absolute value of the total slope
+/// generally indicates stronger downward price pressure.
 #[derive(FactorBase, FromParam, Default, Clone, Copy)]
 pub struct ObSlope(pub Option<usize>);
 

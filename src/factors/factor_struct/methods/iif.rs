@@ -71,10 +71,10 @@ pub fn iif<C: FactorBase, T: FactorBase, O: FactorBase>(
     cond: C,
     then: T,
     otherwise: O,
-) -> FactorIIf<C, T, O> {
-    FactorIIf {
+) -> Factor<FactorIIf<C, T, O>> {
+    Factor(FactorIIf {
         cond,
         then,
         otherwise,
-    }
+    })
 }
