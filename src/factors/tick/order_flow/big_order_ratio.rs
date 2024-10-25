@@ -18,6 +18,20 @@ impl PlFactor for BigOrderRatio {
     }
 }
 
+#[derive(Default, FactorBase, Clone, Copy)]
+pub struct AggBigOrderRatio;
+
+impl PlAggFactor for AggBigOrderRatio {
+    #[inline]
+    fn agg_expr(&self) -> Result<Expr> {
+        let is_big_order = is_simple_order_tier(super::SimpleOrderTier::Big);
+        let big_order_vol = (ORDER_AMT * iif(is_big_order.fac(), 1, 0)).expr().sum();
+        let all_vol = ORDER_AMT.expr().sum();
+        let ratio = big_order_vol.protect_div(all_vol);
+        Ok(ratio)
+    }
+}
+
 #[ctor::ctor]
 fn register() {
     register_pl_fac::<BigOrderRatio>().unwrap()

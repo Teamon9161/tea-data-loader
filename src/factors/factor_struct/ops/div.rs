@@ -71,7 +71,7 @@ impl<G: FactorBase + PlFactor> Div<Factor<G>> for Expr {
     }
 }
 
-impl<F: FactorBase> Div<Expr> for Factor<F> {
+impl<F: FactorBase + PlFactor> Div<Expr> for Factor<F> {
     type Output = DivFactor<F, ExprFactor>;
     #[inline]
     fn div(self, rhs: Expr) -> Self::Output {

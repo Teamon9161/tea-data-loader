@@ -10,10 +10,14 @@ pub use cci::Cci;
 mod bias;
 pub use bias::Bias;
 
-#[cfg(feature = "fac-ext")]
+mod dpo;
+pub use dpo::Dpo;
+
 mod efficiency;
-#[cfg(feature = "fac-ext")]
 pub use efficiency::{Efficiency, EfficiencySign};
+
+mod illiq;
+pub use illiq::{Illiq, IlliqSign};
 
 mod ret;
 pub use ret::{LogRet, Ret};
@@ -38,3 +42,6 @@ pub use mfi::{AmtMfi, Mfi};
 
 mod at_time;
 pub use at_time::AtTime;
+
+mod vol;
+pub use vol::{DownVol, UpVol, Vol};

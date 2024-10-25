@@ -24,7 +24,7 @@ impl DataLoader {
     ///
     /// A `Result` containing the modified `DataLoader` with new factors added, or an error.
     #[inline]
-    pub fn with_facs<F: AsRef<str>>(self, facs: &[F], backend: Backend) -> Result<Self> {
+    pub fn with_facs(self, facs: &[impl AsRef<str>], backend: Backend) -> Result<Self> {
         use crate::factors::parse_pl_fac;
         let facs = facs.iter().map(|v| v.as_ref());
         let len = facs.len();
@@ -81,7 +81,7 @@ impl DataLoader {
     ///
     /// A `Result` containing the modified `DataLoader` with new Polars factors added, or an error.
     #[inline]
-    pub fn with_pl_facs<F: AsRef<dyn PlFactor>>(self, facs: &[F]) -> Result<Self> {
+    pub fn with_pl_facs(self, facs: &[impl AsRef<dyn PlFactor>]) -> Result<Self> {
         let schema = self.schema()?;
         let mut exprs = Vec::with_capacity(facs.len());
         let fac_names = facs.iter().map(|f| f.as_ref().name());
@@ -127,7 +127,7 @@ impl DataLoader {
     ///
     /// A `Result` containing the modified `DataLoader` with new Tfactors added, or an error.
     #[inline]
-    pub fn with_t_facs<F: AsRef<dyn TFactor>>(self, facs: &[F]) -> Result<Self> {
+    pub fn with_t_facs(self, facs: &[impl AsRef<dyn TFactor>]) -> Result<Self> {
         let mut out = self.collect(true)?;
         let schema = out.schema()?;
         let facs = facs
@@ -175,20 +175,20 @@ impl DataLoader {
         self.with_t_facs(&facs)
     }
 
-    pub fn with_pl_agg_facs<F: AsRef<dyn PlAggFactor>, E: AsRef<[Expr]>>(
+    pub fn with_pl_agg_facs(
         self,
         rule: &str,
-        facs: &[F],
-        agg_exprs: E,
+        facs: &[impl AsRef<dyn PlAggFactor>],
+        agg_exprs: impl AsRef<[Expr]>,
         opt: GroupByTimeOpt,
     ) -> Result<Self> {
         let facs = facs.into_iter().map(|f| f.as_ref()).collect_vec();
         let exprs = facs
             .iter()
             .filter_map(|f| {
-                f.fac_expr()
+                f.agg_fac_expr()
                     .unwrap()
-                    .map(|e| e.alias(&f.fac_name().unwrap()))
+                    .map(|e| e.alias(&f.agg_fac_name().unwrap()))
             })
             .collect::<Vec<_>>();
         let dl = self.with_columns(&exprs)?;

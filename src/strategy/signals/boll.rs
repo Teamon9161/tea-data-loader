@@ -57,6 +57,49 @@ impl Strategy for Boll {
 }
 
 #[derive(Clone)]
+pub struct NegBollKwargs(pub BollKwargs);
+
+impl From<BollKwargs> for NegBollKwargs {
+    fn from(kwargs: BollKwargs) -> Self {
+        let mut kwargs = kwargs;
+        kwargs.long_signal = -kwargs.long_signal;
+        kwargs.short_signal = -kwargs.short_signal;
+        NegBollKwargs(kwargs)
+    }
+}
+
+impl From<Params> for NegBollKwargs {
+    fn from(value: Params) -> Self {
+        let kwargs = BollKwargs::from(value);
+        kwargs.into()
+    }
+}
+
+impl From<Params> for NegBoll {
+    #[inline]
+    fn from(value: Params) -> Self {
+        NegBoll(NegBollKwargs::from(value))
+    }
+}
+
+impl GetStrategyParamName for NegBoll {
+    #[inline]
+    fn get_param_name(&self) -> Arc<str> {
+        format!("{:?}", self.0 .0.params).into()
+    }
+}
+
+#[derive(StrategyBase, Clone)]
+pub struct NegBoll(pub NegBollKwargs);
+
+impl Strategy for NegBoll {
+    fn eval_to_fac(&self, fac: &Series, filters: Option<DataFrame>) -> Result<Series> {
+        let strategy = Boll(self.0 .0.clone());
+        strategy.eval_to_fac(fac, filters)
+    }
+}
+
+#[derive(Clone)]
 pub struct BollLongKwargs(pub BollKwargs);
 
 impl From<BollKwargs> for BollLongKwargs {
@@ -69,9 +112,8 @@ impl From<BollKwargs> for BollLongKwargs {
 
 impl From<Params> for BollLongKwargs {
     fn from(value: Params) -> Self {
-        let mut kwargs = BollKwargs::from(value);
-        kwargs.short_signal = kwargs.close_signal;
-        BollLongKwargs(kwargs)
+        let kwargs = BollKwargs::from(value);
+        kwargs.into()
     }
 }
 
@@ -276,6 +318,7 @@ impl Strategy for BollDirect {
 #[ctor::ctor]
 fn register() {
     register_strategy::<Boll>().unwrap();
+    register_strategy::<NegBoll>().unwrap();
     register_strategy::<BollLong>().unwrap();
     register_strategy::<BollShort>().unwrap();
     register_strategy::<BollDirect>().unwrap();

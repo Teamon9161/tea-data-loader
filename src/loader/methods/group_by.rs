@@ -113,18 +113,36 @@ impl DataLoader {
                     time: Some(opt.daily_col.into()),
                 })
             },
-            _ => self.group_by_dynamic(
-                col(opt.time),
-                opt.group_by.unwrap_or_default(),
-                DynamicGroupOptions {
-                    every: Duration::parse(rule),
-                    period: Duration::parse(rule),
-                    offset: Duration::parse("0ns"),
-                    label: opt.label,
-                    closed_window,
-                    ..Default::default()
-                },
-            ),
+            _ => {
+                if let Some(last_time) = opt.last_time {
+                    self.group_by_dynamic_with_last_time(
+                        col(opt.time),
+                        opt.group_by.unwrap_or_default(),
+                        last_time,
+                        DynamicGroupOptions {
+                            every: Duration::parse(rule),
+                            period: Duration::parse(rule),
+                            offset: Duration::parse("0ns"),
+                            label: opt.label,
+                            closed_window,
+                            ..Default::default()
+                        },
+                    )
+                } else {
+                    self.group_by_dynamic(
+                        col(opt.time),
+                        opt.group_by.unwrap_or_default(),
+                        DynamicGroupOptions {
+                            every: Duration::parse(rule),
+                            period: Duration::parse(rule),
+                            offset: Duration::parse("0ns"),
+                            label: opt.label,
+                            closed_window,
+                            ..Default::default()
+                        },
+                    )
+                }
+            },
         }
     }
 
@@ -225,6 +243,34 @@ impl DataLoader {
             dl: self,
             lgbs,
             last_time: None,
+            time: Some(time_col),
+        })
+    }
+
+    #[inline]
+    pub fn group_by_dynamic_with_last_time<E: AsRef<[Expr]>>(
+        self,
+        index_column: Expr,
+        group_by: E,
+        last_time: &str,
+        options: DynamicGroupOptions,
+    ) -> Result<DataLoaderGroupBy> {
+        let group_by = group_by.as_ref();
+        // let time_col = index_column.name();
+        let lgbs = self
+            .dfs
+            .iter()
+            .map(|df| {
+                df.clone()
+                    .lazy()
+                    .group_by_dynamic(index_column.clone(), group_by, options.clone())
+            })
+            .collect_trusted_to_vec();
+        let time_col = index_column.meta().output_name()?;
+        Ok(DataLoaderGroupBy {
+            dl: self,
+            lgbs,
+            last_time: Some(last_time.into()),
             time: Some(time_col),
         })
     }

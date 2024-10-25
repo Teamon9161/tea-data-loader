@@ -71,12 +71,15 @@ impl<F: FactorBase> FactorAgg<F> {
 /// Trait for aggregation factors in Polars expressions.
 ///
 /// This trait defines the interface for factors that can be used in aggregation operations.
-pub trait PlAggFactor: std::fmt::Debug + GetName + 'static {
+pub trait PlAggFactor: GetName + 'static {
     /// Returns the factor expression.
     ///
     /// # Returns
     /// A `Result` containing an `Option<Expr>` representing the factor expression.
-    fn fac_expr(&self) -> Result<Option<Expr>>;
+    #[inline]
+    fn agg_fac_expr(&self) -> Result<Option<Expr>> {
+        Ok(None)
+    }
 
     /// Returns the aggregation expression.
     ///
@@ -88,7 +91,10 @@ pub trait PlAggFactor: std::fmt::Debug + GetName + 'static {
     ///
     /// # Returns
     /// A `String` containing the name of the factor.
-    fn fac_name(&self) -> Option<String>;
+    #[inline]
+    fn agg_fac_name(&self) -> Option<String> {
+        None
+    }
 
     /// Converts the factor into a dynamically dispatched trait object.
     ///
@@ -105,12 +111,12 @@ pub trait PlAggFactor: std::fmt::Debug + GetName + 'static {
 
 impl<F: FactorBase + PlFactor> PlAggFactor for FactorAgg<F> {
     #[inline]
-    fn fac_expr(&self) -> Result<Option<Expr>> {
+    fn agg_fac_expr(&self) -> Result<Option<Expr>> {
         self.fac.try_expr().map(Some)
     }
 
     #[inline]
-    fn fac_name(&self) -> Option<String> {
+    fn agg_fac_name(&self) -> Option<String> {
         Some(self.fac.name())
     }
 

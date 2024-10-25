@@ -70,4 +70,36 @@ impl DataLoader {
         });
         Ok(dl)
     }
+
+    pub fn with_strategy_works(self, strategies: &[StrategyWork]) -> Result<Self> {
+        let schema = self.schema()?;
+        let strategies = strategies.iter().filter_map(|s| {
+            if !schema.contains(&s.name()) {
+                Some(s)
+            } else {
+                None
+            }
+        });
+        let works = strategies.collect::<Vec<_>>();
+        // calculate factors
+        let facs = works.iter().map(|w| w.fac.as_ref()).collect::<Vec<_>>();
+        let dl = self.with_facs(&facs, Default::default())?.par_apply(|f| {
+            let mut df = f.collect().unwrap();
+            let series = works
+                .par_iter()
+                .map(|w| {
+                    let mut res = w.eval(&df).unwrap();
+                    if res.name() == "" {
+                        res.rename((&**w.name.as_ref().unwrap()).into());
+                        res
+                    } else {
+                        res
+                    }
+                })
+                .collect::<Vec<Series>>();
+            df.hstack_mut(&series).unwrap();
+            df.lazy()
+        });
+        Ok(dl)
+    }
 }

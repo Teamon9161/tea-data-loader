@@ -71,7 +71,7 @@ impl<G: FactorBase + PlFactor> Mul<Factor<G>> for Expr {
     }
 }
 
-impl<F: FactorBase> Mul<Expr> for Factor<F> {
+impl<F: FactorBase + PlFactor> Mul<Expr> for Factor<F> {
     type Output = MulFactor<F, ExprFactor>;
     #[inline]
     fn mul(self, rhs: Expr) -> Self::Output {

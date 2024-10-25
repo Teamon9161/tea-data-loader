@@ -13,11 +13,11 @@ impl std::fmt::Debug for AverageVol {
 impl GetName for AverageVol {}
 
 impl PlAggFactor for AverageVol {
-    fn fac_name(&self) -> Option<String> {
+    fn agg_fac_name(&self) -> Option<String> {
         None
     }
 
-    fn fac_expr(&self) -> Result<Option<Expr>> {
+    fn agg_fac_expr(&self) -> Result<Option<Expr>> {
         Ok(None)
     }
 

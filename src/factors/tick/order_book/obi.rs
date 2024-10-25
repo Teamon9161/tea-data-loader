@@ -8,19 +8,19 @@ use crate::factors::export::*;
 /// It measures the relative difference between buy and sell volumes, indicating potential price pressure.
 ///
 /// # Fields
-/// * `Param` - Determines the number of price levels to include:
-///   - None or 1: Uses only the top bid and ask volumes
+/// * `usize` - Determines the number of price levels to include:
+///   - 1: Uses only the top bid and ask volumes
 ///   - 2 to 5: Includes volumes from the specified number of price levels on each side
 ///
 /// # Examples
-/// - Param(1) or None: (BidVol1 - AskVol1) / (BidVol1 + AskVol1)
-/// - Param(3): (Sum of top 3 BidVols - Sum of top 3 AskVols) / (Sum of top 3 BidVols + Sum of top 3 AskVols)
+/// - Obi(1): (BidVol1 - AskVol1) / (BidVol1 + AskVol1)
+/// - Obi(3): (Sum of top 3 BidVols - Sum of top 3 AskVols) / (Sum of top 3 BidVols + Sum of top 3 AskVols)
 #[derive(FactorBase, FromParam, Default, Clone, Copy)]
-pub struct Obi(pub Option<usize>);
+pub struct Obi(pub usize);
 
 impl PlFactor for Obi {
     fn try_expr(&self) -> Result<Expr> {
-        let level = self.0.unwrap_or(1);
+        let level = self.0;
         BidCumVol::new(level).imb(AskCumVol::new(level)).try_expr()
     }
 }

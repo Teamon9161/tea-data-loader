@@ -33,8 +33,8 @@ pub struct ObSlope(pub Option<usize>);
 impl PlFactor for ObSlope {
     fn try_expr(&self) -> Result<Expr> {
         let level = self.0.unwrap_or(5);
-        let ask_slope = (Ask::fac(level) - MID) / AskCumVol::new(level);
-        let bid_slope = (Bid::fac(level) - MID) / (BidCumVol::new(level));
+        let ask_slope = (Ask::fac(level) - MID) / AskCumVol(level);
+        let bid_slope = (Bid::fac(level) - MID) / (BidCumVol(level));
         // 因为bid slope为负值，所以直接加上bid slope即可
         let expr = ask_slope + bid_slope;
         // 避免量纲过小

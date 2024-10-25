@@ -37,11 +37,6 @@ impl<F: FactorBase> FactorBase for Factor<F> {
     fn fac_name() -> std::sync::Arc<str> {
         F::fac_name()
     }
-
-    // #[inline]
-    // fn new(param: impl Into<Param>) -> Self {
-    //     Factor(F::new(param))
-    // }
 }
 
 impl<F: FactorBase + PlFactor + Send + Sync + 'static> PlFactor for Factor<F> {

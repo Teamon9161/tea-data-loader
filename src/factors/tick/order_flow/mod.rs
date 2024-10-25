@@ -5,7 +5,7 @@ mod ofi;
 pub use ofi::{AggOfi, CumOfi, Ofi, SimpleTierOfi, TierOfi};
 
 mod vwap_deviation;
-pub use vwap_deviation::VwapDeviation;
+pub use vwap_deviation::{AggVwapDeviation, VwapDeviation};
 
 mod vwap;
 pub use vwap::Vwap;
@@ -21,4 +21,4 @@ pub(super) use order_tier::{is_order_tier, is_simple_order_tier};
 pub use order_tier::{OrderTier, SimpleOrderTier};
 
 mod big_order_ratio;
-pub use big_order_ratio::BigOrderRatio;
+pub use big_order_ratio::{AggBigOrderRatio, BigOrderRatio};

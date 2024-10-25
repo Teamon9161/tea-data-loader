@@ -71,7 +71,7 @@ impl<G: FactorBase + PlFactor> Sub<Factor<G>> for Expr {
     }
 }
 
-impl<F: FactorBase> Sub<Expr> for Factor<F> {
+impl<F: FactorBase + PlFactor> Sub<Expr> for Factor<F> {
     type Output = SubFactor<F, ExprFactor>;
     #[inline]
     fn sub(self, rhs: Expr) -> Self::Output {

@@ -28,10 +28,10 @@ mod bond_future_spread;
 pub use bond_future_spread::BondFutureSpread;
 
 mod ob_ofi;
-pub use ob_ofi::{CumObOfi, ObOfi};
+pub use ob_ofi::{AggObOfi, CumObOfi, ObOfi};
 
 mod ob_chg_speed;
-pub use ob_chg_speed::{BuyObChgSpeed, SellObChgSpeed};
+pub use ob_chg_speed::{BuyObChgSpeed, ObChgSpeed, SellObChgSpeed};
 
 mod price_diff_imb;
 pub use price_diff_imb::PriceDiffImb;

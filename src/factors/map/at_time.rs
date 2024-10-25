@@ -22,15 +22,19 @@ fn get_minutes_between(start: Time, end: Time) -> i32 {
 
 impl PlFactor for AtTime {
     fn try_expr(&self) -> Result<Expr> {
-        let morning_time = (col("time").dt().time() - MORNING_START_TIME.lit())
-            .dt()
-            .total_seconds()
-            / SEC_PER_MIN.lit();
-        let afternoon_time = (col("time").dt().time() - AFTERNOON_START_TIME.lit())
-            .dt()
-            .total_seconds()
-            / SEC_PER_MIN.lit()
-            + MORNING_MINUTES.lit();
+        let morning_time = (col("time")
+            - col("time")
+                .dt()
+                .combine(MORNING_START_TIME.lit(), TimeUnit::Milliseconds))
+        .dt()
+        .total_seconds();
+        let afternoon_time = (col("time")
+            - col("time")
+                .dt()
+                .combine(AFTERNOON_START_TIME.lit(), TimeUnit::Milliseconds))
+        .dt()
+        .total_seconds()
+            + (*MORNING_MINUTES * SEC_PER_MIN).lit();
         let time = dsl::when(col("time").dt().time().lt_eq(MORNING_END_TIME.lit()))
             .then(morning_time)
             .otherwise(afternoon_time);

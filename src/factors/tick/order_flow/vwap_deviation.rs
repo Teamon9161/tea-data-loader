@@ -20,6 +20,18 @@ impl PlFactor for VwapDeviation {
     }
 }
 
+#[derive(Default, FactorBase, Clone, Copy)]
+pub struct AggVwapDeviation;
+
+impl PlAggFactor for AggVwapDeviation {
+    #[inline]
+    fn agg_expr(&self) -> Result<Expr> {
+        let vwap = (ORDER_PRICE * ORDER_VOL).expr().sum() / ORDER_VOL.expr().sum();
+        let deviation = (ORDER_PRICE.expr().last() - vwap.clone()).protect_div(vwap) * 10000.lit();
+        Ok(deviation)
+    }
+}
+
 #[ctor::ctor]
 fn register() {
     register_pl_fac::<VwapDeviation>().unwrap()

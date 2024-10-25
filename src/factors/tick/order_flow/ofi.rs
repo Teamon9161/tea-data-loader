@@ -3,7 +3,6 @@ use polars::prelude::*;
 
 use super::{is_order_tier, is_simple_order_tier, OrderTier, SimpleOrderTier};
 use crate::factors::export::*;
-use crate::factors::GetName;
 
 /// Represents the Order Flow Imbalance (OFI) factor.
 ///
@@ -39,7 +38,7 @@ impl PlFactor for Ofi {
         let n = self.0;
         let buy_vol = (ORDER_AMT * iif(IS_BUY, 1, 0)).sum_opt(n, 1);
         let sell_vol = (ORDER_AMT * iif(!IS_BUY, 1, 0)).sum_opt(n, 1);
-        let ofi = buy_vol.clone() / (buy_vol + sell_vol);
+        let ofi = buy_vol / (buy_vol + sell_vol);
         ofi.try_expr()
     }
 }
@@ -83,28 +82,41 @@ impl PlFactor for CumOfi {
     }
 }
 
-#[derive(Default, Debug, Clone, Copy)]
+/// Aggregated Order Flow Indicator (AggOFI)
+///
+/// AggOFI is a variant of the Order Flow Indicator (OFI) that calculates the imbalance
+/// between buy and sell volumes over an aggregated time period.
+///
+/// # Calculation
+/// AggOFI = Aggregated Buy Volume / (Aggregated Buy Volume + Aggregated Sell Volume)
+///
+/// Where:
+/// - Aggregated Buy Volume: Sum of trade amounts for buy orders within the aggregation period
+/// - Aggregated Sell Volume: Sum of trade amounts for sell orders within the aggregation period
+///
+/// # Interpretation
+/// - AggOFI > 0.5: Indicates net buying pressure over the aggregated period
+/// - AggOFI < 0.5: Indicates net selling pressure over the aggregated period
+/// - AggOFI = 0.5: Indicates balance between buying and selling pressure
+///
+/// # Usage
+/// AggOFI can be used to:
+/// - Analyze buying/selling pressure over specific time intervals
+/// - Identify potential trend reversals or continuations
+/// - Compare order flow imbalances across different time frames
+///
+/// This struct implements the `PlAggFactor` trait, allowing it to be used
+/// in aggregated factor calculations within the factor framework.
+#[derive(Default, FactorBase, Clone, Copy)]
 pub struct AggOfi;
 
-impl GetName for AggOfi {}
-
 impl PlAggFactor for AggOfi {
-    #[inline]
-    fn fac_expr(&self) -> Result<Option<Expr>> {
-        Ok(None)
-    }
-
     #[inline]
     fn agg_expr(&self) -> Result<Expr> {
         let buy_vol = (ORDER_AMT * iif(IS_BUY, 1, 0)).try_expr()?.sum();
         let sell_vol = (ORDER_AMT * iif(!IS_BUY, 1, 0)).try_expr()?.sum();
         let ofi = buy_vol.clone() / (buy_vol + sell_vol);
         Ok(ofi.fill_nan(NONE))
-    }
-
-    #[inline]
-    fn fac_name(&self) -> Option<String> {
-        Some("ofi(agg)".to_string())
     }
 }
 

@@ -36,6 +36,18 @@ impl PlFactor for ObOfi {
     }
 }
 
+#[derive(Default, FactorBase, Clone, Copy)]
+pub struct AggObOfi;
+
+impl PlAggFactor for AggObOfi {
+    fn agg_expr(&self) -> Result<Expr> {
+        let (of_buy, of_sell) = get_ob_of_buy_sell();
+        let of_buy = of_buy.expr().sum();
+        let of_sell = of_sell.expr().sum();
+        Ok(of_buy.clone().protect_div(of_buy + of_sell))
+    }
+}
+
 /// Represents the Cumulative Order Book Order Flow Imbalance (Cum OB OFI) factor.
 ///
 /// This factor calculates the cumulative imbalance between buy and sell order flow

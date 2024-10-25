@@ -71,7 +71,7 @@ impl<G: FactorBase + PlFactor> Add<Factor<G>> for Expr {
     }
 }
 
-impl<F: FactorBase> Add<Expr> for Factor<F> {
+impl<F: FactorBase + PlFactor> Add<Expr> for Factor<F> {
     type Output = AddFactor<F, ExprFactor>;
     #[inline]
     fn add(self, rhs: Expr) -> Self::Output {

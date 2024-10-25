@@ -93,7 +93,48 @@ fn get_trade_ytm(
 
 impl DataLoader {
     #[cfg(feature = "tick-fac")]
+    /// 拼接trade数据
     pub fn with_trade_data(self) -> Result<Self> {
+        let facs: Vec<Arc<dyn PlFactor>> = vec![];
+        self.with_trade_data_and_facs(&facs)
+    }
+
+    #[cfg(feature = "tick-fac")]
+    /// 使用trade数据计算因子（暂时去掉盘口数据，只保留真实成交数据），再拼接回原数据
+    pub fn with_trade_facs(mut self, facs: &[impl AsRef<dyn PlFactor>]) -> Result<Self> {
+        use crate::factors::tick::order_flow::*;
+        if facs.is_empty() {
+            return Ok(self);
+        }
+        let trade_columns = [
+            ORDER_TIME.name(),
+            ORDER_VOL.name(),
+            ORDER_PRICE.name(),
+            ORDER_YTM.name(),
+            ORDER_AMT.name(),
+            IS_BUY.name(),
+        ];
+        let fac_names = facs.iter().map(|f| f.as_ref().name()).collect::<Vec<_>>();
+        let mut trade_dl = self
+            .clone()
+            .filter(col(ORDER_TIME.name()).is_not_null())?
+            .select([cols(trade_columns)])?;
+        trade_dl = trade_dl
+            .with_pl_facs(facs)?
+            .select([col(ORDER_TIME.name()), cols(&fac_names)])?;
+        self.dfs = self
+            .dfs
+            .into_iter()
+            .zip(trade_dl.dfs)
+            .map(|(df, trade_df)| {
+                df.left_join(trade_df, col(ORDER_TIME.name()), col(ORDER_TIME.name()))
+            })
+            .collect::<Result<Frames>>()?;
+        Ok(self)
+    }
+
+    #[cfg(feature = "tick-fac")]
+    fn with_trade_data_and_facs(self, facs: &[impl AsRef<dyn PlFactor>]) -> Result<Self> {
         use crate::factors::tick::order_flow::*;
         ensure!(
             &*self.typ == "ddb-xbond",
@@ -139,6 +180,7 @@ impl DataLoader {
             .with_name("infer_ytm".into()),
         )?;
 
+        // trade df预处理
         let trade_df = trade_df
             .into_frame()
             .with_column(
@@ -158,14 +200,24 @@ impl DataLoader {
             .drop(["infer_ytm"])?;
         // 拼接trade_df
         let mut out = self.empty_copy();
+        let fac_names = facs.iter().map(|f| f.as_ref().name()).collect::<Vec<_>>();
+        let trade_columns = [
+            ORDER_TIME.name(),
+            ORDER_VOL.name(),
+            ORDER_PRICE.name(),
+            ORDER_YTM.name(),
+            ORDER_AMT.name(),
+        ];
         out.dfs = self
             .into_iter()
             .map(|(symbol, df)| {
-                let df = df.join(
-                    trade_df
-                        .clone()
-                        .filter(col("symbol").eq(symbol.lit()))?
-                        .select([col("*").exclude(["symbol"])])?,
+                let current_trade_df = trade_df
+                    .clone()
+                    .filter(col("symbol").eq(symbol.lit()))?
+                    .select([col("*").exclude(["symbol"])])?
+                    .with_pl_facs(facs)?;
+                let df = df.select([col("*").exclude(&trade_columns)])?.join(
+                    current_trade_df,
                     [col("time")],
                     [col("time")],
                     JoinArgs {
@@ -179,13 +231,6 @@ impl DataLoader {
                     },
                 )?;
                 // 对于同一笔交易，保证只拼到第一个盘口
-                let trade_columns = [
-                    ORDER_TIME.name(),
-                    ORDER_VOL.name(),
-                    ORDER_PRICE.name(),
-                    ORDER_YTM.name(),
-                    ORDER_AMT.name(),
-                ];
                 let ot = col(&ORDER_TIME.name());
                 let duplicate_cond = ot
                     .clone()
@@ -193,12 +238,13 @@ impl DataLoader {
                     .and(ot.is_not_null());
                 df.with_columns(
                     trade_columns
-                        .into_iter()
+                        .iter()
+                        .chain(&fac_names)
                         .map(|f| {
                             when(duplicate_cond.clone())
                                 .then(NULL.lit())
-                                .otherwise(col(&f))
-                                .alias(&f)
+                                .otherwise(col(f))
+                                .alias(f)
                         })
                         .collect::<Vec<_>>(),
                 )?
