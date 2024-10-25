@@ -183,12 +183,20 @@ impl DataLoader {
         opt: GroupByTimeOpt,
     ) -> Result<Self> {
         let facs = facs.into_iter().map(|f| f.as_ref()).collect_vec();
+        let schema = self.schema()?;
         let exprs = facs
             .iter()
             .filter_map(|f| {
-                f.agg_fac_expr()
-                    .unwrap()
-                    .map(|e| e.alias(&f.agg_fac_name().unwrap()))
+                if let Some(fac_to_agg_name) = f.agg_fac_name() {
+                    if schema.contains(&fac_to_agg_name) {
+                        None
+                    } else {
+                        dbg!("{:?} need calc before agg", &fac_to_agg_name);
+                        f.agg_fac_expr().unwrap().map(|e| e.alias(&fac_to_agg_name))
+                    }
+                } else {
+                    None
+                }
             })
             .collect::<Vec<_>>();
         let dl = self.with_columns(&exprs)?;

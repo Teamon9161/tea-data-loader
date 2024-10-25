@@ -246,7 +246,6 @@ fn plot_heatmap(
     );
     let trace = HeatMap::new(x_axis, y_axis, data).zauto(true);
 
-    let mut plot = plotly::Plot::new();
     let (x_axis, y_axis) = if square {
         (
             Axis::new()
@@ -255,16 +254,14 @@ fn plot_heatmap(
                 .scale_anchor("y")
                 .constrain(AxisConstrain::Domain),
             Axis::new()
-                .title("预测窗口(tick)")
+                .title("预测窗口")
                 .type_(AxisType::Category)
                 .constrain(AxisConstrain::Domain),
         )
     } else {
         (
             Axis::new().title("因子参数").type_(AxisType::Category),
-            Axis::new()
-                .title("预测窗口(tick)")
-                .type_(AxisType::Category),
+            Axis::new().title("预测窗口").type_(AxisType::Category),
         )
     };
 
@@ -272,6 +269,7 @@ fn plot_heatmap(
         .title(title.as_ref())
         .x_axis(x_axis)
         .y_axis(y_axis);
+    let mut plot = plotly::Plot::new();
     plot.add_trace(trace);
     plot.set_layout(layout);
     let save_path = save_path.as_ref();

@@ -12,7 +12,7 @@ pub use super::factors::{
 pub use super::factors::{FactorCmpExt, FactorExt};
 #[cfg(feature = "plot")]
 pub use super::frame::PlotOpt;
-pub use super::frame::{EvaluateOpt, Frame, Frames, IntoFrame};
+pub use super::frame::{EvaluateOpt, Frame, FrameCorrOpt, Frames, IntoFrame};
 pub use super::loader::*;
 pub use super::polars_ext::{where_, ExprExt, SeriesExt};
 pub use super::strategy::{

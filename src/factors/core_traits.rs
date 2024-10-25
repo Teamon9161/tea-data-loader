@@ -172,7 +172,7 @@ impl std::fmt::Debug for ExprFactor {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "PlExprFactor({})",
+            "{}",
             self.0.clone().meta().output_name().unwrap().to_string()
         )
     }
