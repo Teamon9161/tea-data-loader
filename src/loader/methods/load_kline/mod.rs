@@ -1,5 +1,6 @@
 mod future;
 mod opt;
+mod sse_bond;
 mod xbond;
 
 use anyhow::bail;
@@ -68,6 +69,7 @@ impl DataLoader {
         match self.typ.as_ref() {
             "future" | "ddb-future" => self.load_future_kline(path_config),
             "xbond" | "ddb-xbond" => self.load_xbond_kline(path_config, opt.concat_tick_df),
+            "sse-bond" => self.load_sse_bond_kline(path_config),
             _ => bail!("Load Unsupported typ: {:?} kline", self.typ),
         }
     }

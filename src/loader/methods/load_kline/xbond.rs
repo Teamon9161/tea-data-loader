@@ -52,14 +52,7 @@ impl DataLoader {
                 let dfs: Vec<_> = all_files
                     .into_iter()
                     .map(|path| -> Result<_> {
-                        let mut ldf = LazyFrame::scan_ipc(
-                            &path,
-                            ScanArgsIpc {
-                                rechunk: true,
-                                // memory_map,
-                                ..Default::default()
-                            },
-                        )?;
+                        let mut ldf = LazyFrame::scan_ipc(&path, Default::default())?;
                         let schema = ldf.collect_schema()?;
                         if let Some(columns) = columns.as_ref() {
                             if columns.len() != schema.len() {

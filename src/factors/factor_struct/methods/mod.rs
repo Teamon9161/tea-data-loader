@@ -75,11 +75,8 @@ pub trait FactorExt: FactorBase {
     #[inline]
     /// Calculates the logarithm of the factor with base e.
     fn ln(self) -> LogFactor<Self> {
-        log::FactorLog {
-            fac: self,
-            base: f64::EPSILON,
-        }
-        .into()
+        use std::f64::consts::E;
+        log::FactorLog { fac: self, base: E }.into()
     }
 
     /// Calculates the bias of the factor relative to its rolling mean.

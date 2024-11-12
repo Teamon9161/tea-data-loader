@@ -2,7 +2,7 @@ pub(crate) mod base;
 pub use base::*;
 
 mod mid;
-pub use mid::{Mid, MidYtm};
+pub use mid::{Mid, MidYtm, WMid};
 
 mod obi;
 pub use obi::{CumObi, Obi};

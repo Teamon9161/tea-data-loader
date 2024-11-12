@@ -4,6 +4,7 @@ use std::ops::{Deref, DerefMut};
 use anyhow::Result;
 use derive_more::From;
 use polars::prelude::*;
+use rayon::prelude::*;
 use tea_strategy::tevec::prelude::{terr, CollectTrustedToVec, TryCollectTrustedToVec};
 
 use super::frame_core::Frame;
@@ -74,6 +75,16 @@ impl<F: Into<Frame>> FromIterator<F> for Frames {
     #[inline]
     fn from_iter<T: IntoIterator<Item = F>>(iter: T) -> Self {
         iter.into_iter().map(Into::into).collect::<Vec<_>>().into()
+    }
+}
+
+impl<F: Into<Frame> + Send> FromParallelIterator<F> for Frames {
+    #[inline]
+    fn from_par_iter<T: IntoParallelIterator<Item = F>>(iter: T) -> Self {
+        iter.into_par_iter()
+            .map(Into::into)
+            .collect::<Vec<_>>()
+            .into()
     }
 }
 

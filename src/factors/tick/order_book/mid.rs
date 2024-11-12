@@ -34,8 +34,21 @@ impl PlFactor for MidYtm {
     }
 }
 
+/// Reference: https://github.com/sstoikov/microprice/blob/master/Microprice%20-%20Big%20Data%20Conference.ipynb
+#[derive(FactorBase, FromParam, Default, Clone, Copy)]
+pub struct WMid;
+
+impl PlFactor for WMid {
+    fn try_expr(&self) -> Result<Expr> {
+        let imb = BID1_VOL / (BID1_VOL + ASK1_VOL);
+        let wmid: Factor<_> = BID1 * (1 - imb) + ASK1 * imb;
+        wmid.try_expr()
+    }
+}
+
 #[ctor::ctor]
 fn register() {
     register_pl_fac::<Mid>().unwrap();
     register_pl_fac::<MidYtm>().unwrap();
+    register_pl_fac::<WMid>().unwrap();
 }

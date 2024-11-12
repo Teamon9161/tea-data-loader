@@ -36,7 +36,6 @@ impl PlFactor for BsPressure {
             + ask_weight4 / ask_denom * ASK4_VOL
             + ask_weight5 / ask_denom * ASK5_VOL;
         ask_pressure.imb(bid_pressure).try_expr()
-        // .map(|e| e.fill_nan(NONE))
         // (ask_pressure.ln() - bid_pressure.ln()).try_expr()
     }
 }
