@@ -115,7 +115,7 @@ impl PlAggFactor for AggOfi {
     fn agg_expr(&self) -> Result<Expr> {
         let buy_vol = (ORDER_AMT * iif(IS_BUY, 1, 0)).try_expr()?.sum();
         let sell_vol = (ORDER_AMT * iif(!IS_BUY, 1, 0)).try_expr()?.sum();
-        let ofi = buy_vol.clone() / (buy_vol + sell_vol);
+        let ofi = buy_vol.clone().protect_div(buy_vol + sell_vol);
         Ok(ofi.fill_nan(NONE))
     }
 }

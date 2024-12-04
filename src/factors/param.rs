@@ -288,13 +288,12 @@ impl Param {
     /// Panics if the parameter is not an f64.
     #[inline]
     pub fn as_f64(&self) -> f64 {
-        if let Param::F64(v) = self {
-            *v
-        } else {
-            panic!("param is not f64")
+        match self {
+            Param::F64(v) => *v,
+            Param::I32(v) => *v as f64,
+            _ => panic!("param is not f64"),
         }
     }
-
     /// Converts the parameter to a u32.
     #[inline]
     pub fn as_u32(&self) -> u32 {

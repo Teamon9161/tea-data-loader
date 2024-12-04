@@ -13,6 +13,7 @@ use crate::factors::export::*;
 pub struct VwapDeviation(pub usize);
 
 impl PlFactor for VwapDeviation {
+    #[inline]
     fn try_expr(&self) -> Result<Expr> {
         let vwap = Vwap::fac(self.0);
         let fac = (ORDER_PRICE - vwap) / vwap * 10000;
