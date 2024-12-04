@@ -152,11 +152,17 @@ impl Frame {
 
     /// Renames columns in the Frame.
     ///
+    /// `existing` and `new` are iterables of the same length containing the old and
+    /// corresponding new column names. Renaming happens to all `existing` columns
+    /// simultaneously, not iteratively. If `strict` is true, all columns in `existing`
+    /// must be present in the `LazyFrame` when `rename` is called; otherwise, only
+    /// those columns that are actually found will be renamed (others will be ignored).
+
     /// # Errors
     ///
     /// Returns an error if there's an issue renaming columns in an eager Frame.
     #[inline]
-    pub fn rename<I, J, T, S>(self, existing: I, new: J) -> Result<Self>
+    pub fn rename<I, J, T, S>(self, existing: I, new: J, strict: bool) -> Result<Self>
     where
         I: IntoIterator<Item = T>,
         J: IntoIterator<Item = S>,
@@ -170,7 +176,7 @@ impl Frame {
                 }
                 Ok(df.into())
             },
-            Frame::Lazy(df) => Ok(df.rename(existing, new).into()),
+            Frame::Lazy(df) => Ok(df.rename(existing, new, strict).into()),
         }
     }
 

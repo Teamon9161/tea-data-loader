@@ -80,7 +80,11 @@ impl DataLoader {
                     )?;
                     // apply rename condition
                     if let Some(table) = &rename_table {
-                        df = df.rename(table.keys(), table.values().map(|v| v.as_str().unwrap()));
+                        df = df.rename(
+                            table.keys(),
+                            table.values().map(|v| v.as_str().unwrap()),
+                            false,
+                        );
                     };
                     df = df.sort(["time", "symbol"], Default::default());
                     // apply filter condition
@@ -97,6 +101,7 @@ impl DataLoader {
                                 df = df.rename(
                                     table.keys(),
                                     table.values().map(|v| v.as_str().unwrap()),
+                                    false,
                                 );
                             };
                             // apply filter condition

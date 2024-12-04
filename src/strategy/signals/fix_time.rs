@@ -104,7 +104,7 @@ impl From<Params> for NegFixTime {
 }
 
 impl Strategy for NegFixTime {
-    fn eval_to_fac(&self, fac: &Series, filters: Option<DataFrame>) -> anyhow::Result<Series> {
+    fn eval_to_fac(&self, fac: &Column, filters: Option<DataFrame>) -> anyhow::Result<Series> {
         FixTime(self.0 .0.clone()).eval_to_fac(fac, filters)
     }
 }
@@ -140,7 +140,7 @@ impl From<Params> for NegFixTimeLong {
 }
 
 impl Strategy for NegFixTimeLong {
-    fn eval_to_fac(&self, fac: &Series, filters: Option<DataFrame>) -> anyhow::Result<Series> {
+    fn eval_to_fac(&self, fac: &Column, filters: Option<DataFrame>) -> anyhow::Result<Series> {
         FixTime(self.0 .0.clone()).eval_to_fac(fac, filters)
     }
 }
@@ -175,7 +175,7 @@ impl From<Params> for NegFixTimeShort {
 }
 
 impl Strategy for NegFixTimeShort {
-    fn eval_to_fac(&self, fac: &Series, filters: Option<DataFrame>) -> anyhow::Result<Series> {
+    fn eval_to_fac(&self, fac: &Column, filters: Option<DataFrame>) -> anyhow::Result<Series> {
         FixTime(self.0 .0.clone()).eval_to_fac(fac, filters)
     }
 }

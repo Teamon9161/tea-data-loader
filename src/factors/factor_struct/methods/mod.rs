@@ -10,6 +10,7 @@ mod ewm;
 mod fill;
 mod iif;
 mod imbalance;
+mod is_none;
 mod kurt;
 mod log;
 mod max;
@@ -30,6 +31,8 @@ use crate::prelude::*;
 
 pub type BiasFactor<F> = Factor<bias::FactorBias<F>>;
 pub type AbsFactor<F> = Factor<abs::FactorAbs<F>>;
+pub type IsNoneFactor<F> = Factor<is_none::FactorIsNone<F>>;
+pub type NotNoneFactor<F> = Factor<is_none::FactorNotNone<F>>;
 pub type EfficiencySignFactor<F> = Factor<efficiency_sign::FactorEfficiencySign<F>>;
 pub type EfficiencyFactor<F> = Factor<efficiency::FactorEfficiency<F>>;
 pub type ImbalanceFactor<F, G> = Factor<imbalance::FactorImbalance<F, G>>;
@@ -64,6 +67,16 @@ pub trait FactorExt: FactorBase {
     /// Calculates the absolute value of the factor.
     fn abs(self) -> AbsFactor<Self> {
         abs::FactorAbs(self).into()
+    }
+
+    #[inline]
+    fn is_none(self) -> IsNoneFactor<Self> {
+        is_none::FactorIsNone(self).into()
+    }
+
+    #[inline]
+    fn is_not_none(self) -> NotNoneFactor<Self> {
+        is_none::FactorNotNone(self).into()
     }
 
     #[inline]

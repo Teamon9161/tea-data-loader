@@ -78,9 +78,7 @@ impl DataLoader {
             .unwrap();
         let closed_window = match source {
             "rq" => ClosedWindow::Right,
-            "coin" => ClosedWindow::Left,
-            "ddb-xbond" => ClosedWindow::Left,
-            "ddb-future" => ClosedWindow::Left,
+            "coin" | "ddb-xbond" | "ddb-future" | "sse-bond" => ClosedWindow::Left,
             _ => {
                 eprintln!(
                     "unsupported source in group_by_time: {}, use Left Closed by default",
@@ -320,9 +318,11 @@ impl DataLoaderGroupBy {
                 self.lgbs
                     .into_iter()
                     .map(|lgb| {
-                        lgb.agg(&aggs)
-                            .drop([time_col])
-                            .rename([last_time.to_string() + "_last"], [last_time])
+                        lgb.agg(&aggs).drop([time_col]).rename(
+                            [last_time.to_string() + "_last"],
+                            [last_time],
+                            true,
+                        )
                     })
                     .collect_trusted_to_vec()
             }

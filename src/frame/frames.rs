@@ -205,7 +205,7 @@ impl Frames {
     pub fn get_column<'a, S: AsRef<str> + 'a>(
         &'a self,
         key: S,
-    ) -> impl Iterator<Item = &'a Series> + 'a {
+    ) -> impl Iterator<Item = &'a Column> + 'a {
         self.iter()
             .map(move |df| df.as_eager().unwrap().column(key.as_ref()).unwrap())
     }
@@ -226,6 +226,8 @@ impl Frames {
         methods: impl IntoIterator<Item = AggMethod>,
     ) -> Result<DataFrame> {
         use polars::lazy::dsl::*;
+
+        use crate::utils::{column_into_expr, column_to_expr};
         let dfs = self.collect(true)?;
         let exprs = keys
             .into_iter()
@@ -233,58 +235,48 @@ impl Frames {
             .map(|(key, method)| {
                 let expr = match method {
                     AggMethod::Mean => mean_horizontal(
-                        dfs.get_column(key)
-                            .map(|s| s.clone().lit())
-                            .collect::<Vec<_>>(),
+                        dfs.get_column(key).map(column_to_expr).collect::<Vec<_>>(),
                     )?,
                     AggMethod::WeightMean(weight) => {
                         let weight_sum = sum_horizontal(
                             dfs.get_column(&weight)
-                                .map(|s| s.clone().lit())
+                                .map(column_to_expr)
                                 .collect::<Vec<_>>(),
                         )?;
                         let all_sum = sum_horizontal(
                             dfs.iter()
                                 .map(|df| {
                                     let df = df.as_eager().unwrap();
-                                    (df.column(key.as_ref()).unwrap()
+                                    let res = (df.column(key.as_ref()).unwrap()
                                         * df.column(weight.as_ref()).unwrap())
-                                    .unwrap()
-                                    .lit()
+                                    .unwrap();
+                                    column_into_expr(res)
                                 })
                                 .collect::<Vec<_>>(),
                         )?;
                         (all_sum / weight_sum).alias(key.as_ref())
                     },
-                    AggMethod::Max => max_horizontal(
-                        dfs.get_column(key)
-                            .map(|s| s.clone().lit())
-                            .collect::<Vec<_>>(),
-                    )?,
-                    AggMethod::Min => min_horizontal(
-                        dfs.get_column(key)
-                            .map(|s| s.clone().lit())
-                            .collect::<Vec<_>>(),
-                    )?,
-                    AggMethod::Sum => sum_horizontal(
-                        dfs.get_column(key)
-                            .map(|s| s.clone().lit())
-                            .collect::<Vec<_>>(),
-                    )?,
-                    AggMethod::First => dfs[0]
-                        .as_eager()
-                        .unwrap()
-                        .column(key.as_ref())
-                        .unwrap()
-                        .clone()
-                        .lit(),
-                    AggMethod::Last => dfs[dfs.len() - 1]
-                        .as_eager()
-                        .unwrap()
-                        .column(key.as_ref())
-                        .unwrap()
-                        .clone()
-                        .lit(),
+                    AggMethod::Max => {
+                        max_horizontal(dfs.get_column(key).map(column_to_expr).collect::<Vec<_>>())?
+                    },
+                    AggMethod::Min => {
+                        min_horizontal(dfs.get_column(key).map(column_to_expr).collect::<Vec<_>>())?
+                    },
+                    AggMethod::Sum => {
+                        sum_horizontal(dfs.get_column(key).map(column_to_expr).collect::<Vec<_>>())?
+                    },
+                    AggMethod::First => {
+                        let res = dfs[0].as_eager().unwrap().column(key.as_ref()).unwrap();
+                        column_to_expr(res)
+                    },
+                    AggMethod::Last => {
+                        let res = dfs[dfs.len() - 1]
+                            .as_eager()
+                            .unwrap()
+                            .column(key.as_ref())
+                            .unwrap();
+                        column_to_expr(res)
+                    },
                     AggMethod::ValidFirst => {
                         todo!()
                     },
@@ -329,8 +321,14 @@ mod tests {
             .horizontal_agg(&["A", "B"], [AggMethod::Mean, AggMethod::Mean])?;
         let expected_mean_a = Series::new("A".into(), &[5.5, 11.0, 16.5]);
         let expected_mean_b = Series::new("B".into(), &[22.0, 27.5, 33.0]);
-        assert_series_equal(result_mean.column("A")?, &expected_mean_a)?;
-        assert_series_equal(result_mean.column("B")?, &expected_mean_b)?;
+        assert_series_equal(
+            result_mean.column("A")?.as_series().unwrap(),
+            &expected_mean_a,
+        )?;
+        assert_series_equal(
+            result_mean.column("B")?.as_series().unwrap(),
+            &expected_mean_b,
+        )?;
 
         // Test WeightMean
         let result_weight_mean = frames.clone().horizontal_agg(
@@ -356,8 +354,14 @@ mod tests {
                 (6.0 * 0.2 + 60.0 * 0.2) / 0.4,
             ],
         );
-        assert_series_equal(result_weight_mean.column("A")?, &expected_weight_mean_a)?;
-        assert_series_equal(result_weight_mean.column("B")?, &expected_weight_mean_b)?;
+        assert_series_equal(
+            result_weight_mean.column("A")?.as_series().unwrap(),
+            &expected_weight_mean_a,
+        )?;
+        assert_series_equal(
+            result_weight_mean.column("B")?.as_series().unwrap(),
+            &expected_weight_mean_b,
+        )?;
 
         // Test Max
         let result_max = frames
@@ -365,8 +369,14 @@ mod tests {
             .horizontal_agg(&["A", "B"], [AggMethod::Max, AggMethod::Max])?;
         let expected_max_a = Series::new("A".into(), &[10.0, 20.0, 30.0]);
         let expected_max_b = Series::new("B".into(), &[40.0, 50.0, 60.0]);
-        assert_series_equal(result_max.column("A")?, &expected_max_a)?;
-        assert_series_equal(result_max.column("B")?, &expected_max_b)?;
+        assert_series_equal(
+            result_max.column("A")?.as_series().unwrap(),
+            &expected_max_a,
+        )?;
+        assert_series_equal(
+            result_max.column("B")?.as_series().unwrap(),
+            &expected_max_b,
+        )?;
 
         // Test Min
         let result_min = frames
@@ -374,8 +384,14 @@ mod tests {
             .horizontal_agg(&["A", "B"], [AggMethod::Min, AggMethod::Min])?;
         let expected_min_a = Series::new("A".into(), &[1.0, 2.0, 3.0]);
         let expected_min_b = Series::new("B".into(), &[4.0, 5.0, 6.0]);
-        assert_series_equal(result_min.column("A")?, &expected_min_a)?;
-        assert_series_equal(result_min.column("B")?, &expected_min_b)?;
+        assert_series_equal(
+            result_min.column("A")?.as_series().unwrap(),
+            &expected_min_a,
+        )?;
+        assert_series_equal(
+            result_min.column("B")?.as_series().unwrap(),
+            &expected_min_b,
+        )?;
 
         // Test Sum
         let result_sum = frames
@@ -383,8 +399,14 @@ mod tests {
             .horizontal_agg(&["A", "B"], [AggMethod::Sum, AggMethod::Sum])?;
         let expected_sum_a = Series::new("A".into(), &[11.0, 22.0, 33.0]);
         let expected_sum_b = Series::new("B".into(), &[44.0, 55.0, 66.0]);
-        assert_series_equal(result_sum.column("A")?, &expected_sum_a)?;
-        assert_series_equal(result_sum.column("B")?, &expected_sum_b)?;
+        assert_series_equal(
+            result_sum.column("A")?.as_series().unwrap(),
+            &expected_sum_a,
+        )?;
+        assert_series_equal(
+            result_sum.column("B")?.as_series().unwrap(),
+            &expected_sum_b,
+        )?;
 
         // Test First
         let result_first = frames
@@ -392,8 +414,14 @@ mod tests {
             .horizontal_agg(&["A", "B"], [AggMethod::First, AggMethod::First])?;
         let expected_first_a = Series::new("A".into(), &[1.0, 2.0, 3.0]);
         let expected_first_b = Series::new("B".into(), &[4.0, 5.0, 6.0]);
-        assert_series_equal(result_first.column("A")?, &expected_first_a)?;
-        assert_series_equal(result_first.column("B")?, &expected_first_b)?;
+        assert_series_equal(
+            result_first.column("A")?.as_series().unwrap(),
+            &expected_first_a,
+        )?;
+        assert_series_equal(
+            result_first.column("B")?.as_series().unwrap(),
+            &expected_first_b,
+        )?;
 
         // Test Last
         let result_last = frames
@@ -401,8 +429,14 @@ mod tests {
             .horizontal_agg(&["A", "B"], [AggMethod::Last, AggMethod::Last])?;
         let expected_last_a = Series::new("A".into(), &[10.0, 20.0, 30.0]);
         let expected_last_b = Series::new("B".into(), &[40.0, 50.0, 60.0]);
-        assert_series_equal(result_last.column("A")?, &expected_last_a)?;
-        assert_series_equal(result_last.column("B")?, &expected_last_b)?;
+        assert_series_equal(
+            result_last.column("A")?.as_series().unwrap(),
+            &expected_last_a,
+        )?;
+        assert_series_equal(
+            result_last.column("B")?.as_series().unwrap(),
+            &expected_last_b,
+        )?;
 
         Ok(())
     }

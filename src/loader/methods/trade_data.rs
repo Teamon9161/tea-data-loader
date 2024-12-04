@@ -14,7 +14,7 @@ fn get_is_buy_expr() -> Expr {
     use crate::factors::*;
     let is_buy = iif(ORDER_YTM.lt_eq(ASK1_YTM.shift(1)), true, NONE);
     let is_buy = iif(ORDER_YTM.gt_eq(BID1_YTM.shift(1)), false, is_buy);
-    is_buy.expr().alias("is_buy")
+    is_buy.expr().alias(IS_BUY.name())
 }
 
 #[cfg(feature = "tick-fac")]
@@ -101,39 +101,59 @@ impl DataLoader {
 
     #[cfg(feature = "tick-fac")]
     /// 使用trade数据计算因子（暂时去掉盘口数据，只保留真实成交数据），再拼接回原数据
+    ///
+    /// 使用本函数需要trade数据已经拼接完成，于with_trade_data_and_facs不同的是这种
+    /// 情况下已经有is_buy列。
     pub fn with_trade_facs(mut self, facs: &[impl AsRef<dyn PlFactor>]) -> Result<Self> {
+        use crate::factors::base::TIME;
         use crate::factors::tick::order_flow::*;
         if facs.is_empty() {
             return Ok(self);
         }
-        let trade_columns = [
-            ORDER_TIME.name(),
-            ORDER_VOL.name(),
-            ORDER_PRICE.name(),
-            ORDER_YTM.name(),
-            ORDER_AMT.name(),
-            IS_BUY.name(),
-        ];
+        let (trade_columns, time_col) = match &*self.typ {
+            "ddb-xbond" => (
+                vec![
+                    ORDER_TIME.name(),
+                    ORDER_VOL.name(),
+                    ORDER_PRICE.name(),
+                    ORDER_YTM.name(),
+                    ORDER_AMT.name(),
+                    IS_BUY.name(),
+                ],
+                ORDER_TIME.name(),
+            ),
+            "sse-bond" => (
+                vec![
+                    TIME.name(),
+                    ORDER_VOL.name(),
+                    ORDER_PRICE.name(),
+                    ORDER_AMT.name(),
+                    IS_BUY.name(),
+                ],
+                TIME.name(),
+            ),
+            tp => todo!("with trade facs is not supported for type: {}", tp),
+        };
         let fac_names = facs.iter().map(|f| f.as_ref().name()).collect::<Vec<_>>();
         let mut trade_dl = self
             .clone()
-            .filter(col(ORDER_TIME.name()).is_not_null())?
+            .filter(col(ORDER_VOL.name()).is_not_null())?
             .select([cols(trade_columns)])?;
         trade_dl = trade_dl
             .with_pl_facs(facs)?
-            .select([col(ORDER_TIME.name()), cols(&fac_names)])?;
+            .select([col(&time_col), cols(&fac_names)])?;
         self.dfs = self
             .dfs
             .into_iter()
             .zip(trade_dl.dfs)
-            .map(|(df, trade_df)| {
-                df.left_join(trade_df, col(ORDER_TIME.name()), col(ORDER_TIME.name()))
-            })
+            .map(|(df, trade_df)| df.left_join(trade_df, col(&time_col), col(&time_col)))
             .collect::<Result<Frames>>()?;
         Ok(self)
     }
 
     #[cfg(feature = "tick-fac")]
+    /// 在首次拼接到盘口数据前就先计算好订单流因子，但是由于尚未拼接盘口数据，
+    /// 无法得到交易是主买还是主卖（无is_buy列）
     fn with_trade_data_and_facs(self, facs: &[impl AsRef<dyn PlFactor>]) -> Result<Self> {
         use crate::factors::tick::order_flow::*;
         ensure!(
@@ -148,7 +168,7 @@ impl DataLoader {
         let preprocess_exprs = get_preprocess_exprs(&self.typ, "trade");
         let mut trade_df = LazyFrame::scan_ipc(path, Default::default())?;
         if let Some(map) = rename_map {
-            trade_df = trade_df.rename(map.keys(), map.values().map(|v| v.as_str().unwrap()))
+            trade_df = trade_df.rename(map.keys(), map.values().map(|v| v.as_str().unwrap()), false)
         }
         // apply filter condition
         if let Some(cond) = filter_cond.clone() {
@@ -173,9 +193,12 @@ impl DataLoader {
         // 对于均价，推断出其对应的ytm
         trade_df.with_column(
             get_trade_ytm(
-                trade_df.column("symbol").unwrap(),
-                trade_df.column("time").unwrap(),
-                trade_df.column(&ORDER_PRICE.name()).unwrap(),
+                trade_df.column("symbol").unwrap().as_materialized_series(),
+                trade_df.column("time").unwrap().as_materialized_series(),
+                trade_df
+                    .column(&ORDER_PRICE.name())
+                    .unwrap()
+                    .as_materialized_series(),
             )?
             .with_name("infer_ytm".into()),
         )?;

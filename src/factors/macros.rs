@@ -25,7 +25,7 @@ macro_rules! define_base_fac {
                 #[inline]
                 fn eval(&self, df: &DataFrame) -> Result<Series> {
                     let fac_name = $crate::factors::macros::to_snake_case(&stringify!($fac));
-                    Ok(df.column(&fac_name)?.clone())
+                    Ok(df.column(&fac_name)?.as_materialized_series().clone())
                 }
             }
 

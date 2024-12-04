@@ -113,6 +113,9 @@ mod tests {
             .unwrap();
 
         let expected = Series::new("fac".into(), &[1, 1, 2, 2, 3, 3, 4, 4, 5, 5]);
-        assert_eq!(result.column("fac").unwrap(), &expected);
+        assert_eq!(
+            result.column("fac").unwrap().as_materialized_series(),
+            &expected
+        );
     }
 }

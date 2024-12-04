@@ -62,7 +62,11 @@ impl DataLoader {
                 )?;
                 // apply rename condition
                 if let Some(table) = &rename_table {
-                    ldf = ldf.rename(table.keys(), table.values().map(|v| v.as_str().unwrap()));
+                    ldf = ldf.rename(
+                        table.keys(),
+                        table.values().map(|v| v.as_str().unwrap()),
+                        false,
+                    );
                 };
                 // apply filter condition
                 if let Some(cond) = filter_cond.clone() {

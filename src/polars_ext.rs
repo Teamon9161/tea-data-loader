@@ -193,6 +193,7 @@ impl SeriesExt for Series {
         Ok(LazyFrame::default()
             .select([self.clone().lit().protect_div(other.lit())])
             .collect()?[0]
+            .as_materialized_series()
             .clone())
     }
 
@@ -480,6 +481,17 @@ impl SeriesExt for Series {
 
 /// Extension trait for Polars expressions providing time series operations.
 pub trait ExprExt {
+    /// Performs addition between two expressions, ignoring null values.
+    ///
+    /// This function adds the current expression with another expression,
+    /// skipping null values and only adding non-null values together.
+    ///
+    /// # Arguments
+    /// * `other` - The expression to add with.
+    ///
+    /// # Returns
+    /// An expression representing the sum of non-null values.
+    fn vadd(self, other: Expr) -> Self;
     /// Calculates the imbalance between two expressions.
     ///
     /// The imbalance is calculated using the formula: (a - b) / (a + b)
@@ -597,6 +609,17 @@ pub trait ExprExt {
 
 impl ExprExt for Expr {
     #[inline]
+    fn vadd(self, other: Expr) -> Self {
+        use polars::lazy::dsl::sum_horizontal;
+        let res = when(self.clone().is_not_null().and(other.clone().is_not_null()))
+            .then(self.clone() + other.clone())
+            .otherwise(NULL.lit());
+        when(res.clone().is_null())
+            .then(sum_horizontal(&[self, other]).unwrap())
+            .otherwise(res)
+    }
+
+    #[inline]
     fn imbalance(self, other: Expr) -> Self {
         (self.clone() - other.clone()).protect_div(self + other)
     }
@@ -612,8 +635,9 @@ impl ExprExt for Expr {
     fn winsorize(self, method: WinsorizeMethod, method_params: Option<f64>) -> Self {
         self.apply(
             move |s| {
-                s.winsorize(method, method_params)
-                    .map(Some)
+                s.as_materialized_series()
+                    .winsorize(method, method_params)
+                    .map(|s| Some(s.into_column()))
                     .map_err(|e| PolarsError::ComputeError(e.to_string().into()))
             },
             GetOutput::float_type(),
@@ -623,7 +647,13 @@ impl ExprExt for Expr {
     #[inline]
     fn ts_ewm(self, window: usize, min_periods: Option<usize>) -> Self {
         self.apply(
-            move |s| Ok(Some(s.ts_ewm(window, min_periods))),
+            move |s| {
+                Ok(Some(
+                    s.as_materialized_series()
+                        .ts_ewm(window, min_periods)
+                        .into_column(),
+                ))
+            },
             GetOutput::float_type(),
         )
     }
@@ -631,7 +661,13 @@ impl ExprExt for Expr {
     #[inline]
     fn ts_skew(self, window: usize, min_periods: Option<usize>) -> Self {
         self.apply(
-            move |s| Ok(Some(s.ts_skew(window, min_periods))),
+            move |s| {
+                Ok(Some(
+                    s.as_materialized_series()
+                        .ts_skew(window, min_periods)
+                        .into_column(),
+                ))
+            },
             GetOutput::float_type(),
         )
     }
@@ -639,7 +675,13 @@ impl ExprExt for Expr {
     #[inline]
     fn ts_kurt(self, window: usize, min_periods: Option<usize>) -> Self {
         self.apply(
-            move |s| Ok(Some(s.ts_kurt(window, min_periods))),
+            move |s| {
+                Ok(Some(
+                    s.as_materialized_series()
+                        .ts_kurt(window, min_periods)
+                        .into_column(),
+                ))
+            },
             GetOutput::float_type(),
         )
     }
@@ -647,7 +689,13 @@ impl ExprExt for Expr {
     #[inline]
     fn ts_rank(self, window: usize, min_periods: Option<usize>, pct: bool, rev: bool) -> Self {
         self.apply(
-            move |s| Ok(Some(s.ts_rank(window, min_periods, pct, rev))),
+            move |s| {
+                Ok(Some(
+                    s.as_materialized_series()
+                        .ts_rank(window, min_periods, pct, rev)
+                        .into_column(),
+                ))
+            },
             GetOutput::float_type(),
         )
     }
@@ -655,7 +703,13 @@ impl ExprExt for Expr {
     #[inline]
     fn ts_zscore(self, window: usize, min_periods: Option<usize>) -> Self {
         self.apply(
-            move |s| Ok(Some(s.ts_zscore(window, min_periods))),
+            move |s| {
+                Ok(Some(
+                    s.as_materialized_series()
+                        .ts_zscore(window, min_periods)
+                        .into_column(),
+                ))
+            },
             GetOutput::float_type(),
         )
     }
@@ -663,9 +717,9 @@ impl ExprExt for Expr {
     fn ts_regx_beta(self, x: Expr, window: usize, min_periods: Option<usize>) -> Self {
         self.apply_many(
             move |series_slice| {
-                let y = &series_slice[0];
-                let x = &series_slice[1];
-                Ok(Some(y.ts_regx_beta(x, window, min_periods)))
+                let y = series_slice[0].as_materialized_series();
+                let x = series_slice[1].as_materialized_series();
+                Ok(Some(y.ts_regx_beta(x, window, min_periods).into_column()))
             },
             &[x],
             GetOutput::map_dtypes(|dtypes| {
@@ -680,12 +734,12 @@ impl ExprExt for Expr {
     fn cut(self, bin: Expr, labels: Expr, right: Option<bool>, add_bounds: Option<bool>) -> Expr {
         self.apply_many(
             move |series_slice| {
-                let s = &series_slice[0];
-                let bin = &series_slice[1];
-                let labels = &series_slice[2];
-                Ok(Some(s.cut(bin, labels, right, add_bounds).map_err(
-                    |e| PolarsError::ComputeError(e.to_string().into()),
-                )?))
+                let s = series_slice[0].as_materialized_series();
+                let bin = series_slice[1].as_materialized_series();
+                let labels = series_slice[2].as_materialized_series();
+                Ok(s.cut(bin, labels, right, add_bounds)
+                    .map(|s| Some(s.into_column()))
+                    .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?)
             },
             &[bin, labels],
             GetOutput::from_type(DataType::Float64),
@@ -697,11 +751,11 @@ impl ExprExt for Expr {
             |s| {
                 Series::from_any_values_and_dtype(
                     s.name().clone(),
-                    &[s.vfirst()],
+                    &[s.as_materialized_series().vfirst()],
                     &s.dtype(),
                     false,
                 )
-                .map(Some)
+                .map(|s| Some(s.into_column()))
             },
             GetOutput::same_type(),
         )
@@ -711,8 +765,13 @@ impl ExprExt for Expr {
     fn vlast(self) -> Self {
         self.apply(
             |s| {
-                Series::from_any_values_and_dtype(s.name().clone(), &[s.vlast()], &s.dtype(), false)
-                    .map(Some)
+                Series::from_any_values_and_dtype(
+                    s.name().clone(),
+                    &[s.as_materialized_series().vlast()],
+                    &s.dtype(),
+                    false,
+                )
+                .map(|s| Some(s.into_column()))
             },
             GetOutput::same_type(),
         )
@@ -721,7 +780,15 @@ impl ExprExt for Expr {
 
     fn half_life(self, min_periods: Option<usize>) -> Self {
         self.apply(
-            move |s| Ok(std::iter::once(Some(s.half_life(min_periods) as i32)).collect()),
+            move |s| {
+                Ok(Some(
+                    std::iter::once(Some(
+                        s.as_materialized_series().half_life(min_periods) as i32
+                    ))
+                    .collect::<Series>()
+                    .into_column(),
+                ))
+            },
             GetOutput::from_type(DataType::Int32),
         )
     }

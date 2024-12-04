@@ -225,6 +225,7 @@ fn plot_heatmap(
         .filter_map(|series| {
             if series.dtype().is_numeric() {
                 let ics_per_label = series
+                    .as_materialized_series()
                     .cast_f64()
                     .unwrap()
                     .f64()
@@ -399,8 +400,11 @@ impl SummaryReport {
         let fac_series = self.fac_series();
         let half_life: Float64Chunked = self.0.iter().map(|f| f.half_life).collect();
         DataFrame::new(vec![
-            fac_series,
-            half_life.into_series().with_name("half_life".into()),
+            fac_series.into_column(),
+            half_life
+                .into_series()
+                .with_name("half_life".into())
+                .into_column(),
         ])
         .unwrap()
     }

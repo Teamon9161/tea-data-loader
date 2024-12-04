@@ -9,9 +9,17 @@ define_base_fac!(
     Time: "时间"
 );
 
+/// Represents a null factor value.
+///
+/// This struct is used to represent null or missing values in factor calculations.
+/// It implements various traits to allow seamless integration with the factor system.
 #[derive(Clone, Copy)]
 pub struct Null;
 
+/// A constant instance of the `Null` struct.
+///
+/// This provides a convenient way to represent null values without needing to construct
+/// a new `Null` instance each time.
 pub const NONE: Null = Null {};
 
 impl Literal for Null {
@@ -82,6 +90,13 @@ impl From<Null> for Param {
     }
 }
 
+/// Represents a direct factor that uses an existing column from a DataFrame without any calculation.
+///
+/// This struct wraps a column name as a String and treats that column directly as a factor.
+/// It's useful when you want to use raw data from the DataFrame as a factor without any
+/// additional computation or transformation.
+///
+/// The String parameter specifies the name of the column to be used as the factor.
 #[derive(FromParam, Clone)]
 pub struct Direct(pub String);
 

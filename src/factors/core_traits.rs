@@ -67,6 +67,21 @@ pub trait FactorBase: std::fmt::Debug + Clone + Sized {
     {
         FactorAgg { fac: self, method }
     }
+
+    /// Aggregates the factor using the mean method.
+    ///
+    /// This is a convenience method that creates a `FactorAgg` instance with the mean aggregation method.
+    ///
+    /// # Returns
+    ///
+    /// A `FactorAgg<Self>` instance containing the factor and the mean aggregation method.
+    #[inline]
+    fn agg_mean(self) -> FactorAgg<Self>
+    where
+        Self: Sized,
+    {
+        self.agg(FactorAggMethod::Mean)
+    }
 }
 
 /// Trait for retrieving the name of a factor.

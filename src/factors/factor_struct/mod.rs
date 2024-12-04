@@ -1,4 +1,5 @@
 mod factor;
+mod horizontal;
 #[cfg(feature = "fac-ext")]
 mod methods;
 #[cfg(feature = "fac-ext")]
@@ -7,6 +8,7 @@ mod ops;
 mod agg;
 pub use agg::{FactorAgg, FactorAggMethod, PlAggFactor};
 pub use factor::Factor;
+pub use horizontal::HSumFactor;
 #[cfg(feature = "fac-ext")]
 pub use methods::*;
 

@@ -126,6 +126,7 @@ impl Frame {
         eval_cols: Option<&[S]>,
         opt: EvaluateOpt,
     ) -> Result<Self> {
+        use crate::utils::column_to_expr;
         let strategies = get_strategy_columns(&self.schema().unwrap(), opt.time, eval_cols);
         let ret_df = self.with_column(cols(strategies.clone()).fill_nan(lit(NULL)))?;
         let equity_curves: Vec<String> = strategies
@@ -161,12 +162,14 @@ impl Frame {
         let n = Duration::parse("252d").duration_ms() as f64 / freq.duration_ms() as f64;
         let mut result = df!(
             "策略" => strategies.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
-            "年化收益率" => strategies.iter().map(|s| ret_df[s.as_ref()].mean().map(|v| v * n)).collect::<Float64Chunked>(),
-            "年化标准差" => strategies.iter().map(|s| ret_df[s.as_ref()].std(1).map(|v| v * (n.sqrt()))).collect::<Float64Chunked>(),
+            "年化收益率" => strategies.iter().map(|s| ret_df[s.as_ref()].as_materialized_series().mean().map(|v| v * n)).collect::<Float64Chunked>(),
+            "年化标准差" => strategies.iter().map(|s| ret_df[s.as_ref()].as_materialized_series().std(1).map(|v| v * (n.sqrt()))).collect::<Float64Chunked>(),
         )?;
         result.with_column(
-            ((&result["年化收益率"] - opt.rf).protect_div(result["年化标准差"].clone()))?
-                .with_name("夏普比率".into()),
+            ((&result["年化收益率"] - opt.rf)
+                .as_materialized_series()
+                .protect_div(result["年化标准差"].as_materialized_series().clone()))?
+            .with_name("夏普比率".into()),
         )?;
         let drawdown_expr = cols(&equity_curves)
             / cols(&equity_curves).cumulative_eval(col("").max(), 1, false)
@@ -190,17 +193,17 @@ impl Frame {
             .transpose(None, None)?;
         let res_expand = df!(
             "胜率" => strategies.iter().map(|s| -> Result<Option<f64>> {
-                let series = &ret_df[s.as_ref()];
+                let series = &ret_df[s.as_ref()].as_materialized_series();
                 Ok(Some(series.gt_eq(0.)?.sum().map(|v| v as f64).unwrap_or(0.) / (series.len() - series.null_count()) as f64))
             }).collect::<Result<Float64Chunked>>()?,
-            "最大回撤" => &ret_df
+            "最大回撤" => ret_df
                 .clone()
                 .lazy()
                 .select([drawdown_expr.abs().max()])
                 .collect()?
-                .transpose(None, None)?[0],
-            "最大回撤开始时间" => &ret_df.clone().lazy().select(drawdown_start_date_idx_df.get_columns().iter().map(|s| col(opt.time).gather(lit(s.clone())).alias(s.name().clone())).collect::<Vec<_>>()).collect()?[0],
-            "最大回撤结束时间" => &ret_df.clone().lazy().select(drawdown_end_date_idx_df.get_columns().iter().map(|s| col(opt.time).gather(lit(s.clone())).alias(s.name().clone())).collect::<Vec<_>>()).collect()?[0],
+                .transpose(None, None)?[0].as_materialized_series(),
+            "最大回撤开始时间" => ret_df.clone().lazy().select(drawdown_start_date_idx_df.get_columns().iter().map(|s| col(opt.time).gather(column_to_expr(s)).alias(s.name().clone())).collect::<Vec<_>>()).collect()?[0].as_materialized_series(),
+            "最大回撤结束时间" => ret_df.clone().lazy().select(drawdown_end_date_idx_df.get_columns().iter().map(|s| col(opt.time).gather(column_to_expr(s)).alias(s.name().clone())).collect::<Vec<_>>()).collect()?[0].as_materialized_series(),
         )?;
         result.hstack_mut(res_expand.get_columns())?;
         if opt.sort {

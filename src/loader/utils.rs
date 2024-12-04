@@ -131,3 +131,19 @@ pub fn get_time_filter_cond<A: Cast<DateTime>, B: Cast<DateTime>, T: AsRef<str>>
 pub fn get_preprocess_exprs<S: AsRef<str>, F: AsRef<str>>(typ: S, freq: F) -> Vec<Expr> {
     get_preprocess_exprs_impl(typ.as_ref(), freq.as_ref())
 }
+
+#[inline]
+pub fn column_to_expr(column: &Column) -> Expr {
+    match column {
+        Column::Series(s) => s.clone().lit(),
+        Column::Scalar(s) => s.scalar().clone().lit().alias(s.name().clone()),
+    }
+}
+
+#[inline]
+pub fn column_into_expr(column: Column) -> Expr {
+    match column {
+        Column::Series(s) => s.lit(),
+        Column::Scalar(s) => s.scalar().clone().lit().alias(s.name().clone()),
+    }
+}

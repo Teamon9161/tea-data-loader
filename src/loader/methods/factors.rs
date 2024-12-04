@@ -1,8 +1,7 @@
 use std::sync::Arc;
 
 use itertools::Itertools;
-use polars::prelude::IntoLazy;
-use polars::series::Series;
+use polars::prelude::{Column, IntoColumn, IntoLazy};
 use rayon::prelude::*;
 use tea_strategy::tevec::prelude::CollectTrustedToVec;
 
@@ -143,10 +142,12 @@ impl DataLoader {
                 .into_par_iter()
                 .map(|df| {
                     let mut df = df.unwrap_eager();
-                    let series_vec: Vec<Series> = facs
+                    let series_vec: Vec<Column> = facs
                         .par_iter()
                         .zip(&fac_names)
-                        .map(|(fac, name)| fac.eval(&df).unwrap().with_name(name.into()))
+                        .map(|(fac, name)| {
+                            fac.eval(&df).unwrap().with_name(name.into()).into_column()
+                        })
                         .collect();
                     df.hstack_mut(&series_vec).unwrap();
                     df.lazy().into()

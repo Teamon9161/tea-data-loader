@@ -113,23 +113,36 @@ fn get_reg_tool_bid(
     n: usize,
 ) -> Result<RegTool<impl FactorT, impl FactorT, impl FactorT, impl FactorT, impl FactorT>> {
     ensure!(n == 5, "n must be equal to 5");
-    let sum_x = BidCumVol::fac(1)
-        + BidCumVol::fac(2)
-        + BidCumVol::fac(3)
-        + BidCumVol::fac(4)
-        + BidCumVol::fac(5);
-    let sum_y = BID1 + BID2 + BID3 + BID4 + BID5;
-    let sum_xy = (BID1 * BidCumVol::fac(1))
-        + (BID2 * BidCumVol::fac(2))
-        + (BID3 * BidCumVol::fac(3))
-        + (BID4 * BidCumVol::fac(4))
-        + (BID5 * BidCumVol::fac(5));
-    let sum_x2 = (BidCumVol::fac(1) * BidCumVol::fac(1))
-        + (BidCumVol::fac(2) * BidCumVol::fac(2))
-        + (BidCumVol::fac(3) * BidCumVol::fac(3))
-        + (BidCumVol::fac(4) * BidCumVol::fac(4))
-        + (BidCumVol::fac(5) * BidCumVol::fac(5));
-    let sum_y2 = (BID1 * BID1) + (BID2 * BID2) + (BID3 * BID3) + (BID4 * BID4) + (BID5 * BID5);
+    // paste::paste!()
+    let sum_x = crate::hsum!(
+        BidCumVol(1),
+        BidCumVol(2),
+        BidCumVol(3),
+        BidCumVol(4),
+        BidCumVol(5)
+    );
+    let sum_y = crate::hsum!(BID1, BID2, BID3, BID4, BID5);
+    let sum_xy = crate::hsum!(
+        BID1 * BidCumVol(1),
+        BID2 * BidCumVol(2),
+        BID3 * BidCumVol(3),
+        BID4 * BidCumVol(4),
+        BID5 * BidCumVol(5)
+    );
+    let sum_x2 = crate::hsum!(
+        BidCumVol::fac(1) * BidCumVol(1),
+        BidCumVol::fac(2) * BidCumVol(2),
+        BidCumVol::fac(3) * BidCumVol(3),
+        BidCumVol::fac(4) * BidCumVol(4),
+        BidCumVol::fac(5) * BidCumVol(5)
+    );
+    let sum_y2 = crate::hsum!(
+        BID1 * BID1,
+        BID2 * BID2,
+        BID3 * BID3,
+        BID4 * BID4,
+        BID5 * BID5
+    );
     Ok(RegTool {
         n,
         sum_x,

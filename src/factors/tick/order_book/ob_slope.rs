@@ -63,45 +63,46 @@ pub struct ObSlopeFine(pub Option<usize>);
 
 impl PlFactor for ObSlopeFine {
     fn try_expr(&self) -> Result<Expr> {
+        use polars::lazy::dsl::sum_horizontal;
         let max_level = self.0.unwrap_or(5);
         let ask_slope = SLOPE_FINE_PARAM.lit()
-            * (1..=max_level)
-                .map(|level| {
-                    let vi = AskCumVol::fac(level);
-                    let vi_1 = AskCumVol::fac(level - 1);
-                    ((Ask::fac(level) - MID) * (vi.pow(2) - vi_1.pow(2))).expr()
-                })
-                .reduce(|a, b| a + b)
-                .unwrap()
-                .protect_div(
-                    (1..=max_level)
-                        .map(|level| {
-                            let vi = AskCumVol::new(level).expr();
-                            let vi_1 = AskCumVol::new(level - 1).expr();
-                            vi.clone().pow(3) - vi_1.clone().pow(3)
-                        })
-                        .reduce(|a, b| a + b)
-                        .unwrap(),
-                );
+            * sum_horizontal(
+                (1..=max_level)
+                    .map(|level| {
+                        let vi = AskCumVol::fac(level);
+                        let vi_1 = AskCumVol::fac(level - 1);
+                        ((Ask::fac(level) - MID) * (vi.pow(2) - vi_1.pow(2))).expr()
+                    })
+                    .collect::<Vec<_>>(),
+            )?
+            .protect_div(sum_horizontal(
+                (1..=max_level)
+                    .map(|level| {
+                        let vi = AskCumVol::new(level).expr();
+                        let vi_1 = AskCumVol::new(level - 1).expr();
+                        vi.pow(3) - vi_1.pow(3)
+                    })
+                    .collect::<Vec<_>>(),
+            )?);
         let bid_slope = SLOPE_FINE_PARAM.lit()
-            * (1..=max_level)
-                .map(|level| {
-                    let vi = BidCumVol::new(level).expr();
-                    let vi_1 = BidCumVol::new(level - 1).expr();
-                    (Bid::fac(level) - MID).expr() * (vi.pow(2) - vi_1.pow(2))
-                })
-                .reduce(|a, b| a + b)
-                .unwrap()
-                .protect_div(
-                    (1..=max_level)
-                        .map(|level| {
-                            let vi = BidCumVol::new(level).expr();
-                            let vi_1 = BidCumVol::new(level - 1).expr();
-                            vi.clone().pow(3) - vi_1.clone().pow(3)
-                        })
-                        .reduce(|a, b| a + b)
-                        .unwrap(),
-                );
+            * sum_horizontal(
+                (1..=max_level)
+                    .map(|level| {
+                        let vi = BidCumVol::fac(level);
+                        let vi_1 = BidCumVol::fac(level - 1);
+                        ((Bid::fac(level) - MID) * (vi.pow(2) - vi_1.pow(2))).expr()
+                    })
+                    .collect::<Vec<_>>(),
+            )?
+            .protect_div(sum_horizontal(
+                (1..=max_level)
+                    .map(|level| {
+                        let vi = BidCumVol::new(level).expr();
+                        let vi_1 = BidCumVol::new(level - 1).expr();
+                        vi.pow(3) - vi_1.pow(3)
+                    })
+                    .collect::<Vec<_>>(),
+            )?);
         // 因为bid slope为负值，所以直接加上bid slope即可
         let expr = ask_slope + bid_slope;
         // 避免量纲过小

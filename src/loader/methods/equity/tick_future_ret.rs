@@ -128,21 +128,33 @@ impl DataLoader {
                 let ecs: Vec<Series> = facs
                     .par_iter()
                     .map(|f| {
-                        let mut signal = df.column(f).unwrap().clone();
+                        let mut signal = df.column(f).unwrap().as_materialized_series().clone();
                         if !opt.is_signal {
                             // recover signal from position vector
                             signal = signal.shift(-1);
                         }
                         let signal = signal.cast_f64().unwrap();
-                        let bid_vec = df.column(opt.bid).unwrap().cast_f64().unwrap();
-                        let ask_vec = df.column(opt.ask).unwrap().cast_f64().unwrap();
+                        let bid_vec = df
+                            .column(opt.bid)
+                            .unwrap()
+                            .as_materialized_series()
+                            .cast_f64()
+                            .unwrap();
+                        let ask_vec = df
+                            .column(opt.ask)
+                            .unwrap()
+                            .as_materialized_series()
+                            .cast_f64()
+                            .unwrap();
                         let multiplier = multiplier_map.get(symbol).cloned();
                         let out: Float64Chunked = if let Some(contract_chg_signal) =
                             &opt.contract_chg_signal
                         {
                             let contract_chg_signal_vec = df.column(contract_chg_signal).unwrap();
-                            let contract_chg_signal_vec =
-                                contract_chg_signal_vec.cast_bool().unwrap();
+                            let contract_chg_signal_vec = contract_chg_signal_vec
+                                .as_materialized_series()
+                                .cast_bool()
+                                .unwrap();
                             calc_tick_future_ret(
                                 signal.f64().unwrap(),
                                 bid_vec.f64().unwrap(),

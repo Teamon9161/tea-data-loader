@@ -47,7 +47,7 @@ impl PlAggFactor for AggCancelRate {
             iif(ask_vol_add.lt(0), ask_vol_add.abs(), 0).expr().sum() / ask_vol.expr().sum();
         let bid_cancel_rate =
             iif(bid_vol_add.lt(0), bid_vol_add.abs(), 0).expr().sum() / bid_vol.expr().sum();
-        let cancel_rate = ask_cancel_rate + bid_cancel_rate;
+        let cancel_rate = ask_cancel_rate - bid_cancel_rate;
         Ok(cancel_rate)
     }
 }

@@ -10,7 +10,7 @@ impl PlFactor for OrderAmtQuantile {
     fn try_expr(&self) -> Result<Expr> {
         let expr = ORDER_AMT.expr().rolling_quantile_by(
             TIME.expr(),
-            QuantileInterpolOptions::Linear,
+            QuantileMethod::Linear,
             self.0,
             RollingOptionsDynamicWindow {
                 window_size: Duration::parse(self.1),
@@ -31,7 +31,7 @@ impl PlFactor for OrderVolQuantile {
     fn try_expr(&self) -> Result<Expr> {
         let expr = ORDER_VOL.expr().rolling_quantile_by(
             TIME.expr(),
-            QuantileInterpolOptions::Linear,
+            QuantileMethod::Linear,
             self.0,
             RollingOptionsDynamicWindow {
                 window_size: Duration::parse(self.1),

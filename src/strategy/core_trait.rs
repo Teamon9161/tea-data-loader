@@ -44,7 +44,7 @@ pub trait Strategy: GetName + Send + Sync + 'static {
     ///
     /// A `Result` containing the evaluated Series or an error.
     #[allow(unused_variables)]
-    fn eval_to_fac(&self, fac: &Series, filters: Option<DataFrame>) -> Result<Series> {
+    fn eval_to_fac(&self, fac: &Column, filters: Option<DataFrame>) -> Result<Series> {
         bail!("eval_to_fac is not implemented for {}", self.name())
     }
 

@@ -171,13 +171,17 @@ impl DataLoader {
                         }
                         let open_vec = df.column(opt.opening_cost).unwrap();
                         let close_vec = df.column(opt.closing_cost).unwrap();
-                        let contract_chg_signal_vec = df.column(opt.contract_chg_signal).unwrap();
+                        let contract_chg_signal_vec = df
+                            .column(opt.contract_chg_signal)
+                            .unwrap()
+                            .as_materialized_series();
                         let contract_chg_signal_vec = contract_chg_signal_vec.cast_bool().unwrap();
                         let (pos, open_vec, close_vec) =
                             auto_cast!(Float64(pos, open_vec, close_vec));
                         let multiplier = multiplier_map.get(symbol).cloned();
                         let out: Float64Chunked = if opt.slippage_flag {
-                            let slippage = df.column("twap_spread").unwrap() * 0.5;
+                            let slippage = (df.column("twap_spread").unwrap() * 0.5)
+                                .take_materialized_series();
                             let slippage_vec = slippage.cast_f64().unwrap();
                             tea_strategy::equity::calc_future_ret_with_spread(
                                 pos.f64().unwrap(),

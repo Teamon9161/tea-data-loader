@@ -1,5 +1,4 @@
-use polars::prelude::IntoLazy;
-use polars::series::Series;
+use polars::prelude::{Column, IntoColumn, IntoLazy};
 use rayon::prelude::*;
 use tea_strategy::tevec::prelude::CollectTrustedToVec;
 
@@ -59,12 +58,12 @@ impl DataLoader {
                     let mut res = w.eval(&df).unwrap();
                     if res.name() == "" {
                         res.rename((&**w.name.as_ref().unwrap()).into());
-                        res
+                        res.into_column()
                     } else {
-                        res
+                        res.into_column()
                     }
                 })
-                .collect::<Vec<Series>>();
+                .collect::<Vec<Column>>();
             df.hstack_mut(&series).unwrap();
             df.lazy()
         });
@@ -91,12 +90,12 @@ impl DataLoader {
                     let mut res = w.eval(&df).unwrap();
                     if res.name() == "" {
                         res.rename((&**w.name.as_ref().unwrap()).into());
-                        res
+                        res.into_column()
                     } else {
-                        res
+                        res.into_column()
                     }
                 })
-                .collect::<Vec<Series>>();
+                .collect::<Vec<Column>>();
             df.hstack_mut(&series).unwrap();
             df.lazy()
         });

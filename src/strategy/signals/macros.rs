@@ -1,6 +1,6 @@
 macro_rules! impl_by_tea_strategy {
     ($strategy: ident $({$mark: tt})?) => {
-        fn eval_to_fac(&self, fac: &::polars::prelude::Series, filters: Option<::polars::prelude::DataFrame>) -> ::anyhow::Result<::polars::prelude::Series> {
+        fn eval_to_fac(&self, fac: &::polars::prelude::Column, filters: Option<::polars::prelude::DataFrame>) -> ::anyhow::Result<::polars::prelude::Series> {
             use ::polars::prelude::{DataType, Float64Chunked};
             let out: Float64Chunked = match fac.dtype() {
                 DataType::Int32 => {

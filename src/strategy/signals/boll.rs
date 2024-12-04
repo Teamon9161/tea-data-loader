@@ -93,7 +93,7 @@ impl GetStrategyParamName for NegBoll {
 pub struct NegBoll(pub NegBollKwargs);
 
 impl Strategy for NegBoll {
-    fn eval_to_fac(&self, fac: &Series, filters: Option<DataFrame>) -> Result<Series> {
+    fn eval_to_fac(&self, fac: &Column, filters: Option<DataFrame>) -> Result<Series> {
         let strategy = Boll(self.0 .0.clone());
         strategy.eval_to_fac(fac, filters)
     }
@@ -135,7 +135,7 @@ impl GetStrategyParamName for BollLong {
 pub struct BollLong(pub BollLongKwargs);
 
 impl Strategy for BollLong {
-    fn eval_to_fac(&self, fac: &Series, filters: Option<DataFrame>) -> Result<Series> {
+    fn eval_to_fac(&self, fac: &Column, filters: Option<DataFrame>) -> Result<Series> {
         let strategy = Boll(self.0 .0.clone());
         strategy.eval_to_fac(fac, filters)
     }
@@ -177,7 +177,7 @@ impl GetStrategyParamName for BollShort {
 pub struct BollShort(pub BollShortKwargs);
 
 impl Strategy for BollShort {
-    fn eval_to_fac(&self, fac: &Series, filters: Option<DataFrame>) -> Result<Series> {
+    fn eval_to_fac(&self, fac: &Column, filters: Option<DataFrame>) -> Result<Series> {
         let strategy = Boll(self.0 .0.clone());
         strategy.eval_to_fac(fac, filters)
     }
@@ -254,7 +254,7 @@ impl GetStrategyParamName for BollDirectLong {
 pub struct BollDirectLong(pub BollDirectLongKwargs);
 
 impl Strategy for BollDirectLong {
-    fn eval_to_fac(&self, fac: &Series, filters: Option<DataFrame>) -> Result<Series> {
+    fn eval_to_fac(&self, fac: &Column, filters: Option<DataFrame>) -> Result<Series> {
         let strategy = Boll(self.0 .0.clone());
         strategy.eval_to_fac(fac, filters)
     }
@@ -299,7 +299,7 @@ impl GetStrategyParamName for BollDirectShort {
 pub struct BollDirectShort(pub BollDirectShortKwargs);
 
 impl Strategy for BollDirectShort {
-    fn eval_to_fac(&self, fac: &Series, filters: Option<DataFrame>) -> Result<Series> {
+    fn eval_to_fac(&self, fac: &Column, filters: Option<DataFrame>) -> Result<Series> {
         let strategy = Boll(self.0 .0.clone());
         strategy.eval_to_fac(fac, filters)
     }
@@ -309,7 +309,7 @@ impl Strategy for BollDirectShort {
 pub struct BollDirect(pub BollDirectKwargs);
 
 impl Strategy for BollDirect {
-    fn eval_to_fac(&self, fac: &Series, filters: Option<DataFrame>) -> Result<Series> {
+    fn eval_to_fac(&self, fac: &Column, filters: Option<DataFrame>) -> Result<Series> {
         let strategy = Boll(self.0 .0.clone());
         strategy.eval_to_fac(fac, filters)
     }

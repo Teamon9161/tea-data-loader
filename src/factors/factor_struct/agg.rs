@@ -133,7 +133,7 @@ impl<F: FactorBase + PlFactor> PlAggFactor for FactorAgg<F> {
             FactorAggMethod::Var => expr.var(1),
             FactorAggMethod::Skew => expr.skew(false).fill_nan(NONE),
             FactorAggMethod::Kurt => expr.kurtosis(true, false).fill_nan(NONE),
-            FactorAggMethod::Quantile(q) => expr.quantile(q.lit(), QuantileInterpolOptions::Linear),
+            FactorAggMethod::Quantile(q) => expr.quantile(q.lit(), QuantileMethod::Linear),
             FactorAggMethod::First => expr.first(),
             FactorAggMethod::Last => expr.last(),
             FactorAggMethod::Nth(n) => expr.get(n as i32),

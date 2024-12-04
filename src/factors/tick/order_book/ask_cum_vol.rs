@@ -14,10 +14,29 @@ impl PlFactor for AskCumVol {
         match self.0 {
             0 => Ok(0.lit()),
             1 => ASK1_VOL.try_expr(),
-            2 => (ASK1_VOL + ASK2_VOL).try_expr(),
-            3 => (ASK1_VOL + ASK2_VOL + ASK3_VOL).try_expr(),
-            4 => (ASK1_VOL + ASK2_VOL + ASK3_VOL + ASK4_VOL).try_expr(),
-            5 => (ASK1_VOL + ASK2_VOL + ASK3_VOL + ASK4_VOL + ASK5_VOL).try_expr(),
+            2 => crate::hsum!(ASK1_VOL, ASK2_VOL).try_expr(),
+            3 => crate::hsum!(ASK1_VOL, ASK2_VOL, ASK3_VOL).try_expr(),
+            4 => crate::hsum!(ASK1_VOL, ASK2_VOL, ASK3_VOL, ASK4_VOL).try_expr(),
+            5 => crate::hsum!(ASK1_VOL, ASK2_VOL, ASK3_VOL, ASK4_VOL, ASK5_VOL).try_expr(),
+            6 => {
+                crate::hsum!(ASK1_VOL, ASK2_VOL, ASK3_VOL, ASK4_VOL, ASK5_VOL, ASK6_VOL).try_expr()
+            },
+            7 => crate::hsum!(ASK1_VOL, ASK2_VOL, ASK3_VOL, ASK4_VOL, ASK5_VOL, ASK6_VOL, ASK7_VOL)
+                .try_expr(),
+            8 => crate::hsum!(
+                ASK1_VOL, ASK2_VOL, ASK3_VOL, ASK4_VOL, ASK5_VOL, ASK6_VOL, ASK7_VOL, ASK8_VOL
+            )
+            .try_expr(),
+            9 => crate::hsum!(
+                ASK1_VOL, ASK2_VOL, ASK3_VOL, ASK4_VOL, ASK5_VOL, ASK6_VOL, ASK7_VOL, ASK8_VOL,
+                ASK9_VOL
+            )
+            .try_expr(),
+            10 => crate::hsum!(
+                ASK1_VOL, ASK2_VOL, ASK3_VOL, ASK4_VOL, ASK5_VOL, ASK6_VOL, ASK7_VOL, ASK8_VOL,
+                ASK9_VOL, ASK10_VOL
+            )
+            .try_expr(),
             p => bail!("invalid param for ask_cum_vol: {}", p),
         }
     }

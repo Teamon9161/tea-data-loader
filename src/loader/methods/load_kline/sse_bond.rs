@@ -7,7 +7,7 @@ use crate::path_finder::{PathConfig, PathFinder};
 use crate::prelude::*;
 use crate::utils::get_preprocess_exprs;
 
-const SSE_SELECT_COLUMNS: [&str; 50] = [
+const SSE_SELECT_COLUMNS: [&str; 45] = [
     "symbol",
     "trading_date",
     "time",
@@ -51,13 +51,12 @@ const SSE_SELECT_COLUMNS: [&str; 50] = [
     "bid8_vol",
     "bid9_vol",
     "bid10_vol",
-    "total_count",
+    // "last_price",
+    // "total_count",
     "total_vol",
     "total_amt",
-    "total_buy_count",
-    "total_sell_count",
-    "total_buy_vol",
-    "total_sell_vol",
+    // "total_buy_vol",
+    // "total_sell_vol",
 ];
 
 impl DataLoader {
@@ -113,8 +112,11 @@ impl DataLoader {
                     .map(|mut df| {
                         // apply rename condition
                         if let Some(table) = &rename_table {
-                            df = df
-                                .rename(table.keys(), table.values().map(|v| v.as_str().unwrap()));
+                            df = df.rename(
+                                table.keys(),
+                                table.values().map(|v| v.as_str().unwrap()),
+                                false,
+                            );
                         };
                         // apply filter condition
                         if let Some(cond) = filter_cond.clone() {

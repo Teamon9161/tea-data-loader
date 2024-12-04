@@ -79,85 +79,95 @@ where
     }
 }
 
+pub type CompareFactor<F, G> = Factor<FactorCompare<F, G>>;
+
 pub trait FactorCmpExt: FactorBase {
     #[inline]
     /// Compare `Factor` with other `Factor` on equality.
-    fn eq<G: FactorBase>(self, other: G) -> FactorCompare<Self, G> {
+    fn eq<G: FactorBase>(self, other: G) -> CompareFactor<Self, G> {
         FactorCompare {
             left: self,
             right: other,
             op: CompareOp::Eq,
         }
+        .into()
     }
 
     #[inline]
     /// Compare `Factor` with other `Factor` on equality where `None == None`.
-    fn eq_missing<G: FactorBase>(self, other: G) -> FactorCompare<Self, G> {
+    fn eq_missing<G: FactorBase>(self, other: G) -> CompareFactor<Self, G> {
         FactorCompare {
             left: self,
             right: other,
             op: CompareOp::EqMissing,
         }
+        .into()
     }
 
     #[inline]
     /// Compare `Factor` with other `Factor` on non-equality.
-    fn neq<G: FactorBase>(self, other: G) -> FactorCompare<Self, G> {
+    fn neq<G: FactorBase>(self, other: G) -> CompareFactor<Self, G> {
         FactorCompare {
             left: self,
             right: other,
             op: CompareOp::Neq,
         }
+        .into()
     }
 
     #[inline]
     /// Compare `Factor` with other `Factor` on non-equality where `None == None`.
-    fn neq_missing<G: FactorBase>(self, other: G) -> FactorCompare<Self, G> {
+    fn neq_missing<G: FactorBase>(self, other: G) -> CompareFactor<Self, G> {
         FactorCompare {
             left: self,
             right: other,
             op: CompareOp::NeqMissing,
         }
+        .into()
     }
 
     #[inline]
     /// Compare `Factor` with other `Factor` for "less than" relationship.
-    fn lt<G: FactorBase>(self, other: G) -> FactorCompare<Self, G> {
+    fn lt<G: FactorBase>(self, other: G) -> CompareFactor<Self, G> {
         FactorCompare {
             left: self,
             right: other,
             op: CompareOp::Lt,
         }
+        .into()
     }
 
     #[inline]
     /// Compare `Factor` with other `Factor` for "less than or equal to" relationship.
-    fn lt_eq<G: FactorBase>(self, other: G) -> FactorCompare<Self, G> {
+    fn lt_eq<G: FactorBase>(self, other: G) -> CompareFactor<Self, G> {
         FactorCompare {
             left: self,
             right: other,
             op: CompareOp::Le,
         }
+        .into()
     }
 
     #[inline]
     /// Compare `Factor` with other `Factor` for "greater than" relationship.
-    fn gt<G: FactorBase>(self, other: G) -> FactorCompare<Self, G> {
+    fn gt<G: FactorBase>(self, other: G) -> CompareFactor<Self, G> {
         FactorCompare {
             left: self,
             right: other,
             op: CompareOp::Gt,
         }
+        .into()
     }
 
     #[inline]
     /// Compare `Factor` with other `Factor` for "greater than or equal to" relationship.
-    fn gt_eq<G: FactorBase>(self, other: G) -> FactorCompare<Self, G> {
+    fn gt_eq<G: FactorBase>(self, other: G) -> CompareFactor<Self, G> {
         FactorCompare {
             left: self,
             right: other,
             op: CompareOp::Ge,
         }
+        .into()
     }
 }
 

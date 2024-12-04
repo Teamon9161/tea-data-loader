@@ -18,8 +18,8 @@ impl PlFactor for Vol {
 fn condition_rolling_std(fac: Expr, cond: Expr, window: usize) -> Expr {
     fac.apply_many(
         move |series| {
-            let fac = series[0].cast_f64().unwrap();
-            let cond = series[1].cast_bool().unwrap();
+            let fac = series[0].as_materialized_series().cast_f64().unwrap();
+            let cond = series[1].as_materialized_series().cast_bool().unwrap();
             let out: Float64Chunked = fac
                 .f64()
                 .unwrap()
@@ -30,7 +30,7 @@ fn condition_rolling_std(fac: Expr, cond: Expr, window: usize) -> Expr {
                     None,
                 )
                 .unwrap();
-            Ok(Some(out.into_series()))
+            Ok(Some(out.into_column()))
         },
         &[cond],
         GetOutput::from_type(PolarsDataType::Float64),
