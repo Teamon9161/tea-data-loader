@@ -26,7 +26,7 @@ pub struct PriceDiffImb(pub usize);
 impl PlFactor for PriceDiffImb {
     fn try_expr(&self) -> Result<Expr> {
         ensure!(self.0 > 1, "level must be greater than 1");
-        let fac = (Ask::fac(self.0) - Ask::fac(1)).imb(Bid::fac(self.0) - Bid::fac(1));
+        let fac = (Ask::fac(self.0) - ASK1).imb(Bid::fac(1) - BID1);
         fac.try_expr()
     }
 }
