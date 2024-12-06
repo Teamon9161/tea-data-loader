@@ -1,3 +1,5 @@
+#![allow(clippy::too_many_arguments)]
+
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::types::PyList;
@@ -5,7 +7,7 @@ use pyo3_polars::*;
 use tea_data_loader::export::tea_strategy::equity::SignalType;
 use tea_data_loader::prelude::*;
 
-#[pyclass(name = "DataLoader")]
+#[pyclass(name = "DataLoader", subclass)]
 #[derive(Clone)]
 pub struct PyLoader(pub DataLoader);
 
@@ -131,19 +133,19 @@ impl PyLoader {
         let idx: usize = obj.extract::<usize>().unwrap();
         let df = self.0.dfs[idx].clone();
         match df {
-            Frame::Eager(df) => PyDataFrame(df.clone()).into_py(py),
-            Frame::Lazy(lf) => PyLazyFrame(lf.clone()).into_py(py),
+            Frame::Eager(df) => PyDataFrame(df).into_py(py),
+            Frame::Lazy(lf) => PyLazyFrame(lf).into_py(py),
         }
     }
 
     #[getter]
     fn get_type(&self) -> &str {
-        &*self.0.typ
+        &self.0.typ
     }
 
     #[getter]
     fn get_freq(&self) -> Option<&str> {
-        self.0.freq.as_ref().map(|s| &**s)
+        self.0.freq.as_deref()
     }
 
     #[setter]
@@ -189,8 +191,8 @@ impl PyLoader {
         Ok(out)
     }
 
-    fn lazy(&mut self) {
-        self.0 = self.0.clone().lazy();
+    fn lazy(&self) -> Self {
+        self.0.clone().lazy().into()
     }
 
     #[pyo3(signature = (freq, tier=None, adjust=None, concat_tick_df=false))]

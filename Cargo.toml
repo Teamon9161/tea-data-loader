@@ -2,7 +2,7 @@
 name = "tea-data-loader"
 version = "0.1.0"
 edition = "2021"
-exclude = ["pyloader/**"]
+# exclude = ["pyloader/**"]
 
 [features]
 default = [

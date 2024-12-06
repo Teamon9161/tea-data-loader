@@ -9,6 +9,10 @@ name = "pyloader"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = "0.22.0"
+pyo3 = "0.21.0"
 tea-data-loader = { path = "../", features = ["dtype-full"] }
-pyo3-polars = { version = "0.17", features = ["derive", "dtype-full", "lazy"] }
+pyo3-polars = { version = "0.18.0", features = [
+    "derive",
+    "dtype-full",
+    "lazy",
+] }
