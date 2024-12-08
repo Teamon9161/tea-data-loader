@@ -25,7 +25,7 @@ impl Frames {
     /// - If the `Frames` collection is empty, it returns the original `Frames` instance.
     /// - For large numbers of frames (more than `POST_ALIGN_COLLECT_NUM`), it may need to collect eagerly to avoid stack overflow.
     /// - The method sorts the resulting frames based on the alignment columns.
-    pub fn align<E: AsRef<[Expr]>>(self, on: E, how: Option<JoinType>) -> Result<Self> {
+    pub fn align(self, on: impl AsRef<[Expr]>, how: Option<JoinType>) -> Result<Self> {
         if self.is_empty() {
             return Ok(self);
         }

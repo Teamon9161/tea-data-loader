@@ -12,7 +12,7 @@ requires = ["maturin>=1.2,<2.0"]
 build-backend = "maturin"
 
 [tool.rye]
-managed = true
+managed = false
 dev-dependencies = []
 
 [tool.maturin]

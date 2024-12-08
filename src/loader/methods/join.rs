@@ -73,7 +73,7 @@ impl DataLoader {
     /// # Returns
     ///
     /// A `Result` containing the joined `DataLoader` if successful, or an error if the join operation fails.
-    pub fn join<P: AsRef<Path>, E: AsRef<[Expr]>>(self, option: JoinOpt<P, E>) -> Result<Self> {
+    pub fn join(self, option: JoinOpt<impl AsRef<Path>, impl AsRef<[Expr]>>) -> Result<Self> {
         if !option.flag {
             return Ok(self);
         }
@@ -126,9 +126,9 @@ impl DataLoader {
     ///
     /// A `Result` containing the joined `DataLoader` if successful, or an error if the join operation fails.
     #[inline]
-    pub fn left_join<P: AsRef<Path>, E: AsRef<[Expr]>>(
+    pub fn left_join<E: AsRef<[Expr]>>(
         self,
-        path: P,
+        path: impl AsRef<Path>,
         left_on: E,
         right_on: E,
         flag: bool,

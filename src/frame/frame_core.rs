@@ -229,21 +229,37 @@ impl Frame {
         self.impl_by_lazy(|df| df.sort(by, sort_options))
     }
 
-    /// Drops specified columns from the Frame.
+    /// Removes columns from the Frame.
+    /// Note that it's better to only select the columns you need
+    /// and let the projection pushdown optimize away the unneeded columns.
     ///
     /// # Errors
     ///
-    /// Returns an error if there's an issue dropping the columns.
+    /// Returns a error if any of the specified columns
+    /// do not exist in the schema when materializing the Frame.
     #[inline]
-    pub fn drop<I, T>(mut self, columns: I) -> Result<Self>
+    pub fn drop_strict<I, T>(self, columns: I) -> Result<Self>
     where
         I: IntoIterator<Item = T>,
-        T: AsRef<str> + Into<Selector>,
+        T: Into<Selector>,
     {
-        // ignore exists columns
-        let schema = self.schema()?;
-        let columns = columns.into_iter().filter(|c| schema.contains(c.as_ref()));
         self.impl_by_lazy(|df| df.drop(columns))
+    }
+
+    /// Removes columns from the Frame.
+    /// Note that it's better to only select the columns you need
+    /// and let the projection pushdown optimize away the unneeded columns.
+    ///
+    /// # Notes
+    ///
+    /// If a column name does not exist in the schema, it will be silently ignored.
+    #[inline]
+    pub fn drop<I, T>(self, columns: I) -> Result<Self>
+    where
+        I: IntoIterator<Item = T>,
+        T: Into<Selector>,
+    {
+        self.impl_by_lazy(|df| df.drop_no_validate(columns))
     }
 }
 

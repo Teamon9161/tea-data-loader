@@ -22,7 +22,7 @@ impl DataLoader {
     /// # Returns
     ///
     /// Returns `Ok(())` if the save operation is successful, otherwise returns an error.
-    pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+    pub fn save(&self, path: impl AsRef<Path>) -> Result<()> {
         let path = path.as_ref();
         if path.extension().is_none() {
             return self.save_ipcs(path);
@@ -47,7 +47,7 @@ impl DataLoader {
     ///
     /// Returns a `Result` containing the loaded `DataLoader` if successful, otherwise returns an error.
     #[inline]
-    pub fn load<P: AsRef<Path>>(path: P, lazy: bool) -> Result<Self> {
+    pub fn load(path: impl AsRef<Path>, lazy: bool) -> Result<Self> {
         let path = path.as_ref();
         if path.is_dir() {
             return DataLoader::read_ipcs(path, None, true, lazy);
@@ -70,9 +70,9 @@ impl DataLoader {
     ///
     /// Returns a `Result` containing the loaded `DataLoader` if successful, otherwise returns an error.
     #[inline]
-    pub fn load_symbols<P: AsRef<Path>, S: AsRef<str>>(
-        path: P,
-        symbols: &[S],
+    pub fn load_symbols(
+        path: impl AsRef<Path>,
+        symbols: &[impl AsRef<str>],
         lazy: bool,
     ) -> Result<Self> {
         if path.as_ref().is_dir() {
@@ -91,7 +91,7 @@ impl DataLoader {
     /// # Returns
     ///
     /// Returns `Ok(())` if the save operation is successful, otherwise returns an error.
-    pub fn save_ipcs<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+    pub fn save_ipcs(&self, path: impl AsRef<Path>) -> Result<()> {
         use std::fs::File;
 
         use polars::io::SerWriter;
@@ -134,8 +134,8 @@ impl DataLoader {
     /// # Returns
     ///
     /// Returns a `Result` containing the loaded `DataLoader` if successful, otherwise returns an error.
-    pub fn read_ipcs<P: AsRef<Path>>(
-        path: P,
+    pub fn read_ipcs(
+        path: impl AsRef<Path>,
         symbols: Option<&[&str]>,
         memory_map: bool,
         lazy: bool,
@@ -210,8 +210,8 @@ fn get_file_stem(path: &Path) -> Option<&str> {
 ///
 /// Returns a `Result` containing an `Option` with the file stem and the loaded data frame if successful,
 /// otherwise returns an error.
-fn try_read_ipc_path<P: AsRef<Path>>(
-    file_path: P,
+fn try_read_ipc_path(
+    file_path: impl AsRef<Path>,
     memory_map: bool,
     lazy: bool,
 ) -> Result<Option<(Arc<str>, Frame)>> {

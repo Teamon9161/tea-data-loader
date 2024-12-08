@@ -146,18 +146,126 @@ impl DataLoader {
         self.try_apply(|df| df.sort(by.clone(), sort_options.clone()))
     }
 
+    /// Removes columns from each DataFrame in the DataLoader.
+    /// Note that it's better to only select the columns you need
+    /// and let the projection pushdown optimize away the unneeded columns.
+    ///
+    /// # Arguments
+    ///
+    /// * `columns` - An iterator of column names or selectors to remove
+    ///
+    /// # Notes
+    ///
+    /// If a column name does not exist in the schema, it will be silently ignored.
     #[inline]
     pub fn drop<I, T>(self, columns: I) -> Result<Self>
     where
         I: IntoIterator<Item = T> + Clone,
-        T: AsRef<str> + Into<Selector>,
+        T: Into<Selector>,
     {
         self.try_apply(|df| df.drop(columns.clone()))
     }
 
+    /// Removes columns from each DataFrame in the DataLoader.
+    /// Note that it's better to only select the columns you need
+    /// and let the projection pushdown optimize away the unneeded columns.
+    ///
+    /// # Arguments
+    ///
+    /// * `columns` - An iterator of column names or selectors to remove
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if any of the specified columns
+    /// do not exist in the schema when materializing the DataFrames.
     #[inline]
-    pub fn align<E: AsRef<[Expr]>>(mut self, on: E, how: Option<JoinType>) -> Result<Self> {
+    pub fn drop_strict<I, T>(self, columns: I) -> Result<Self>
+    where
+        I: IntoIterator<Item = T> + Clone,
+        T: Into<Selector>,
+    {
+        self.try_apply(|df| df.drop_strict(columns.clone()))
+    }
+
+    /// Aligns multiple DataFrames based on specified columns and join type.
+    ///
+    /// This method aligns the DataFrames in the `DataLoader` by performing a series of joins
+    /// on the specified columns. It creates a master alignment frame and then extracts
+    /// individual aligned frames from it.
+    ///
+    /// # Arguments
+    ///
+    /// * `on` - An expression or slice of expressions specifying the columns to align on.
+    /// * `how` - An optional `JoinType` specifying the type of join to perform. Defaults to `JoinType::Full` if not provided.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Result` containing the modified `DataLoader` with aligned frames, or an error if the alignment process fails.
+    ///
+    /// # Notes
+    ///
+    /// - If the `DataLoader` is empty, it returns the original instance.
+    /// - For large numbers of frames (more than `POST_ALIGN_COLLECT_NUM`), it may need to collect eagerly to avoid stack overflow.
+    /// - The method sorts the resulting frames based on the alignment columns.
+    #[inline]
+    pub fn align(mut self, on: impl AsRef<[Expr]>, how: Option<JoinType>) -> Result<Self> {
         self.dfs = self.dfs.align(on, how)?;
+        Ok(self)
+    }
+
+    /// Finds the index of a given symbol in the DataLoader's symbols list.
+    ///
+    /// # Arguments
+    ///
+    /// * `symbol` - The symbol name to search for
+    ///
+    /// # Returns
+    ///
+    /// Returns `Some(index)` if the symbol is found, where `index` is the position
+    /// of the symbol in the list. Returns `None` if either:
+    /// - The symbol is not found
+    /// - The DataLoader has no symbols list
+    #[inline]
+    pub fn find_index(&self, symbol: &str) -> Option<usize> {
+        if let Some(symbols) = &self.symbols {
+            symbols.iter().position(|s| &**s == symbol)
+        } else {
+            None
+        }
+    }
+
+    /// Inserts a new DataFrame into the DataLoader with the given symbol name.
+    ///
+    /// # Arguments
+    ///
+    /// * `symbol` - The name/identifier for the DataFrame
+    /// * `frame` - The DataFrame to insert
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing a mutable reference to the modified `DataLoader` or an error.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Attempting to insert a new symbol when the DataLoader has data but no symbol names
+    pub fn insert(&mut self, symbol: &str, frame: impl Into<Frame>) -> Result<&mut Self> {
+        if let Some(symbols) = &mut self.symbols {
+            let arc_symbol = symbol.into();
+            if symbols.contains(&arc_symbol) {
+                self[symbol] = frame.into()
+            } else {
+                symbols.push(arc_symbol);
+                self.dfs.push(frame.into());
+            }
+        } else {
+            if self.is_empty() {
+                self.symbols = Some(vec![symbol.into()]);
+                self.dfs.push(frame.into());
+            } else {
+                bail!("DataLoader should have symbol names when insert a new symbol, cannot insert new symbol: {}, ", symbol);
+            }
+        }
         Ok(self)
     }
 }

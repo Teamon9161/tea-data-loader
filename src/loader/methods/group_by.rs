@@ -5,6 +5,7 @@ use crate::prelude::*;
 
 const DAILY_COL: &str = "trading_date";
 
+#[derive(Clone)]
 /// Represents a DataLoader with grouped data
 pub struct DataLoaderGroupBy {
     /// The original DataLoader
@@ -12,14 +13,14 @@ pub struct DataLoaderGroupBy {
     /// A vector of LazyGroupBy operations
     pub lgbs: Vec<LazyGroupBy>,
     /// Optional last time column name
-    pub last_time: Option<Arc<str>>,
+    pub last_time: Option<PlSmallStr>,
     /// Optional time column name
     pub time: Option<PlSmallStr>,
 }
 
 /// Options for grouping data by time
 pub struct GroupByTimeOpt<'a> {
-    /// Optional last time column name
+    /// Optional time column name to call last method on
     pub last_time: Option<&'a str>,
     /// Time column name to group by
     pub time: &'a str,
@@ -29,7 +30,7 @@ pub struct GroupByTimeOpt<'a> {
     pub daily_col: &'a str,
     /// Whether to maintain the original order
     pub maintain_order: bool,
-    /// Label position for the time window
+    /// Which edge of the window to use for labels
     pub label: Label,
 }
 
@@ -188,7 +189,7 @@ impl DataLoader {
     ///
     /// A `DataLoaderGroupBy` instance representing the grouped data.
     #[inline]
-    pub fn group_by<E: AsRef<[IE]>, IE: Into<Expr> + Clone>(self, by: E) -> DataLoaderGroupBy {
+    pub fn group_by<IE: Into<Expr> + Clone>(self, by: impl AsRef<[IE]>) -> DataLoaderGroupBy {
         let by = by.as_ref();
         let lgbs = self
             .dfs
@@ -219,10 +220,10 @@ impl DataLoader {
     /// A `Result` containing a `DataLoaderGroupBy` instance if successful, or an error if the
     /// operation fails.
     #[inline]
-    pub fn group_by_dynamic<E: AsRef<[Expr]>>(
+    pub fn group_by_dynamic(
         self,
         index_column: Expr,
-        group_by: E,
+        group_by: impl AsRef<[Expr]>,
         options: DynamicGroupOptions,
     ) -> Result<DataLoaderGroupBy> {
         let group_by = group_by.as_ref();
@@ -293,15 +294,15 @@ impl DataLoaderGroupBy {
     /// - If a last time column is present and different from the time column, it adds a last() aggregation for the last time column.
     /// - If the last time column is the same as the time column, it renames the aggregated last time column and drops the original time column.
     /// - If no last time column is present, it simply applies the provided aggregations.
-    pub fn agg<E: AsRef<[Expr]>>(self, aggs: E) -> DataLoader {
+    pub fn agg(self, aggs: impl AsRef<[Expr]>) -> DataLoader {
         let aggs = aggs.as_ref();
-        let dfs = if let Some(last_time) = &self.last_time {
+        let dfs = if let Some(last_time) = self.last_time {
             let time_col = self.time.as_deref().unwrap();
-            if last_time.as_ref() != time_col {
+            if last_time != time_col {
                 let aggs: Vec<_> = aggs
                     .iter()
                     .cloned()
-                    .chain(std::iter::once(col(&**last_time).last()))
+                    .chain(std::iter::once(col(&*last_time).last()))
                     .collect();
                 self.lgbs
                     .into_iter()
@@ -312,15 +313,15 @@ impl DataLoaderGroupBy {
                     .iter()
                     .cloned()
                     .chain(std::iter::once(
-                        col(&**last_time).last().name().suffix("_last"),
+                        col(&*last_time).last().name().suffix("_last"),
                     ))
                     .collect();
                 self.lgbs
                     .into_iter()
                     .map(|lgb| {
                         lgb.agg(&aggs).drop([time_col]).rename(
-                            [last_time.to_string() + "_last"],
-                            [last_time],
+                            [(&last_time).to_string() + "_last"],
+                            [&last_time],
                             true,
                         )
                     })

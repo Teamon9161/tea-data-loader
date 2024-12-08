@@ -301,7 +301,7 @@ impl DataLoader {
     ///
     /// The modified `DataLoader` instance.
     #[inline]
-    pub fn with_type<R: AsRef<str>>(mut self, typ: R) -> Self {
+    pub fn with_type(mut self, typ: impl AsRef<str>) -> Self {
         self.typ = typ.as_ref().into();
         self
     }
@@ -316,7 +316,7 @@ impl DataLoader {
     ///
     /// The modified `DataLoader` instance.
     #[inline]
-    pub fn with_freq<R: AsRef<str>>(mut self, freq: R) -> Self {
+    pub fn with_freq(mut self, freq: impl AsRef<str>) -> Self {
         self.freq = Some(freq.as_ref().into());
         self
     }
@@ -331,7 +331,7 @@ impl DataLoader {
     ///
     /// A new `DataLoader` instance with the same metadata as the current instance but with new data frames.
     #[inline]
-    pub fn copy_with_dfs<F: Into<Frames>>(&self, dfs: F) -> Self {
+    pub fn copy_with_dfs(&self, dfs: impl Into<Frames>) -> Self {
         DataLoader {
             typ: self.typ.clone(),
             dfs: dfs.into(),
