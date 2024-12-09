@@ -1,3 +1,4 @@
 /target
 # *.lock
 fac_analyse/
+.idea/
