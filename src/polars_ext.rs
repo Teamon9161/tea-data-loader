@@ -121,7 +121,7 @@ pub trait SeriesExt {
     /// - The number of labels doesn't match the number of bins (accounting for `add_bounds`).
     /// - A value falls outside the bin ranges.
     /// - The input Series has an unsupported data type.
-    fn cut(
+    fn tcut(
         &self,
         bin: &Series,
         labels: &Series,
@@ -398,7 +398,7 @@ impl SeriesExt for Series {
         res
     }
 
-    fn cut(
+    fn tcut(
         &self,
         bin: &Series,
         labels: &Series,
@@ -582,7 +582,7 @@ pub trait ExprExt {
     ///
     /// # Returns
     /// An expression representing the binned and labeled data.
-    fn cut(self, bin: Expr, labels: Expr, right: Option<bool>, add_bounds: Option<bool>) -> Expr;
+    fn tcut(self, bin: Expr, labels: Expr, right: Option<bool>, add_bounds: Option<bool>) -> Expr;
 
     /// Returns the first non-null value in a vector.
     ///
@@ -731,13 +731,13 @@ impl ExprExt for Expr {
         )
     }
 
-    fn cut(self, bin: Expr, labels: Expr, right: Option<bool>, add_bounds: Option<bool>) -> Expr {
+    fn tcut(self, bin: Expr, labels: Expr, right: Option<bool>, add_bounds: Option<bool>) -> Expr {
         self.apply_many(
             move |series_slice| {
                 let s = series_slice[0].as_materialized_series();
                 let bin = series_slice[1].as_materialized_series();
                 let labels = series_slice[2].as_materialized_series();
-                Ok(s.cut(bin, labels, right, add_bounds)
+                Ok(s.tcut(bin, labels, right, add_bounds)
                     .map(|s| Some(s.into_column()))
                     .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?)
             },

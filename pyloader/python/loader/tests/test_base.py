@@ -4,7 +4,11 @@ import polars as pl
 from loader import DataLoader
 
 test_df = pl.DataFrame({"a": [1, 2, 3], "b": [4, 5, 6]})
+test_df2 = pl.LazyFrame({"a": [[1, 2], [3, 4], [5, 6]]})
 
+dl = DataLoader(test_df2).with_columns(pl.col("a").list.to_array(2).arr.min()).collect()
+
+# DataLoader(test_df2).apply(lambda df: df.with_columns(pl.col("a").list.to_array(2).array.min())).collect()
 
 def test_base():
     dl = DataLoader(pl.DataFrame(), ["a"])

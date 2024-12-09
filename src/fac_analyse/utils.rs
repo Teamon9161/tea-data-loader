@@ -42,13 +42,13 @@ pub(super) fn get_ts_group_by_value(fac: Expr, group: usize) -> Expr {
         ((group + 1) as i32).lit(),
     );
     match group {
-        20 => fac.cut(
+        20 => fac.tcut(
             bins,
             GROUP_20_LABEL_SERIES.clone().lit(),
             Some(true),
             Some(false),
         ),
-        10 => fac.cut(
+        10 => fac.tcut(
             bins,
             GROUP_10_LABEL_SERIES.clone().lit(),
             Some(true),
@@ -57,7 +57,7 @@ pub(super) fn get_ts_group_by_value(fac: Expr, group: usize) -> Expr {
         _ => {
             let labels: Vec<f64> = Vec1Create::linspace(Some(-1.), 1., group);
             let labels = Series::from_vec("group".into(), labels);
-            fac.cut(bins, labels.lit(), Some(true), Some(false))
+            fac.tcut(bins, labels.lit(), Some(true), Some(false))
         },
     }
 }

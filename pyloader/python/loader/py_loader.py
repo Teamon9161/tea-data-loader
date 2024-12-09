@@ -246,7 +246,7 @@ class DataLoader:
         pyexprs = parse_into_list_of_expressions(
             *exprs, **named_exprs, __structify=structify
         )
-        return DataLoader(self.dl.select(*pyexprs))
+        return DataLoader(self.dl.select(pyexprs))
 
     def with_columns(
         self,
@@ -276,7 +276,7 @@ class DataLoader:
         pyexprs = parse_into_list_of_expressions(
             *exprs, **named_exprs, __structify=structify
         )
-        return DataLoader(self.dl.with_columns(*pyexprs))
+        return DataLoader(self.dl.with_columns(pyexprs))
 
     def drop(
         self,

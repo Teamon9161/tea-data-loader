@@ -1,5 +1,7 @@
+
 debug:
-	maturin develop
+	@conda run --live-stream -n te maturin develop
 
 release:
-	maturin develop --release
+	@conda run --live-stream -n te maturin develop --release
+

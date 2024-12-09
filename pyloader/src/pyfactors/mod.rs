@@ -9,12 +9,12 @@ use crate::utils::Wrap;
 #[pyclass(name = "Factor", subclass)]
 pub struct PyFactor {}
 
-#[pymethods]
-impl PyFactor {
-    fn __repr__(&self) -> String {
-        "Factor".to_string()
-    }
-}
+// #[pymethods]
+// impl PyFactor {
+//     fn __repr__(&self) -> String {
+//         "Factor".to_string()
+//     }
+// }
 
 impl FromPyObject<'_> for Wrap<Param> {
     fn extract_bound(ob: &Bound<'_, PyAny>) -> PyResult<Self> {
