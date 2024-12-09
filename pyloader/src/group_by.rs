@@ -206,7 +206,7 @@ impl PyLoader {
         let offset = if let Some(offset) = offset {
             Duration::try_parse(offset).map_err(|e| PyValueError::new_err(e.to_string()))?
         } else {
-            Duration::new(0)
+            Duration::try_parse("0ns").unwrap()
         };
         if let Some(last_time) = last_time {
             Ok(PyDataLoaderGroupBy(

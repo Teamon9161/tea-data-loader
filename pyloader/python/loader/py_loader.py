@@ -7,7 +7,8 @@ from polars import DataFrame, DataType, LazyFrame
 from polars._utils.parse import parse_into_expression, parse_into_list_of_expressions
 from typing_extensions import TypeAlias
 
-from .rs_loader import DataLoaderGroupBy, _RS_Loader
+from .group_by import DataLoaderGroupBy
+from .rs_loader import _RS_Loader
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -15,6 +16,8 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from polars._typing import ColumnNameOrSelector, IntoExpr
+
+    from .loader import AggFactor
 
     # Type alias for DataFrame or LazyFrame
     PolarsFrame: TypeAlias = DataFrame | LazyFrame
@@ -169,6 +172,13 @@ class DataLoader:
         if obj in ["dfs", "symbols", "type", "start", "end", "freq"]:
             setattr(self.dl, obj, value)
         else:
+            if obj != "dl":
+                from warnings import warn
+
+                warn(
+                    "Additional attributes of DataLoader will be dropped when creating a new DataLoader instance",
+                    stacklevel=2,
+                )
             super().__setattr__(obj, value)
 
     def with_type(self, typ: str) -> DataLoader:
@@ -428,7 +438,7 @@ class DataLoader:
         """
         if group_by is not None:
             group_by = parse_into_list_of_expressions(group_by)
-        return DataLoader(
+        return DataLoaderGroupBy(
             self.dl.group_by_time(
                 rule=rule,
                 last_time=last_time,
@@ -453,7 +463,7 @@ class DataLoader:
             maintain_order: Whether to maintain the original order within groups
         """
         by = parse_into_list_of_expressions(*by)
-        return DataLoader(self.dl.group_by(by, maintain_order))
+        return DataLoaderGroupBy(self.dl.group_by(by, maintain_order))
 
     def group_by_dynamic(
         self,
@@ -465,7 +475,7 @@ class DataLoader:
         label: str = "left",
         include_boundaries: bool = False,  # noqa: FBT001
         closed_window: str = "left",
-        start_by: str = "window_bound",
+        start_by: str = "window",
         last_time: str | None = None,
     ) -> DataLoaderGroupBy:
         """
@@ -486,7 +496,7 @@ class DataLoader:
         index_column = parse_into_expression(index_column)
         if group_by is not None:
             group_by = parse_into_list_of_expressions(group_by)
-        return DataLoader(
+        return DataLoaderGroupBy(
             self.dl.group_by_dynamic(
                 index_column=index_column,
                 every=every,
@@ -517,6 +527,76 @@ class DataLoader:
             concat_tick_df: Whether to concatenate tick data frames.
         """
         return DataLoader(self.dl.kline(freq, tier, adjust))
+
+    def with_facs(self, facs: str | list[str], backend: str = "polars") -> DataLoader:
+        """
+        Adds factors to the DataLoader using the specified backend.
+
+        This method processes a list of factor names, parses them according to the chosen backend,
+        and adds the resulting factors to each DataFrame in the DataLoader.
+
+        Args:
+            facs: A list of factor names to be added.
+            backend: The backend to use for factor calculation ("polars" or "tevec"). Defaults to "polars".
+
+        Returns:
+            The modified DataLoader instance with new factors added.
+
+        Raises:
+            ValueError: If an invalid backend is specified or if factor calculation fails.
+        """
+        if isinstance(facs, str):
+            facs = [facs]
+        return DataLoader(self.dl.with_facs(facs, backend=backend))
+
+    def with_agg_facs(
+        self,
+        rule: str,
+        facs: AggFactor | list[AggFactor],  # PyAggFactor type from Rust
+        *agg_exprs: IntoExpr | Iterable[IntoExpr],
+        last_time: str | None = None,
+        time: str = "time",
+        group_by: IntoExpr | Iterable[IntoExpr] | None = None,
+        daily_col: str = "trading_date",
+        maintain_order: bool = True,
+        label: str = "left",
+        **named_agg_exprs: IntoExpr,
+    ) -> DataLoader:
+        """
+        Adds aggregated factors to the DataLoader.
+
+        Args:
+            rule: The grouping rule (e.g. 'daily' or any rule supported by Polars)
+            facs: List of aggregation factor definitions
+            agg_exprs: List of aggregation expressions
+            last_time: Optional time column name to call last method on
+            time: Time column name to group by
+            group_by: Optional additional columns to group by
+            daily_col: Column name for daily grouping
+            maintain_order: Whether to maintain original order within groups
+            label: Which edge of the window to use for labels (left, right or datapoint)
+
+        Returns:
+            The modified DataLoader instance with aggregated factors added.
+        """
+        agg_exprs = parse_into_list_of_expressions(*agg_exprs, **named_agg_exprs)
+        if group_by is not None:
+            group_by = parse_into_list_of_expressions(group_by)
+        if not isinstance(facs, (list, tuple)):
+            facs = [facs]
+        return DataLoader(
+            self.dl.with_agg_facs(
+                rule=rule,
+                facs=facs,
+                agg_exprs=agg_exprs,
+                last_time=last_time,
+                time=time,
+                group_by=group_by,
+                daily_col=daily_col,
+                maintain_order=maintain_order,
+                label=label,
+            )
+        )
 
     def calc_tick_future_ret(
         self,

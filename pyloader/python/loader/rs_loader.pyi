@@ -9,10 +9,8 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any, Callable, overload
-
+from .loader import AggFactor
 from polars import DataFrame, DataType, Expr, LazyFrame
-
-from . import DataLoader
 
 class _RS_Loader:
     """
@@ -253,16 +251,16 @@ class _RS_Loader:
             The modified DataLoader instance.
         """
 
-    def with_column(self, expr: Expr) -> _RS_Loader:
-        """
-        Adds a new column to each DataFrame in the DataLoader.
+    # def with_column(self, expr: Expr) -> _RS_Loader:
+    #     """
+    #     Adds a new column to each DataFrame in the DataLoader.
 
-        Args:
-            expr: The expression defining the new column.
+    #     Args:
+    #         expr: The expression defining the new column.
 
-        Returns:
-            The modified DataLoader instance.
-        """
+    #     Returns:
+    #         The modified DataLoader instance.
+    #     """
 
     def with_columns(self, exprs: list[Expr]) -> _RS_Loader:
         """
@@ -340,7 +338,7 @@ class _RS_Loader:
         daily_col: str = "trading_date",
         maintain_order: bool = True,  # noqa: FBT001
         label: str = "left",
-    ) -> DataLoaderGroupBy:
+    ) -> _RS_DataLoaderGroupBy:
         """
         Groups data by dynamic frequency.
 
@@ -361,7 +359,7 @@ class _RS_Loader:
         self,
         by: list[Expr],
         maintain_order: bool = True,  # noqa: FBT001
-    ) -> DataLoaderGroupBy:
+    ) -> _RS_DataLoaderGroupBy:
         """
         Groups the data by the specified columns.
 
@@ -383,9 +381,9 @@ class _RS_Loader:
         label: str = "left",
         include_boundaries: bool = False,  # noqa: FBT001
         closed_window: str = "left",
-        start_by: str = "window_bound",
+        start_by: str = "window",
         last_time: str | None = None,
-    ) -> DataLoaderGroupBy:
+    ) -> _RS_DataLoaderGroupBy:
         """
         Groups the data dynamically based on a time index and additional grouping expressions.
 
@@ -528,13 +526,61 @@ class _RS_Loader:
             or if the DataLoader has no symbols list.
         """
 
-class DataLoaderGroupBy:
+    def with_facs(self, facs: list[str], backend: str = "polars") -> _RS_Loader:
+        """
+        Adds factors to the DataLoader using the specified backend.
+
+        This method processes a list of factor names, parses them according to the chosen backend,
+        and adds the resulting factors to each DataFrame in the DataLoader.
+
+        Args:
+            facs: A list of factor names to be added.
+            backend: The backend to use for factor calculation ("polars" or "tevec"). Defaults to "polars".
+
+        Returns:
+            The modified DataLoader instance with new factors added.
+
+        Raises:
+            ValueError: If an invalid backend is specified or if factor calculation fails.
+        """
+
+    def with_agg_facs(
+        self,
+        rule: str,
+        facs: list[AggFactor],  # PyAggFactor type from Rust
+        agg_exprs: list[Expr],
+        last_time: str | None = None,
+        time: str = "time",
+        group_by: list[Expr] | None = None,
+        daily_col: str = "trading_date",
+        maintain_order: bool = True,
+        label: str = "left",
+    ) -> _RS_Loader:
+        """
+        Adds aggregated factors to the DataLoader.
+
+        Args:
+            rule: The grouping rule (e.g. 'daily' or any rule supported by Polars)
+            facs: List of aggregation factor definitions
+            agg_exprs: List of aggregation expressions
+            last_time: Optional time column name to call last method on
+            time: Time column name to group by
+            group_by: Optional additional columns to group by
+            daily_col: Column name for daily grouping
+            maintain_order: Whether to maintain original order within groups
+            label: Which edge of the window to use for labels (left, right or datapoint)
+
+        Returns:
+            The modified DataLoader instance with aggregated factors added.
+        """
+
+class _RS_DataLoaderGroupBy:
     """
     A class representing grouped data from a DataLoader.
     """
 
     @property
-    def dl(self) -> DataLoader:
+    def dl(self) -> _RS_Loader:
         """The underlying DataLoader"""
 
     @property
@@ -545,7 +591,7 @@ class DataLoaderGroupBy:
     def time(self) -> str | None:
         """The time column name if present"""
 
-    def agg(self, aggs: list[Expr]) -> DataLoader:
+    def agg(self, aggs: list[Expr]) -> _RS_Loader:
         """
         Applies aggregation functions to the grouped data.
 

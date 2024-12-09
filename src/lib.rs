@@ -3,7 +3,7 @@
 mod configs;
 mod enums;
 #[cfg(feature = "fac-analyse")]
-mod fac_analyse;
+pub mod fac_analyse;
 mod frame;
 mod loader;
 mod path_finder;

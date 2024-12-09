@@ -71,7 +71,7 @@ impl<F: FactorBase> FactorAgg<F> {
 /// Trait for aggregation factors in Polars expressions.
 ///
 /// This trait defines the interface for factors that can be used in aggregation operations.
-pub trait PlAggFactor: GetName + 'static {
+pub trait PlAggFactor: GetName + Send + Sync + 'static {
     /// Returns the factor expression.
     ///
     /// # Returns
@@ -87,10 +87,7 @@ pub trait PlAggFactor: GetName + 'static {
     /// A `Result` containing an `Expr` representing the aggregation expression.
     fn agg_expr(&self) -> Result<Expr>;
 
-    /// Returns the name of the factor.
-    ///
-    /// # Returns
-    /// A `String` containing the name of the factor.
+    /// Returns the name of the factor used in aggregation.
     #[inline]
     fn agg_fac_name(&self) -> Option<String> {
         None

@@ -1,3 +1,4 @@
+mod fac_analyse;
 mod from_py;
 mod group_by;
 mod pyfactors;
@@ -11,6 +12,8 @@ use pyo3::prelude::*;
 
 #[pymodule]
 fn loader(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
+    pyfactors::register_agg_facs(m)?;
+    m.add_class::<pyfactors::PyAggFactor>()?;
     m.add_class::<PyLoader>()?;
     m.add_class::<PyDataLoaderGroupBy>()?;
     Ok(())

@@ -11,6 +11,7 @@ use super::utils::{get_ts_group, infer_label_periods, stable_corr};
 use crate::prelude::*;
 use crate::POOL;
 
+#[derive(Clone)]
 pub struct FacAnalysis {
     pub dl: DataLoader,
     facs: Vec<String>,
@@ -20,10 +21,10 @@ pub struct FacAnalysis {
 }
 
 impl DataLoader {
-    pub fn fac_analyse<S: AsRef<str>, L: AsRef<str>>(
+    pub fn fac_analyse(
         self,
-        facs: &[S],
-        labels: &[L],
+        facs: &[impl AsRef<str>],
+        labels: &[impl AsRef<str>],
         // label_periods: &[usize],
         drop_peak: bool,
     ) -> Result<FacAnalysis> {

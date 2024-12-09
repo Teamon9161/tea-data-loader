@@ -3,6 +3,7 @@ use pyo3::prelude::*;
 use pyo3::pybacked::PyBackedStr;
 use tea_data_loader::export::polars::prelude::*;
 use tea_data_loader::export::tea_strategy::equity::SignalType;
+use tea_data_loader::export::tevec::agg::CorrMethod;
 use tea_data_loader::prelude::Backend;
 
 use super::utils::Wrap;
@@ -100,6 +101,21 @@ impl<'py> FromPyObject<'py> for Wrap<Backend> {
             v => {
                 return Err(PyValueError::new_err(format!(
                     "`backend` must be one of {{'polars', 'tevec'}}, got {v}",
+                )))
+            },
+        };
+        Ok(Wrap(parsed))
+    }
+}
+
+impl<'py> FromPyObject<'py> for Wrap<CorrMethod> {
+    fn extract_bound(ob: &Bound<'py, PyAny>) -> PyResult<Self> {
+        let parsed = match &*ob.extract::<PyBackedStr>()? {
+            "pearson" => CorrMethod::Pearson,
+            "spearman" => CorrMethod::Spearman,
+            v => {
+                return Err(PyValueError::new_err(format!(
+                    "`corr_method` must be one of {{'pearson', 'spearman'}}, got {v}",
                 )))
             },
         };

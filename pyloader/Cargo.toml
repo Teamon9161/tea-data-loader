@@ -10,7 +10,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 # libz-ng-sys = "=1.1.16"  # failed on 1.1.20
-serde_json = { version = "1", default-features = false, optional = true }
+# serde_json = { version = "1", default-features = false, optional = true }
 pyo3 = { version = "0.21.0", features = [
     "anyhow",
     "chrono",
@@ -24,9 +24,9 @@ pyo3-polars = { version = "0.18.0", features = [
     "lazy",
     "object",
 ] }
-polars-plan = { version = "0.44", default-features = false }
-polars-utils = { version = "0.44", default-features = false }
-polars-lazy = { version = "0.44", default-features = false }
+# polars-plan = { version = "0.44", default-features = false }
+# polars-utils = { version = "0.44", default-features = false }
+# polars-lazy = { version = "0.44", default-features = false }
 
 # [dependencies.polars]
 # version = "0.44"
@@ -98,8 +98,15 @@ polars-lazy = { version = "0.44", default-features = false }
 #     "cov",
 # ]
 
+[features]
+default = ["map-fac", "tick-fac", "tick-future-fac"]
 
-# [features]
+map-fac = ["tea-data-loader/map-fac"]
+tick-fac = ["tea-data-loader/tick-fac"]
+tick-future-fac = ["tea-data-loader/tick-future-fac"]
+order-book-fac = ["tea-data-loader/order-book-fac"]
+order-flow-fac = ["tea-data-loader/order-flow-fac"]
+
 # # Features below are only there to enable building a slim binary during development.
 # avro = ["polars/avro"]
 # # parquet = ["polars/parquet", "polars-parquet"]

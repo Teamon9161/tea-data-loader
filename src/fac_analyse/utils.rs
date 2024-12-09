@@ -11,7 +11,7 @@ pub(super) fn stable_corr(a: Expr, b: Expr, method: CorrMethod) -> Expr {
         CorrMethod::Pearson => pearson_corr(a, b, 1),
         CorrMethod::Spearman => spearman_rank_corr(a, b, 1, true),
     };
-    corr.clip(-0.2.lit(), 0.2.lit()).fill_nan(NULL.lit())
+    corr.clip(-0.3.lit(), 0.3.lit()).fill_nan(NULL.lit())
 }
 
 #[allow(dead_code)]

@@ -2598,12 +2598,8 @@ dependencies = [
 name = "pyloader"
 version = "0.1.0"
 dependencies = [
- "polars-lazy",
- "polars-plan",
- "polars-utils",
  "pyo3",
  "pyo3-polars",
- "serde_json",
  "tea-data-loader",
 ]
 

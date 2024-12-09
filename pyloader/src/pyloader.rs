@@ -501,18 +501,18 @@ impl PyLoader {
         Ok(out.into())
     }
 
-    /// Adds a new column to each DataFrame in the PyLoader.
-    ///
-    /// # Arguments
-    ///
-    /// * `expr` - The expression defining the new column.
-    ///
-    /// # Returns
-    ///
-    /// A `PyResult` containing the modified `PyLoader` instance or an error.
-    fn with_column(&self, expr: PyExpr) -> PyResult<Self> {
-        Ok(self.0.clone().with_column(expr.0)?.into())
-    }
+    // /// Adds a new column to each DataFrame in the PyLoader.
+    // ///
+    // /// # Arguments
+    // ///
+    // /// * `expr` - The expression defining the new column.
+    // ///
+    // /// # Returns
+    // ///
+    // /// A `PyResult` containing the modified `PyLoader` instance or an error.
+    // fn with_column(&self, expr: PyExpr) -> PyResult<Self> {
+    //     Ok(self.0.clone().with_column(expr.0)?.into())
+    // }
 
     /// Adds multiple new columns to each DataFrame in the PyLoader.
     ///
