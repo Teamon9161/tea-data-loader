@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from polars._typing import ColumnNameOrSelector, IntoExpr
 
     from .loader import AggFactor
+    from .fac_analyse import FacAnalysis
 
     # Type alias for DataFrame or LazyFrame
     PolarsFrame: TypeAlias = DataFrame | LazyFrame
@@ -646,3 +647,42 @@ class DataLoader:
                 suffix=suffix,
             )
         )
+
+    def fac_analyse(
+        self,
+        facs: list[str],
+        labels: list[str],
+        drop_peak: bool = True
+    ) -> FacAnalysis:
+        """
+        Perform factor analysis on the data.
+
+        Args:
+            facs: A list of factor names to analyze
+            labels: A list of label names to use in the analysis
+            drop_peak: Whether to drop the peak values in the analysis (default: True)
+
+        Returns:
+            A FacAnalysis object containing the results of the factor analysis
+        """
+        return self.dl.fac_analyse(facs, labels, drop_peak)
+
+    def with_strategies(self, strategies: str | list[str]) -> DataLoader:
+        """
+        Adds strategies to the DataLoader.
+
+        This method applies a list of strategies to the data in the DataLoader,
+        calculating new columns based on the provided strategy definitions.
+
+        Args:
+            strategies: A list of strings, each representing a strategy to be applied.
+
+        Returns:
+            A new DataLoader instance with the strategies applied.
+
+        Raises:
+            Exception: If there's an issue parsing strategies or applying them.
+        """
+        if isinstance(strategies, str):
+            strategies = [strategies]
+        return DataLoader(self.dl.with_strategies(strategies))

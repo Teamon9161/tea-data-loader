@@ -3,7 +3,6 @@ from __future__ import annotations
 from .rs_loader import _RS_DataLoaderGroupBy
 
 from typing import TYPE_CHECKING
-from polars import Expr
 from polars._utils.parse import parse_into_list_of_expressions
 
 

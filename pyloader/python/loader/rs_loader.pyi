@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any, Callable, overload
-from .loader import AggFactor
+from .loader import AggFactor, FacAnalysis
 from polars import DataFrame, DataType, Expr, LazyFrame
 
 class _RS_Loader:
@@ -572,6 +572,41 @@ class _RS_Loader:
 
         Returns:
             The modified DataLoader instance with aggregated factors added.
+        """
+
+    def fac_analyse(
+        self,
+        facs: list[str],
+        labels: list[str],
+        drop_peak: bool = True
+    ) -> FacAnalysis:
+        """
+        Perform factor analysis on the data.
+
+        Args:
+            facs: A list of factor names to analyze
+            labels: A list of label names to use in the analysis
+            drop_peak: Whether to drop the peak values in the analysis (default: True)
+
+        Returns:
+            A FacAnalysis object containing the results of the factor analysis
+        """
+
+    def with_strategies(self, strategies: list[str]) -> _RS_Loader:
+        """
+        Adds strategies to the DataLoader.
+
+        This method applies a list of strategies to the data in the DataLoader,
+        calculating new columns based on the provided strategy definitions.
+
+        Args:
+            strategies: A list of strings, each representing a strategy to be applied.
+
+        Returns:
+            A new DataLoader instance with the strategies applied.
+
+        Raises:
+            Exception: If there's an issue parsing strategies or applying them.
         """
 
 class _RS_DataLoaderGroupBy:

@@ -5,6 +5,7 @@ mod pyfactors;
 mod pyloader;
 mod utils;
 mod with_facs;
+mod with_strategies;
 
 use group_by::PyDataLoaderGroupBy;
 use pyloader::PyLoader;

@@ -27,8 +27,8 @@ plotly-plot = ["plot", "dep:plotly"]
 io = ["serde", "bincode", "serde_par"]
 
 # factors
-fac-ext = []
-fac-analyse = []                                           # 基础因子扩展方法
+fac-ext = [] # 基础因子扩展方法
+fac-analyse = []
 map-fac = ["fac-ext"]
 tick-fac = ["order-book-fac", "order-flow-fac", "fac-ext"]
 tick-future-fac = ["fac-ext"]

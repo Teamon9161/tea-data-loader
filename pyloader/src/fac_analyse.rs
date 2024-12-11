@@ -22,6 +22,16 @@ pub struct PySummaryReport(SummaryReport);
 
 #[pymethods]
 impl PyLoader {
+    /// Perform factor analysis on the data
+    ///
+    /// # Arguments
+    /// * `facs` - A vector of factor names to analyze
+    /// * `labels` - A vector of label names to use in the analysis
+    /// * `drop_peak` - Whether to drop the peak values in the analysis
+    ///
+    /// # Returns
+    /// A `PyFacAnalysis` object containing the results of the factor analysis
+    #[pyo3(signature = (facs, labels, drop_peak=true))]
     fn fac_analyse(
         &self,
         facs: Vec<String>,

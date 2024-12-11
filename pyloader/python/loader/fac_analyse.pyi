@@ -1,6 +1,7 @@
 from typing import overload
 from polars import DataFrame, Series
 from .py_loader import DataLoader
+from typing import Literal
 
 class Summary:
     """A summary of factor analysis results containing various metrics and calculations."""
@@ -96,6 +97,28 @@ class FacSummary:
     @property
     def half_life(self) -> float | None:
         """Get the half-life for the factor."""
+
+class FacAnalysis:
+    """A class for performing factor analysis with various metrics and calculations."""
+    
+    @property
+    def summary(self) -> Summary:
+        """Get a Summary object that contains overall results of the analysis."""
+    
+    def with_ic_overall(self, method: Literal["pearson"] = "pearson") -> "FacAnalysis":
+        """Calculate overall Information Coefficient (IC) for the factors."""
+    
+    def with_ts_ic(self, rule: str, method: Literal["pearson"] = "pearson") -> "FacAnalysis":
+        """Calculate time-series Information Coefficient (IC) for the factors."""
+    
+    def with_ts_group_ret(self, group: int = 10) -> "FacAnalysis":
+        """Calculate time-series group returns."""
+    
+    def with_group_ret(self, rule: str | None = None, group: int = 10) -> "FacAnalysis":
+        """Calculate group returns."""
+    
+    def with_half_life(self) -> "FacAnalysis":
+        """Calculate half-life values for the factors."""
 
 class SummaryReport:
     """A comprehensive report containing analysis results for multiple factors."""
