@@ -8,12 +8,27 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::pybacked::PyBackedStr;
 use pyo3_polars::PyExpr;
-use tea_data_loader::factors::{Param, PlAggFactor};
-
+use tea_data_loader::factors::{Param, PlAggFactor, PlFactor};
+use tea_data_loader::prelude::Result;
 use crate::utils::Wrap;
 
-// #[pyclass(name = "Factor")]
-// pub struct PyFactor {}
+#[pyclass(name="Factor", subclass)]
+pub struct PyFactor(pub Arc<dyn PlFactor>);
+
+#[pymethods]
+impl PyFactor {
+    fn expr(&self) -> Result<PyExpr> {
+        Ok(PyExpr(self.0.try_expr()?))
+    }
+
+    fn __repr__(&self) -> String {
+        self.0.name()
+    }
+
+    fn name(&self) -> String {
+        self.0.name()
+    }
+}
 
 #[pyclass(name = "AggFactor", subclass)]
 #[derive(Clone)]

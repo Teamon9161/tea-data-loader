@@ -102,7 +102,7 @@ impl DataLoader {
     #[cfg(feature = "tick-fac")]
     /// 使用trade数据计算因子（暂时去掉盘口数据，只保留真实成交数据），再拼接回原数据
     ///
-    /// 使用本函数需要trade数据已经拼接完成，于with_trade_data_and_facs不同的是这种
+    /// 使用本函数需要trade数据已经拼接完成，与with_trade_data_and_facs不同的是这种
     /// 情况下已经有is_buy列。
     pub fn with_trade_facs(mut self, facs: &[impl AsRef<dyn PlFactor>]) -> Result<Self> {
         use crate::factors::base::TIME;
