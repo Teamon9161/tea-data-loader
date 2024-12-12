@@ -1,0 +1,31 @@
+[package]
+name = "tea-factors"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+default = ["tick-fac", "tick-future-fac", "map-fac"]
+
+fac-ext = [] # 基础因子扩展方法
+map-fac = ["fac-ext"]
+tick-fac = ["order-book-fac", "order-flow-fac", "fac-ext"]
+tick-future-fac = ["fac-ext"]
+order-book-fac = ["fac-ext"]
+order-flow-fac = ["fac-ext"]
+
+[dependencies]
+anyhow = {workspace = true}
+paste = {workspace = true}
+ctor = {workspace = true}
+regex = {workspace = true}
+polars = {workspace = true}
+tea-polars = { path = "../tea-polars" }
+parking_lot = {workspace = true}
+factor-macro = { path = "../factor-macro" }
+tea_strategy = { workspace = true, features = ['polars-lazy', "time"] }
+derive_more = { workspace = true, features = [
+    "from",
+    "is_variant",
+    "deref",
+    "deref_mut",
+] }

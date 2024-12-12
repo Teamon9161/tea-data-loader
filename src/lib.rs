@@ -7,10 +7,11 @@ pub mod fac_analyse;
 mod frame;
 mod loader;
 mod path_finder;
-mod polars_ext;
+// mod polars_ext;
 
 pub mod export;
-pub mod factors;
+// pub mod factors;
+pub use tea_factors as factors;
 pub mod prelude;
 pub mod strategy;
 

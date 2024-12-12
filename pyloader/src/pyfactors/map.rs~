@@ -28,4 +28,4 @@ macro_rules! define_py_typ_class {
     };
 }
 
-define_py_typ_class!(PyTyp, Typ, "Typ");
+define_py_typ_class!(PyTyp, Typ);

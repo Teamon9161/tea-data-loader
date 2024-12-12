@@ -3527,9 +3527,9 @@ checksum = "61c41af27dd6d1e27b1b16b489db798443478cef1f06a660c96db617ba5de3b1"
 
 [[package]]
 name = "tea-agg"
-version = "0.4.5"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c99ba59ab2d9b93cfebbf87a3d34aff633b1bb75714ebac7aa55542d62780d58"
+checksum = "bd7541a545ffcc3b6b1e97462b92de242e48ca74b5cc96b7d72983f9f7540893"
 dependencies = [
  "tea-core",
 ]
@@ -3548,9 +3548,9 @@ dependencies = [
 
 [[package]]
 name = "tea-core"
-version = "0.4.5"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20721144cdc85ca767ba915c062ffa203bf961c08f2a7ac0a793d92c78d947bd"
+checksum = "5bbfb655d118f3d1913f341f99c842ae65aa508ca60508cb158d27507480368a"
 dependencies = [
  "num-traits",
  "serde",
@@ -3582,15 +3582,17 @@ dependencies = [
  "serde",
  "smartstring",
  "tea-bond",
+ "tea-factors",
+ "tea-polars",
  "tea_strategy",
  "toml",
 ]
 
 [[package]]
 name = "tea-deps"
-version = "0.4.5"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e3a5dbb529274ed23e58e2d7197ecea0691f2920ced05c11d60e529713c439bc"
+checksum = "bef8b8d24ccdcdb6827e777f3b81c6e1087c1291a6db54a59727ff332ca6a043"
 dependencies = [
  "chrono",
  "polars",
@@ -3598,9 +3600,9 @@ dependencies = [
 
 [[package]]
 name = "tea-dtype"
-version = "0.4.5"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf191a8ccd95441499120685072fca79ee44027b543611ad28968a6b6cab8eb3"
+checksum = "7b5e6853bf59f0972aa0a3c3e1a2d5c846b4bb085e331e676955271b2f2628cf"
 dependencies = [
  "num-traits",
  "tea-deps",
@@ -3609,9 +3611,9 @@ dependencies = [
 
 [[package]]
 name = "tea-dyn"
-version = "0.4.5"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bffb39f04c75a4770d7c7837a5a451fca2c787c11bf29a77ff56baf59966eeb7"
+checksum = "af6e28db0b41edba32842e35ddaa643023eecdcb0b0d661b5309745fdd55a5e5"
 dependencies = [
  "tea-core",
  "tea-deps",
@@ -3621,19 +3623,35 @@ dependencies = [
 
 [[package]]
 name = "tea-error"
-version = "0.4.5"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e4589145841ef1112067136d2c5b67bd8254a7e58326a4e36c5d2a75e5d31748"
+checksum = "4d65e81feccdc44b5b1592672ee41f1a624a404c791447c29a9839bb8d28536a"
 dependencies = [
  "tea-deps",
  "thiserror 2.0.3",
 ]
 
 [[package]]
+name = "tea-factors"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "ctor",
+ "derive_more",
+ "factor-macro",
+ "parking_lot",
+ "paste",
+ "polars",
+ "regex",
+ "tea-polars",
+ "tea_strategy",
+]
+
+[[package]]
 name = "tea-macros"
-version = "0.4.5"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8dbe4ffa7a863f7834397ddc40d77d47f3b1057e9bbbc2118e66cb97fa31d8f3"
+checksum = "0206bf9172863b70026a877998cd312a5abd22bab5715c84480e24293fc95704"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3642,9 +3660,9 @@ dependencies = [
 
 [[package]]
 name = "tea-map"
-version = "0.4.5"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db06adce61b126b6b46d3d76ec25b7a27e2ce54279a2c525e2994b3c3d9d2f10"
+checksum = "b4a6f29d16d8c179cb5a2817bbe52f96f1e29d30d96d5462eb109342d70c047a"
 dependencies = [
  "itertools",
  "num-traits",
@@ -3652,10 +3670,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "tea-polars"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "polars",
+ "tea_strategy",
+]
+
+[[package]]
 name = "tea-rolling"
-version = "0.4.5"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c5df7f6233702779ca003a6197c5756e4b6996e31a0528f84438b8cf3862883b"
+checksum = "f18435141f29bd9b45909ff6f0524f5b5f83ba81d23179d186582c8a14b6a15e"
 dependencies = [
  "num-traits",
  "tea-core",
@@ -3664,9 +3691,9 @@ dependencies = [
 
 [[package]]
 name = "tea-time"
-version = "0.4.5"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8e3f0dfa00217c6268c542bf250a7935de1821cb95b6cc904f487e38acebc78"
+checksum = "d14f679974f34eb3a1faa79f961676e2b724b44827c276c5312a12a23bc930ba"
 dependencies = [
  "chrono",
  "serde",
@@ -3678,7 +3705,7 @@ dependencies = [
 [[package]]
 name = "tea_strategy"
 version = "0.1.0"
-source = "git+https://github.com/Teamon9161/tea_strategy.git?branch=master#48519192b20e51943a6ad0c02fb102723f89c580"
+source = "git+https://github.com/Teamon9161/tea_strategy.git?branch=master#ef5392e72d360a80aa29617ce2da52929232d050"
 dependencies = [
  "derive_more",
  "itertools",
@@ -3688,9 +3715,9 @@ dependencies = [
 
 [[package]]
 name = "tevec"
-version = "0.4.5"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3030fe22f96ea574b830b680e6dd3ba51e67223a8501e97fb8ee485e947572eb"
+checksum = "986bb37fbac9c804a174ce11ec9f4eea8dc9b225255340c4566ac23fc3cfc43f"
 dependencies = [
  "derive_more",
  "tea-agg",
@@ -4182,7 +4209,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]

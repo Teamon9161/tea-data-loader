@@ -4,16 +4,16 @@ macro_rules! impl_by_tea_strategy {
             use ::polars::prelude::{DataType, Float64Chunked};
             let out: Float64Chunked = match fac.dtype() {
                 DataType::Int32 => {
-                    ::tea_strategy::$strategy(fac.i32()?, filters.map(Into::into).as_ref(), &self.0)$($mark)?
+                    ::tea_strategy::$strategy(fac.i32()?, filters.map(Into::into).as_ref(), (&self.0).into())$($mark)?
                 },
                 DataType::Int64 => {
-                    ::tea_strategy::$strategy(fac.i64()?, filters.map(Into::into).as_ref(), &self.0)$($mark)?
+                    ::tea_strategy::$strategy(fac.i64()?, filters.map(Into::into).as_ref(), (&self.0).into())$($mark)?
                 },
                 DataType::Float32 => {
-                    ::tea_strategy::$strategy(fac.f32()?, filters.map(Into::into).as_ref(), &self.0)$($mark)?
+                    ::tea_strategy::$strategy(fac.f32()?, filters.map(Into::into).as_ref(), (&self.0).into())$($mark)?
                 },
                 DataType::Float64 => {
-                    ::tea_strategy::$strategy(fac.f64()?, filters.map(Into::into).as_ref(), &self.0)$($mark)?
+                    ::tea_strategy::$strategy(fac.f64()?, filters.map(Into::into).as_ref(), (&self.0).into())$($mark)?
                 },
                 dtype => ::anyhow::bail!(
                     "dtype {} not supported for {}",

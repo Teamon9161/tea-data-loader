@@ -5,20 +5,20 @@ pub use tea_strategy::BollKwargs;
 
 use crate::prelude::{register_strategy, GetName, Params};
 use crate::strategy::{GetStrategyParamName, Strategy, StrategyBase};
-
+use super::Wrap;
 #[derive(StrategyBase, Clone)]
-pub struct Boll(pub BollKwargs);
+pub struct Boll(pub Wrap<BollKwargs>);
 
 impl GetStrategyParamName for Boll {
     #[inline]
     fn get_param_name(&self) -> Arc<str> {
-        format!("{:?}", self.0.params).into()
+        format!("{:?}", self.0.0.params).into()
     }
 }
 
-impl From<Params> for BollKwargs {
+impl From<Params> for Wrap<BollKwargs> {
     fn from(value: Params) -> Self {
-        match value.len() {
+        let kwargs = match value.len() {
             0 => panic!("boll strategy need a param"),
             1 => BollKwargs::new(value[0].as_usize(), 0.),
             2 => BollKwargs::new(value[0].as_usize(), value[1].as_f64()),
@@ -41,14 +41,15 @@ impl From<Params> for BollKwargs {
                 ..Default::default()
             },
             _ => panic!("Too many params for boll strategy"),
-        }
+        };
+        Wrap(kwargs)
     }
 }
 
 impl From<Params> for Boll {
     #[inline]
     fn from(value: Params) -> Self {
-        Boll(BollKwargs::from(value))
+        Boll(value.into())
     }
 }
 
@@ -70,8 +71,8 @@ impl From<BollKwargs> for NegBollKwargs {
 
 impl From<Params> for NegBollKwargs {
     fn from(value: Params) -> Self {
-        let kwargs = BollKwargs::from(value);
-        kwargs.into()
+        let kwargs = Wrap::<BollKwargs>::from(value);
+        kwargs.0.into()
     }
 }
 
@@ -94,7 +95,7 @@ pub struct NegBoll(pub NegBollKwargs);
 
 impl Strategy for NegBoll {
     fn eval_to_fac(&self, fac: &Column, filters: Option<DataFrame>) -> Result<Series> {
-        let strategy = Boll(self.0 .0.clone());
+        let strategy = Boll(Wrap(self.0 .0.clone()));
         strategy.eval_to_fac(fac, filters)
     }
 }
@@ -112,8 +113,8 @@ impl From<BollKwargs> for BollLongKwargs {
 
 impl From<Params> for BollLongKwargs {
     fn from(value: Params) -> Self {
-        let kwargs = BollKwargs::from(value);
-        kwargs.into()
+        let kwargs = Wrap::<BollKwargs>::from(value);
+        kwargs.0.into()
     }
 }
 
@@ -136,7 +137,7 @@ pub struct BollLong(pub BollLongKwargs);
 
 impl Strategy for BollLong {
     fn eval_to_fac(&self, fac: &Column, filters: Option<DataFrame>) -> Result<Series> {
-        let strategy = Boll(self.0 .0.clone());
+        let strategy = Boll(Wrap(self.0 .0.clone()));
         strategy.eval_to_fac(fac, filters)
     }
 }
@@ -146,7 +147,7 @@ pub struct BollShortKwargs(pub BollKwargs);
 
 impl From<Params> for BollShortKwargs {
     fn from(value: Params) -> Self {
-        let mut kwargs = BollKwargs::from(value);
+        let mut kwargs = Wrap::<BollKwargs>::from(value).0;
         kwargs.long_signal = kwargs.close_signal;
         BollShortKwargs(kwargs)
     }
@@ -178,7 +179,7 @@ pub struct BollShort(pub BollShortKwargs);
 
 impl Strategy for BollShort {
     fn eval_to_fac(&self, fac: &Column, filters: Option<DataFrame>) -> Result<Series> {
-        let strategy = Boll(self.0 .0.clone());
+        let strategy = Boll(Wrap(self.0 .0.clone()));
         strategy.eval_to_fac(fac, filters)
     }
 }
@@ -196,7 +197,7 @@ impl From<BollKwargs> for BollDirectKwargs {
 
 impl From<Params> for BollDirectKwargs {
     fn from(value: Params) -> Self {
-        let mut kwargs = BollKwargs::from(value);
+        let mut kwargs = Wrap::<BollKwargs>::from(value).0;
         kwargs.zscore = false;
         BollDirectKwargs(kwargs)
     }
@@ -229,7 +230,7 @@ impl From<BollKwargs> for BollDirectLongKwargs {
 
 impl From<Params> for BollDirectLongKwargs {
     fn from(value: Params) -> Self {
-        let mut kwargs = BollKwargs::from(value);
+        let mut kwargs = Wrap::<BollKwargs>::from(value).0;
         kwargs.zscore = false;
         kwargs.short_signal = kwargs.close_signal;
         BollDirectLongKwargs(kwargs)
@@ -255,7 +256,7 @@ pub struct BollDirectLong(pub BollDirectLongKwargs);
 
 impl Strategy for BollDirectLong {
     fn eval_to_fac(&self, fac: &Column, filters: Option<DataFrame>) -> Result<Series> {
-        let strategy = Boll(self.0 .0.clone());
+        let strategy = Boll(Wrap(self.0 .0.clone()));
         strategy.eval_to_fac(fac, filters)
     }
 }
@@ -274,7 +275,7 @@ impl From<BollKwargs> for BollDirectShortKwargs {
 
 impl From<Params> for BollDirectShortKwargs {
     fn from(value: Params) -> Self {
-        let mut kwargs = BollKwargs::from(value);
+        let mut kwargs = Wrap::<BollKwargs>::from(value).0;
         kwargs.zscore = false;
         kwargs.long_signal = kwargs.close_signal;
         BollDirectShortKwargs(kwargs)
@@ -300,7 +301,7 @@ pub struct BollDirectShort(pub BollDirectShortKwargs);
 
 impl Strategy for BollDirectShort {
     fn eval_to_fac(&self, fac: &Column, filters: Option<DataFrame>) -> Result<Series> {
-        let strategy = Boll(self.0 .0.clone());
+        let strategy = Boll(Wrap(self.0 .0.clone()));
         strategy.eval_to_fac(fac, filters)
     }
 }
@@ -310,7 +311,7 @@ pub struct BollDirect(pub BollDirectKwargs);
 
 impl Strategy for BollDirect {
     fn eval_to_fac(&self, fac: &Column, filters: Option<DataFrame>) -> Result<Series> {
-        let strategy = Boll(self.0 .0.clone());
+        let strategy = Boll(Wrap(self.0 .0.clone()));
         strategy.eval_to_fac(fac, filters)
     }
 }

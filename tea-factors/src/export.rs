@@ -21,6 +21,5 @@ pub(super) use super::tick::order_flow::base::*;
 pub(super) use super::{
     register_fac, register_pl_fac, ExprFactor, FactorBase, IntoFactor, Param, PlFactor, TFactor,
 };
-pub(super) use crate::export::tevec::prelude::EPS;
-pub(super) use crate::factors::GetName;
+pub(super) use crate::GetName;
 pub(super) use tea_polars::*;
