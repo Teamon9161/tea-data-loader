@@ -18,8 +18,8 @@ impl<T> Deref for Wrap<T> {
     }
 }
 
-impl<T> From<&Wrap<T>> for &T {
-    fn from(value: &Wrap<T>) -> &T {
-        &value.0
-    }
-}
+// impl<T> From<&Wrap<T>> for &T {
+//     fn from(value: &Wrap<T>) -> &T {
+//         &value.0
+//     }
+// }

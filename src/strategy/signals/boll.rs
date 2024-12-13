@@ -3,16 +3,16 @@ use factor_macro::StrategyBase;
 use polars::prelude::*;
 pub use tea_strategy::BollKwargs;
 
+use super::Wrap;
 use crate::prelude::{register_strategy, GetName, Params};
 use crate::strategy::{GetStrategyParamName, Strategy, StrategyBase};
-use super::Wrap;
 #[derive(StrategyBase, Clone)]
 pub struct Boll(pub Wrap<BollKwargs>);
 
 impl GetStrategyParamName for Boll {
     #[inline]
     fn get_param_name(&self) -> Arc<str> {
-        format!("{:?}", self.0.0.params).into()
+        format!("{:?}", self.0 .0.params).into()
     }
 }
 
@@ -54,7 +54,7 @@ impl From<Params> for Boll {
 }
 
 impl Strategy for Boll {
-    super::macros::impl_by_tea_strategy!(boll);
+    super::macros::impl_by_tea_strategy!(wrap boll);
 }
 
 #[derive(Clone)]
