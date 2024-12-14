@@ -1,2 +1,5 @@
-mod polars_ext;
-pub use polars_ext::{SeriesExt, ExprExt, where_};
+mod expr;
+mod series;
+
+pub use expr::{where_, ExprExt};
+pub use series::SeriesExt;

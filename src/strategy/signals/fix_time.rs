@@ -2,11 +2,12 @@ use factor_macro::StrategyBase;
 use polars::prelude::*;
 pub use tea_strategy::FixTimeKwargs;
 
+use super::Wrap;
 use crate::prelude::{register_strategy, GetName, Params};
 use crate::strategy::{GetStrategyParamName, Strategy, StrategyBase};
 
 #[derive(StrategyBase, Clone)]
-pub struct FixTime(pub FixTimeKwargs);
+pub struct FixTime(pub Wrap<FixTimeKwargs>);
 
 impl GetStrategyParamName for FixTime {
     #[inline]
@@ -15,24 +16,24 @@ impl GetStrategyParamName for FixTime {
     }
 }
 
-impl From<Params> for FixTimeKwargs {
+impl From<Params> for Wrap<FixTimeKwargs> {
     fn from(value: Params) -> Self {
         match value.len() {
             0 => panic!("fix time strategy need a param"),
-            1 => FixTimeKwargs {
+            1 => Wrap(FixTimeKwargs {
                 n: value[0].as_usize(),
                 pos_map: None,
                 extend_time: true,
-            },
+            }),
             2 => panic!("fix time strategy does not support 2 params"),
-            3 => FixTimeKwargs {
+            3 => Wrap(FixTimeKwargs {
                 n: value[0].as_usize(),
                 pos_map: Some((
                     vec![value[1].as_f64(), value[2].as_f64()],
                     vec![-1., 0., 1.],
                 )),
                 extend_time: true,
-            },
+            }),
             _ => panic!("Too many params for fix time strategy"),
         }
     }
@@ -41,7 +42,7 @@ impl From<Params> for FixTimeKwargs {
 impl From<Params> for FixTime {
     #[inline]
     fn from(value: Params) -> Self {
-        FixTime(FixTimeKwargs::from(value))
+        FixTime(value.into())
     }
 }
 
@@ -105,7 +106,7 @@ impl From<Params> for NegFixTime {
 
 impl Strategy for NegFixTime {
     fn eval_to_fac(&self, fac: &Column, filters: Option<DataFrame>) -> anyhow::Result<Series> {
-        FixTime(self.0 .0.clone()).eval_to_fac(fac, filters)
+        FixTime(Wrap(self.0 .0.clone())).eval_to_fac(fac, filters)
     }
 }
 
@@ -141,7 +142,7 @@ impl From<Params> for NegFixTimeLong {
 
 impl Strategy for NegFixTimeLong {
     fn eval_to_fac(&self, fac: &Column, filters: Option<DataFrame>) -> anyhow::Result<Series> {
-        FixTime(self.0 .0.clone()).eval_to_fac(fac, filters)
+        FixTime(Wrap(self.0 .0.clone())).eval_to_fac(fac, filters)
     }
 }
 #[derive(Clone)]
@@ -176,7 +177,7 @@ impl From<Params> for NegFixTimeShort {
 
 impl Strategy for NegFixTimeShort {
     fn eval_to_fac(&self, fac: &Column, filters: Option<DataFrame>) -> anyhow::Result<Series> {
-        FixTime(self.0 .0.clone()).eval_to_fac(fac, filters)
+        FixTime(Wrap(self.0 .0.clone())).eval_to_fac(fac, filters)
     }
 }
 
