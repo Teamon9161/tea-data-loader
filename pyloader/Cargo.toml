@@ -1,7 +1,7 @@
 [package]
 name = "pyloader"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
@@ -9,7 +9,7 @@ name = "pyloader"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.23", features = [
+pyo3 = { version = "0.22", features = [
     "anyhow",
     "chrono",
     "abi3-py38",
@@ -24,7 +24,7 @@ tea-data-loader = { path = "../", features = [
     "dtype-full",
     "python",
 ] }
-pyo3-polars = { version = "0.20", features = [
+pyo3-polars = { version = "0.19", features = [
     "derive",
     "dtype-full",
     "lazy",

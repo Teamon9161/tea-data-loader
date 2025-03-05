@@ -16,8 +16,8 @@ order-book-fac = ["fac-ext"]
 order-flow-fac = ["fac-ext"]
 
 [dependencies]
-pyo3 = { version = "0.23", optional = true, features = ["anyhow"] }
-pyo3-polars = { version = "0.20", optional = true, features = [
+pyo3 = { version = "0.22", optional = true, features = ["anyhow", "abi3-py38"] }
+pyo3-polars = { version = "0.19", optional = true, features = [
     "dtype-full",
     "lazy",
 ] }

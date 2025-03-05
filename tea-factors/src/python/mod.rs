@@ -8,17 +8,42 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::pybacked::PyBackedStr;
 use pyo3_polars::PyExpr;
-use crate::{Param, PlAggFactor, PlFactor};
-use crate::prelude::Result;
-// use crate::utils::Wrap;
 
-#[pyclass(name="Factor", subclass)]
+use crate::prelude::Result;
+use crate::{ExprFactor, NamedExprFactor, Param, PlAggFactor, PlFactor, POLARS_FAC_MAP};
+
+#[pyclass(name = "Factor", subclass)]
 pub struct PyFactor(pub Arc<dyn PlFactor>);
 
 #[pymethods]
 impl PyFactor {
+    #[new]
+    fn new(name: Bound<'_, PyAny>, param: Param) -> PyResult<Self> {
+        if let Ok(name) = name.extract::<PyBackedStr>() {
+            if let Some(factor) = POLARS_FAC_MAP.lock().get(&*name) {
+                Ok(Self(factor(param)))
+            } else {
+                Err(PyValueError::new_err(format!("Factor not found: {}", name)))
+            }
+        } else {
+            let fac_class = name;
+            let pyexpr = fac_class.call_method0("expr")?.extract::<PyExpr>()?;
+            if let Ok(fac_name) = fac_class.getattr("name") {
+                let py_name = fac_name.extract::<PyBackedStr>()?;
+                let factor = Arc::new(NamedExprFactor {
+                    name: (&*py_name).into(),
+                    expr: pyexpr.0.alias(&*py_name),
+                });
+                Ok(Self(factor))
+            } else {
+                let factor = Arc::new(ExprFactor(pyexpr.0));
+                Ok(Self(factor))
+            }
+        }
+    }
+
     fn expr(&self) -> Result<PyExpr> {
-        Ok(PyExpr(self.0.try_expr()?))
+        Ok(PyExpr(self.0.try_expr().unwrap()))
     }
 
     fn __repr__(&self) -> String {

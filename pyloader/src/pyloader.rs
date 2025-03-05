@@ -41,10 +41,20 @@ impl From<DataLoader> for PyLoader {
 ///
 /// * `Eager` - Contains a `PyDataFrame` representing an eagerly evaluated DataFrame
 /// * `Lazy` - Contains a `PyLazyFrame` representing a lazily evaluated DataFrame
-#[derive(FromPyObject, IntoPyObject)]
+#[derive(FromPyObject)]
+// #[derive(FromPyObject, IntoPyObject)]
 pub enum PyFrame {
     Eager(PyDataFrame),
     Lazy(PyLazyFrame),
+}
+
+impl pyo3::IntoPy<PyObject> for PyFrame {
+    fn into_py(self, py: Python) -> PyObject {
+        match self {
+            PyFrame::Eager(df) => df.into_py(py),
+            PyFrame::Lazy(lf) => lf.into_py(py),
+        }
+    }
 }
 
 impl From<PyFrame> for Frame {
@@ -122,8 +132,8 @@ impl PyLoader {
     ///
     /// A `Result` containing the `SchemaRef` of the first data frame or an error.
     /// If the `DataLoader` is empty, returns an empty `SchemaRef`.
-    fn schema<'py>(&'py self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
-        PySchema(self.0.schema()?).into_pyobject(py)
+    fn schema<'py>(&'py self, py: Python<'py>) -> PyResult<PyObject> {
+        Ok(PySchema(self.0.schema()?).into_py(py))
     }
 
     /// Returns a list of column names from the first data frame in the `PyLoader`.
@@ -277,20 +287,20 @@ impl PyLoader {
     #[getter]
     /// Returns the list of data frames.
     fn get_dfs<'py>(&'py self, py: Python<'py>) -> PyResult<Bound<'py, PyList>> {
-        PyList::new(
+        Ok(PyList::new_bound(
             py,
             self.0
                 .dfs
                 .iter()
                 .map(|df| frame_into_py(df.clone(), py).unwrap()),
-        )
+        ))
     }
 
     fn __getitem__<'py>(
         &'py self,
         obj: &Bound<'py, PyAny>,
         py: Python<'py>,
-    ) -> PyResult<Bound<'py, PyAny>> {
+    ) -> PyResult<PyObject> {
         let df = if let Ok(idx) = obj.extract::<Cow<'_, str>>() {
             self.0[idx.as_ref()].clone()
         } else {
@@ -389,15 +399,15 @@ impl PyLoader {
         mut slf: PyRefMut<'_, Self>,
         par: bool,
         inplace: bool,
-    ) -> PyResult<Bound<'_, PyLoader>> {
+    ) -> PyResult<PyObject> {
         let py = slf.py();
         if inplace {
             slf.0 = slf.0.clone().collect(par)?;
-            Ok(slf.into_pyobject(py).unwrap())
+            Ok(slf.into_py(py))
         } else {
             let mut out = slf.clone();
             out.0 = out.0.collect(par)?;
-            out.into_pyobject(py)
+            Ok(out.into_py(py))
         }
     }
 

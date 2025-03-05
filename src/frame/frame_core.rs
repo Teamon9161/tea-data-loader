@@ -107,7 +107,7 @@ impl Frame {
     #[inline]
     pub fn schema(&mut self) -> Result<SchemaRef> {
         match self {
-            Frame::Eager(df) => Ok(df.schema().clone()),
+            Frame::Eager(df) => Ok(df.schema().clone().into()),
             Frame::Lazy(df) => Ok(df.collect_schema()?),
         }
     }

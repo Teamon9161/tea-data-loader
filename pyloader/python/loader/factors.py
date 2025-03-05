@@ -1,1 +1,8 @@
-from .loader import AggOfi, AggObOfi, AggBsIntensity, AggCancelRate  # noqa: F401
+from .loader import (  # noqa: F401
+    AggBsIntensity,
+    AggCancelRate,
+    AggFactor,
+    AggObOfi,
+    AggOfi,
+    Factor,
+)

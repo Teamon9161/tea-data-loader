@@ -163,6 +163,12 @@ impl PlFactor for Arc<dyn PlFactor> {
 #[derive(Clone)]
 pub struct ExprFactor(pub Expr);
 
+#[derive(Clone)]
+pub struct NamedExprFactor {
+    pub name: Arc<str>,
+    pub expr: Expr,
+}
+
 impl From<Param> for ExprFactor {
     #[inline]
     fn from(_param: Param) -> Self {
@@ -175,11 +181,13 @@ impl FactorBase for ExprFactor {
     fn fac_name() -> Arc<str> {
         "expr".into()
     }
+}
 
-    // #[inline]
-    // fn new(_param: impl Into<Param>) -> Self {
-    //     panic!("ExprFactor::new should not be called directly")
-    // }
+impl FactorBase for NamedExprFactor {
+    #[inline]
+    fn fac_name() -> Arc<str> {
+        "named_expr".into()
+    }
 }
 
 impl std::fmt::Debug for ExprFactor {
@@ -188,10 +196,23 @@ impl std::fmt::Debug for ExprFactor {
     }
 }
 
+impl std::fmt::Debug for NamedExprFactor {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.name)
+    }
+}
+
 impl PlFactor for ExprFactor {
     #[inline]
     fn try_expr(&self) -> Result<Expr> {
         Ok(self.0.clone())
+    }
+}
+
+impl PlFactor for NamedExprFactor {
+    #[inline]
+    fn try_expr(&self) -> Result<Expr> {
+        Ok(self.expr.clone())
     }
 }
 
