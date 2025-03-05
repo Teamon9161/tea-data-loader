@@ -62,9 +62,9 @@ impl TFactor for Null {
     }
 }
 
-impl Into<Expr> for Null {
+impl From<Null> for Expr {
     #[inline]
-    fn into(self) -> Expr {
+    fn from(_val: Null) -> Self {
         PlNull {}.lit()
     }
 }

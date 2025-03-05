@@ -310,7 +310,7 @@ impl Param {
     /// Converts the parameter to str.
     pub fn as_str(&self) -> &str {
         match self {
-            Param::Str(v) => &*v,
+            Param::Str(v) => v,
             _ => panic!("param is not str"),
         }
     }

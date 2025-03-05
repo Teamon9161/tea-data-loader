@@ -1,15 +1,15 @@
 use std::sync::LazyLock;
 
 use polars::prelude::*;
-use tea_strategy::tevec::prelude::{CorrMethod, Vec1Create, EPS};
+use tea_strategy::tevec::prelude::{CorrMethod, EPS, Vec1Create};
 
 use super::linspace;
 use crate::prelude::*;
 
 pub(super) fn stable_corr(a: Expr, b: Expr, method: CorrMethod) -> Expr {
     let corr = match method {
-        CorrMethod::Pearson => pearson_corr(a, b, 1),
-        CorrMethod::Spearman => spearman_rank_corr(a, b, 1, true),
+        CorrMethod::Pearson => pearson_corr(a, b),
+        CorrMethod::Spearman => spearman_rank_corr(a, b, true),
     };
     corr.clip(-0.3.lit(), 0.3.lit()).fill_nan(NULL.lit())
 }
@@ -24,12 +24,12 @@ pub(super) fn get_ts_group_by_value(fac: Expr, group: usize) -> Expr {
 
     const GROUP_10_LABELS: [f64; 10] = [-1.0, -0.8, -0.6, -0.4, -0.2, 0.2, 0.4, 0.6, 0.8, 1.0];
 
-    const GROUP_20_LABEL_SERIES: LazyLock<Series> = LazyLock::new(|| {
+    static GROUP_20_LABEL_SERIES: LazyLock<Series> = LazyLock::new(|| {
         let labels: Vec<f64> = GROUP_20_LABELS.into();
         Series::from_vec("group".into(), labels)
     });
 
-    const GROUP_10_LABEL_SERIES: LazyLock<Series> = LazyLock::new(|| {
+    static GROUP_10_LABEL_SERIES: LazyLock<Series> = LazyLock::new(|| {
         let labels: Vec<f64> = GROUP_10_LABELS.into();
         Series::from_vec("group".into(), labels)
     });

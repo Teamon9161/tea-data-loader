@@ -44,7 +44,7 @@ impl PlFactor for Rsi {
         let down = iif(diff.lt(0), diff.abs(), 0);
         let up_ma = up.mean(self.0);
         let down_ma = down.mean(self.0);
-        (up_ma.clone() / (up_ma + down_ma)).try_expr()
+        (up_ma / (up_ma + down_ma)).try_expr()
     }
 }
 

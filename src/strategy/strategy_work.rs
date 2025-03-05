@@ -1,13 +1,13 @@
 use std::str::FromStr;
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use polars::lazy::dsl;
 use polars::prelude::*;
 
 use super::filters::FILTER_SYMBOL;
 use super::stop_filters::STOP_FILTER_SYMBOL;
-use super::{Strategy, STRATEGY_MAP};
-use crate::factors::{parse_pl_fac, GetName, Params};
+use super::{STRATEGY_MAP, Strategy};
+use crate::factors::{GetName, Params, parse_pl_fac};
 use crate::prelude::PlFactor;
 use crate::strategy::{Filters, StopFilters};
 // const weight_func_symbol: &str = "@";
@@ -38,7 +38,7 @@ impl std::fmt::Debug for StrategyWork {
         } else if !self.is_null_fac() {
             format!("{}__{}", self.fac, self.strategy.name())
         } else {
-            format!("{}", self.strategy.name())
+            self.strategy.name()
         };
         let name = if let Some(filters) = &self.filters {
             format!("{}{}{}", name, FILTER_SYMBOL, filters)

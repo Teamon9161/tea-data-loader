@@ -128,7 +128,7 @@ pub trait ExprExt {
     /// # Arguments
     ///
     /// * `min_periods` - The minimum number of observations required to calculate the half-life.
-    ///                   If None, defaults to half the length of the series.
+    ///   If None, defaults to half the length of the series.
     fn half_life(self, min_periods: Option<usize>) -> Self;
 }
 
@@ -140,7 +140,7 @@ impl ExprExt for Expr {
             .then(self.clone() + other.clone())
             .otherwise(NULL.lit());
         when(res.clone().is_null())
-            .then(sum_horizontal(&[self, other]).unwrap())
+            .then(sum_horizontal(&[self, other], true).unwrap())
             .otherwise(res)
     }
 
@@ -262,9 +262,9 @@ impl ExprExt for Expr {
                 let s = series_slice[0].as_materialized_series();
                 let bin = series_slice[1].as_materialized_series();
                 let labels = series_slice[2].as_materialized_series();
-                Ok(s.tcut(bin, labels, right, add_bounds)
+                s.tcut(bin, labels, right, add_bounds)
                     .map(|s| Some(s.into_column()))
-                    .map_err(|e| PolarsError::ComputeError(e.to_string().into()))?)
+                    .map_err(|e| PolarsError::ComputeError(e.to_string().into()))
             },
             &[bin, labels],
             GetOutput::from_type(DataType::Float64),
@@ -277,7 +277,7 @@ impl ExprExt for Expr {
                 Series::from_any_values_and_dtype(
                     s.name().clone(),
                     &[s.as_materialized_series().vfirst()],
-                    &s.dtype(),
+                    s.dtype(),
                     false,
                 )
                 .map(|s| Some(s.into_column()))
@@ -293,7 +293,7 @@ impl ExprExt for Expr {
                 Series::from_any_values_and_dtype(
                     s.name().clone(),
                     &[s.as_materialized_series().vlast()],
-                    &s.dtype(),
+                    s.dtype(),
                     false,
                 )
                 .map(|s| Some(s.into_column()))

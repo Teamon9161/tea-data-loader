@@ -40,7 +40,7 @@ where
         let expr = self.fac.try_expr()?;
         let n = self.param;
         if n == 1 {
-            return Ok(expr);
+            Ok(expr)
         } else {
             let mean_expr = expr.rolling_mean(RollingOptionsFixedWindow {
                 window_size: n,

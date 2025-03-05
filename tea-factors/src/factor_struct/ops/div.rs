@@ -127,6 +127,6 @@ where
 {
     #[inline]
     fn eval(&self, df: &DataFrame) -> Result<Series> {
-        Ok((self.left.eval(df)?.protect_div(self.right.eval(df)?))?)
+        self.left.eval(df)?.protect_div(self.right.eval(df)?)
     }
 }

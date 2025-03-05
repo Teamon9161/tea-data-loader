@@ -107,7 +107,7 @@ impl Frame {
     #[inline]
     pub fn schema(&mut self) -> Result<SchemaRef> {
         match self {
-            Frame::Eager(df) => Ok(df.schema().into()),
+            Frame::Eager(df) => Ok(df.schema().clone()),
             Frame::Lazy(df) => Ok(df.collect_schema()?),
         }
     }
@@ -157,7 +157,7 @@ impl Frame {
     /// simultaneously, not iteratively. If `strict` is true, all columns in `existing`
     /// must be present in the `LazyFrame` when `rename` is called; otherwise, only
     /// those columns that are actually found will be renamed (others will be ignored).
-
+    ///
     /// # Errors
     ///
     /// Returns an error if there's an issue renaming columns in an eager Frame.

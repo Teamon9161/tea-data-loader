@@ -1,11 +1,8 @@
 use pyo3::prelude::*;
-use tea_data_loader::factors::map::*;
-use tea_data_loader::factors::*;
+use crate::map::*;
+use crate::prelude::*;
 use super::PyFactor;
 use std::sync::Arc;
-
-use crate::utils::Wrap;
-
 
 macro_rules! define_py_typ_class {
     ($name:ident, $inner:ident, $str_inner: expr) => {
@@ -15,9 +12,9 @@ macro_rules! define_py_typ_class {
         #[pymethods]
         impl $name {
             #[new]
-            #[pyo3(signature = (param=Wrap(Param::None)))]
-            fn new(param: Wrap<Param>) -> (Self, PyFactor) {
-                let fac = $inner::new(param.0);
+            #[pyo3(signature = (param=Param::None))]
+            fn new(param: Param) -> (Self, PyFactor) {
+                let fac = $inner::new(param);
                 ($name, PyFactor(Arc::new(fac)))
             }
 

@@ -70,11 +70,13 @@ pub trait FactorExt: FactorBase {
     }
 
     #[inline]
+    #[allow(clippy::wrong_self_convention)]
     fn is_none(self) -> IsNoneFactor<Self> {
         is_none::FactorIsNone(self).into()
     }
 
     #[inline]
+    #[allow(clippy::wrong_self_convention)]
     fn is_not_none(self) -> NotNoneFactor<Self> {
         is_none::FactorNotNone(self).into()
     }
@@ -342,7 +344,7 @@ pub trait FactorExt: FactorBase {
     /// # Arguments
     ///
     /// * `param` - A parameter that can be converted into `Param`, specifying the
-    ///             period over which to calculate the mean.
+    ///   period over which to calculate the mean.
     ///
     /// # Returns
     ///
@@ -362,7 +364,7 @@ pub trait FactorExt: FactorBase {
     /// # Arguments
     ///
     /// * `param` - A parameter that can be converted into `Param`, specifying the
-    ///             period over which to calculate the mean.
+    ///   period over which to calculate the mean.
     /// * `min_periods` - The minimum number of periods required to have a value.
     ///
     /// # Returns
@@ -382,8 +384,8 @@ pub trait FactorExt: FactorBase {
     ///
     /// # Arguments
     ///
-    /// * `param` - A parameter that can be converted into `Param`, specifying the  
-    ///             window size for the rolling sum.
+    /// * `param` - A parameter that can be converted into `Param`, specifying the
+    ///   window size for the rolling sum.
     ///
     /// # Returns
     ///
@@ -403,7 +405,7 @@ pub trait FactorExt: FactorBase {
     /// # Arguments
     ///
     /// * `param` - A parameter that can be converted into `Param`, specifying the
-    ///             window size for the rolling sum.
+    ///   window size for the rolling sum.
     /// * `min_periods` - The minimum number of periods required to have a value.
     ///
     /// # Returns
@@ -424,7 +426,7 @@ pub trait FactorExt: FactorBase {
     /// # Arguments
     ///
     /// * `param` - A parameter that can be converted into `Param`, specifying the
-    ///             window size for the rolling maximum.
+    ///   window size for the rolling maximum.
     ///
     /// # Returns
     ///
@@ -444,7 +446,7 @@ pub trait FactorExt: FactorBase {
     /// # Arguments
     ///
     /// * `param` - A parameter that can be converted into `Param`, specifying the
-    ///             window size for the rolling minimum.
+    ///   window size for the rolling minimum.
     ///
     /// # Returns
     ///
@@ -467,7 +469,7 @@ pub trait FactorExt: FactorBase {
     /// # Arguments
     ///
     /// * `param` - A parameter that can be converted into `Param`, specifying the
-    ///             window size for the rolling normalization.
+    ///   window size for the rolling normalization.
     ///
     /// # Returns
     ///
@@ -487,7 +489,7 @@ pub trait FactorExt: FactorBase {
     /// # Arguments
     ///
     /// * `param` - A parameter that can be converted into `Param`, representing the period
-    ///             over which the percentage change is calculated.
+    ///   over which the percentage change is calculated.
     ///
     /// # Returns
     ///

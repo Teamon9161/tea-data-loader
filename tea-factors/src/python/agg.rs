@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
 use pyo3::prelude::*;
-use tea_data_loader::factors::tick::both::*;
-use tea_data_loader::factors::tick::order_book::*;
-use tea_data_loader::factors::tick::order_flow::*;
+use crate::tick::both::*;
+use crate::tick::order_book::*;
+use crate::tick::order_flow::*;
 
 use super::PyAggFactor;
 

@@ -23,17 +23,19 @@ impl PlFactor for Typ {
             col("open"),
             col("high"),
             col("close"),
-            col("low"),
-        ])?)
+            col("low")
+        ],
+        true)?)
     }
 }
 
 impl TFactor for Typ {
     #[inline]
     fn eval(&self, df: &DataFrame) -> Result<Series> {
-        use polars::frame::NullStrategy;
+        use polars::prelude::{SumMeanHorizontal, NullStrategy};
         df.select(["close", "open", "high", "low"])?
             .mean_horizontal(NullStrategy::Ignore)?
+            .map(|s| s.as_materialized_series().clone())
             .ok_or_else(|| anyhow::Error::msg("Can not find data columns"))
     }
 }

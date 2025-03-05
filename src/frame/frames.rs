@@ -235,13 +235,14 @@ impl Frames {
             .map(|(key, method)| {
                 let expr = match method {
                     AggMethod::Mean => mean_horizontal(
-                        dfs.get_column(key).map(column_to_expr).collect::<Vec<_>>(),
+                        dfs.get_column(key).map(column_to_expr).collect::<Vec<_>>(), true
                     )?,
                     AggMethod::WeightMean(weight) => {
                         let weight_sum = sum_horizontal(
                             dfs.get_column(&weight)
                                 .map(column_to_expr)
                                 .collect::<Vec<_>>(),
+                                true
                         )?;
                         let all_sum = sum_horizontal(
                             dfs.iter()
@@ -253,6 +254,7 @@ impl Frames {
                                     column_into_expr(res)
                                 })
                                 .collect::<Vec<_>>(),
+                                true
                         )?;
                         (all_sum / weight_sum).alias(key.as_ref())
                     },
@@ -263,7 +265,7 @@ impl Frames {
                         min_horizontal(dfs.get_column(key).map(column_to_expr).collect::<Vec<_>>())?
                     },
                     AggMethod::Sum => {
-                        sum_horizontal(dfs.get_column(key).map(column_to_expr).collect::<Vec<_>>())?
+                        sum_horizontal(dfs.get_column(key).map(column_to_expr).collect::<Vec<_>>(), true)?
                     },
                     AggMethod::First => {
                         let res = dfs[0].as_eager().unwrap().column(key.as_ref()).unwrap();

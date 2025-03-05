@@ -74,6 +74,7 @@ impl PlFactor for ObSlopeFine {
                         ((Ask::fac(level) - MID) * (vi.pow(2) - vi_1.pow(2))).expr()
                     })
                     .collect::<Vec<_>>(),
+                    true
             )?
             .protect_div(sum_horizontal(
                 (1..=max_level)
@@ -83,6 +84,7 @@ impl PlFactor for ObSlopeFine {
                         vi.pow(3) - vi_1.pow(3)
                     })
                     .collect::<Vec<_>>(),
+                    true
             )?);
         let bid_slope = SLOPE_FINE_PARAM.lit()
             * sum_horizontal(
@@ -93,6 +95,7 @@ impl PlFactor for ObSlopeFine {
                         ((Bid::fac(level) - MID) * (vi.pow(2) - vi_1.pow(2))).expr()
                     })
                     .collect::<Vec<_>>(),
+                    true
             )?
             .protect_div(sum_horizontal(
                 (1..=max_level)
@@ -102,6 +105,7 @@ impl PlFactor for ObSlopeFine {
                         vi.pow(3) - vi_1.pow(3)
                     })
                     .collect::<Vec<_>>(),
+                    true
             )?);
         // 因为bid slope为负值，所以直接加上bid slope即可
         let expr = ask_slope + bid_slope;

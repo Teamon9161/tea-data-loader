@@ -4,10 +4,10 @@ use pyo3::prelude::*;
 use pyo3_polars::{PyDataFrame, PyLazyFrame};
 use tea_data_loader::prelude::Frame;
 
-pub fn frame_into_py(df: Frame, py: Python) -> PyObject {
+pub fn frame_into_py(df: Frame, py: Python) -> PyResult<Bound<PyAny>> {
     match df {
-        Frame::Eager(df) => PyDataFrame(df).into_py(py),
-        Frame::Lazy(lf) => PyLazyFrame(lf).into_py(py),
+        Frame::Eager(df) => PyDataFrame(df).into_pyobject(py),
+        Frame::Lazy(lf) => PyLazyFrame(lf).into_pyobject(py),
     }
 }
 

@@ -258,13 +258,14 @@ impl DataLoader {
                 symbols.push(arc_symbol);
                 self.dfs.push(frame.into());
             }
+        } else if self.is_empty() {
+            self.symbols = Some(vec![symbol.into()]);
+            self.dfs.push(frame.into());
         } else {
-            if self.is_empty() {
-                self.symbols = Some(vec![symbol.into()]);
-                self.dfs.push(frame.into());
-            } else {
-                bail!("DataLoader should have symbol names when insert a new symbol, cannot insert new symbol: {}, ", symbol);
-            }
+            bail!(
+                "DataLoader should have symbol names when insert a new symbol, cannot insert new symbol: {}, ",
+                symbol
+            );
         }
         Ok(self)
     }

@@ -25,7 +25,7 @@ fn get_amt_quantile(window: &'static str) -> Vec<Expr> {
         .into_iter()
         .map(|q| {
             let f = OrderAmtQuantile(q, window);
-            f.expr().alias(&f.name())
+            f.expr().alias(f.name())
         })
         .collect()
 }
@@ -50,8 +50,8 @@ fn get_trade_ytm(
         if let Some(date) = date {
             let date = NaiveDate::from_ymd_opt(1970, 1, 1).unwrap() + Days::new(date as u64);
             let code = code.unwrap();
-            let current_code = if bond.is_some() {
-                bond.as_ref().unwrap().code()
+            let current_code = if let Some(bond) = &bond {
+                bond.code()
             } else {
                 "__empty__"
             };
@@ -74,7 +74,7 @@ fn get_trade_ytm(
                         None,
                     )
                     .unwrap_or(f64::NAN)
-                    * 1000_000.0) // 100 * 10000
+                    * 1_000_000.0) // 100 * 10000
                     .round()
                     / 10000.0
             });
@@ -181,13 +181,13 @@ impl DataLoader {
             .with_columns(&preprocess_exprs)
             .group_by_stable([col("symbol"), col("time")])
             .agg([
-                order_vol.clone().sum().alias(&ORDER_VOL.name()),
+                order_vol.clone().sum().alias(ORDER_VOL.name()),
                 ((order_price.clone() * order_vol.clone()).sum() / order_vol.sum())
-                    .alias(&ORDER_PRICE.name()),
+                    .alias(ORDER_PRICE.name()),
                 when(order_ytm.clone().count().eq(1))
                     .then(order_ytm.clone().first())
                     .otherwise(NULL.lit())
-                    .alias(&ORDER_YTM.name()),
+                    .alias(ORDER_YTM.name()),
             ])
             .collect()?;
         // 对于均价，推断出其对应的ytm
@@ -216,7 +216,7 @@ impl DataLoader {
                 when(order_ytm.clone().is_null())
                     .then(col("infer_ytm"))
                     .otherwise(order_ytm)
-                    .alias(&ORDER_YTM.name()),
+                    .alias(ORDER_YTM.name()),
                 col("time").alias("order_time"),
                 ORDER_VOL.expr().cast(DataType::Float64), // 调整数据类型，i32类型如果对较长窗口滚动求和，可能会溢出
             ])?
@@ -254,7 +254,7 @@ impl DataLoader {
                     },
                 )?;
                 // 对于同一笔交易，保证只拼到第一个盘口
-                let ot = col(&ORDER_TIME.name());
+                let ot = col(ORDER_TIME.name());
                 let duplicate_cond = ot
                     .clone()
                     .eq(ot.clone().shift(1.lit()))

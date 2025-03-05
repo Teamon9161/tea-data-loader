@@ -12,6 +12,8 @@ mod path_finder;
 pub mod export;
 // pub mod factors;
 pub use tea_factors as factors;
+#[cfg(feature = "python")]
+pub use tea_factors::python as pyfactors;
 pub mod prelude;
 pub mod strategy;
 
@@ -33,11 +35,7 @@ pub static POOL: LazyLock<ThreadPool> = LazyLock::new(|| {
                     let n = std::thread::available_parallelism()
                         .unwrap_or_else(|_| std::num::NonZeroUsize::new(1).unwrap())
                         .get();
-                    if n >= 4 {
-                        n - 1
-                    } else {
-                        n
-                    }
+                    if n >= 4 { n - 1 } else { n }
                 }),
         )
         .thread_name(move |i| format!("{}-{}", thread_name, i))

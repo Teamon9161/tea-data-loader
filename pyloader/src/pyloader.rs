@@ -41,19 +41,10 @@ impl From<DataLoader> for PyLoader {
 ///
 /// * `Eager` - Contains a `PyDataFrame` representing an eagerly evaluated DataFrame
 /// * `Lazy` - Contains a `PyLazyFrame` representing a lazily evaluated DataFrame
-#[derive(FromPyObject)]
+#[derive(FromPyObject, IntoPyObject)]
 pub enum PyFrame {
     Eager(PyDataFrame),
     Lazy(PyLazyFrame),
-}
-
-impl IntoPy<PyObject> for PyFrame {
-    fn into_py(self, py: Python<'_>) -> PyObject {
-        match self {
-            PyFrame::Eager(df) => df.into_py(py),
-            PyFrame::Lazy(lf) => lf.into_py(py),
-        }
-    }
 }
 
 impl From<PyFrame> for Frame {
@@ -131,8 +122,8 @@ impl PyLoader {
     ///
     /// A `Result` containing the `SchemaRef` of the first data frame or an error.
     /// If the `DataLoader` is empty, returns an empty `SchemaRef`.
-    fn schema(&self, py: Python<'_>) -> PyResult<PyObject> {
-        Ok(PySchema(self.0.schema()?).into_py(py))
+    fn schema<'py>(&'py self, py: Python<'py>) -> PyResult<Bound<'py, PyDict>> {
+        PySchema(self.0.schema()?).into_pyobject(py)
     }
 
     /// Returns a list of column names from the first data frame in the `PyLoader`.
@@ -285,14 +276,21 @@ impl PyLoader {
 
     #[getter]
     /// Returns the list of data frames.
-    fn get_dfs<'py>(&'py self, py: Python<'py>) -> Bound<'py, PyList> {
-        PyList::new_bound(
+    fn get_dfs<'py>(&'py self, py: Python<'py>) -> PyResult<Bound<'py, PyList>> {
+        PyList::new(
             py,
-            self.0.dfs.iter().map(|df| frame_into_py(df.clone(), py)),
+            self.0
+                .dfs
+                .iter()
+                .map(|df| frame_into_py(df.clone(), py).unwrap()),
         )
     }
 
-    fn __getitem__(&self, obj: &Bound<'_, PyAny>, py: Python<'_>) -> PyObject {
+    fn __getitem__<'py>(
+        &'py self,
+        obj: &Bound<'py, PyAny>,
+        py: Python<'py>,
+    ) -> PyResult<Bound<'py, PyAny>> {
         let df = if let Ok(idx) = obj.extract::<Cow<'_, str>>() {
             self.0[idx.as_ref()].clone()
         } else {
@@ -387,15 +385,19 @@ impl PyLoader {
     /// # Returns
     ///
     /// A `PyResult` containing the modified `PyLoader` instance or an error.
-    fn collect(mut slf: PyRefMut<'_, Self>, par: bool, inplace: bool) -> PyResult<PyObject> {
+    fn collect(
+        mut slf: PyRefMut<'_, Self>,
+        par: bool,
+        inplace: bool,
+    ) -> PyResult<Bound<'_, PyLoader>> {
         let py = slf.py();
         if inplace {
             slf.0 = slf.0.clone().collect(par)?;
-            Ok(slf.into_py(py))
+            Ok(slf.into_pyobject(py).unwrap())
         } else {
             let mut out = slf.clone();
             out.0 = out.0.collect(par)?;
-            Ok(out.into_py(py))
+            out.into_pyobject(py)
         }
     }
 
@@ -596,6 +598,7 @@ impl PyLoader {
     /// - If the `PyLoader` is empty, it returns the original instance.
     /// - For large numbers of frames (more than `POST_ALIGN_COLLECT_NUM`), it may need to collect eagerly to avoid stack overflow.
     /// - The method sorts the resulting frames based on the alignment columns.
+    #[pyo3(signature=(on, how=None))]
     fn align(&self, on: Vec<PyExpr>, how: Option<Wrap<JoinType>>) -> PyResult<Self> {
         let on: Vec<Expr> = on.into_iter().map(|e| e.0).collect();
         Ok(self.0.clone().align(on, how.map(|h| h.0))?.into())

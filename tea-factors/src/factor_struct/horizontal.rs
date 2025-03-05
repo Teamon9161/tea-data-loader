@@ -26,7 +26,7 @@ impl<F: GetName, const N: usize> std::fmt::Debug for HSumFactor<F, N> {
 impl<F: GetName + Clone, const N: usize> FactorBase for HSumFactor<F, N> {
     #[inline]
     fn fac_name() -> Arc<str> {
-        format!("hsum").into()
+        "hsum".into()
     }
 }
 
@@ -39,6 +39,7 @@ impl<F: PlFactor + Clone, const N: usize> PlFactor for HSumFactor<F, N> {
                 .iter()
                 .map(|f| f.try_expr())
                 .collect::<Result<Vec<_>>>()?,
+            true,
         )?)
     }
 }

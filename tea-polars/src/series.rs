@@ -1,4 +1,4 @@
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use polars::prelude::{DataType, *};
 use tea_strategy::tevec::prelude::*;
 
@@ -155,7 +155,7 @@ pub trait SeriesExt {
     /// # Arguments
     ///
     /// * `min_periods` - The minimum number of observations required to calculate the half-life.
-    ///                   If None, defaults to half the length of the series.
+    ///   If None, defaults to half the length of the series.
     fn half_life(&self, min_periods: Option<usize>) -> usize;
 }
 

@@ -48,12 +48,12 @@ pub fn parse_pl_fac(name: &str) -> Result<Arc<dyn PlFactor>> {
 /// # Arguments
 ///
 /// * `name` - A string slice that holds the name of the extended factor, including the base factor,
-///            extension method, and parameter.
+///   extension method, and parameter.
 ///
 /// # Returns
 ///
 /// * `Result<Arc<dyn PlFactor>>` - An `Arc` containing the parsed extended `PlFactor` if successful,
-///                                 or an error if parsing fails.
+///   or an error if parsing fails.
 fn parse_pl_ext_fac(name: &str) -> Result<Arc<dyn PlFactor>> {
     if !name.contains('_') {
         bail!("Can not parse as polars extension factor: {}", name);

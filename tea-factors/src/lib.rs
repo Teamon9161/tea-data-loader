@@ -2,6 +2,9 @@ mod core_impls;
 mod core_traits;
 pub(crate) mod export;
 
+#[cfg(feature = "python")]
+pub mod python;
+
 pub mod agg;
 pub mod base;
 pub mod factor_struct;

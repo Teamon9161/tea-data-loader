@@ -36,11 +36,7 @@ impl DataLoader {
         let schema = self.schema()?;
         let strategies = strategies.iter().filter_map(|n| {
             let n = n.as_ref();
-            if !schema.contains(n) {
-                Some(n)
-            } else {
-                None
-            }
+            if !schema.contains(n) { Some(n) } else { None }
         });
         let works = strategies
             .map(|s| s.parse())
@@ -72,13 +68,7 @@ impl DataLoader {
 
     pub fn with_strategy_works(self, strategies: &[StrategyWork]) -> Result<Self> {
         let schema = self.schema()?;
-        let strategies = strategies.iter().filter_map(|s| {
-            if !schema.contains(&s.name()) {
-                Some(s)
-            } else {
-                None
-            }
-        });
+        let strategies = strategies.iter().filter(|s| !schema.contains(&s.name()));
         let works = strategies.collect::<Vec<_>>();
         // calculate factors
         let facs = works.iter().map(|w| w.fac.as_ref()).collect::<Vec<_>>();

@@ -110,7 +110,7 @@ pub fn derive_from_param(input: TokenStream) -> TokenStream {
     let expanded = match input.data {
         syn::Data::Struct(data) => match data.fields {
             syn::Fields::Unnamed(fields) => {
-                if fields.unnamed.len() >= 1 {
+                if !fields.unnamed.is_empty() {
                     let field = fields.unnamed.first().unwrap();
                     let ty = &field.ty;
                     match ty {

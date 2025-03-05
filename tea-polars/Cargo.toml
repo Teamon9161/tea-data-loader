@@ -1,10 +1,10 @@
 [package]
 name = "tea-polars"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
-polars = {workspace = true, features = [
+polars = { workspace = true, features = [
     "rolling_window",
     "rolling_window_by",
     "moment",
@@ -18,6 +18,6 @@ polars = {workspace = true, features = [
     "log",
     "meta",
     "round_series",
-]}
-anyhow = {workspace = true}
-tea_strategy = {workspace = true, features = ['polars-lazy', "time"]}
+] }
+anyhow = { workspace = true }
+tea_strategy = { workspace = true, features = ['polars-lazy', "time"] }

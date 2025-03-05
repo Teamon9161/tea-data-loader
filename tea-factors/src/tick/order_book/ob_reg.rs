@@ -3,7 +3,7 @@ use polars::prelude::*;
 
 use crate::export::*;
 /// This module implements order book regression tools and factors.
-
+///
 /// Trait representing a factor that can be used in regression calculations.
 trait FactorT: FactorBase + PlFactor {}
 

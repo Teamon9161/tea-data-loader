@@ -110,7 +110,7 @@ impl DataLoader {
     /// A `Result` containing the modified `DataLoader` with the new Polars factor added, or an error.
     #[inline]
     pub fn with_pl_fac(self, fac: impl PlFactor) -> Result<Self> {
-        self.with_column(fac.try_expr()?.alias(&fac.name()))
+        self.with_column(fac.try_expr()?.alias(fac.name()))
     }
 
     /// Adds Tfactors to the DataLoader.
@@ -183,7 +183,7 @@ impl DataLoader {
         agg_exprs: impl AsRef<[Expr]>,
         opt: GroupByTimeOpt,
     ) -> Result<Self> {
-        let facs = facs.into_iter().map(|f| f.as_ref()).collect_vec();
+        let facs = facs.iter().map(|f| f.as_ref()).collect_vec();
         let schema = self.schema()?;
         let exprs = facs
             .iter()
@@ -203,7 +203,7 @@ impl DataLoader {
         let dl = self.with_columns(&exprs)?;
         let dl = dl.group_by_time(rule, opt)?.agg(
             facs.iter()
-                .map(|f| f.agg_expr().unwrap().alias(&f.name()))
+                .map(|f| f.agg_expr().unwrap().alias(f.name()))
                 .chain(agg_exprs.as_ref().iter().cloned())
                 .collect_vec(),
         );

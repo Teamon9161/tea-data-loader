@@ -17,7 +17,7 @@ impl PlFactor for VwapDeviation {
     fn try_expr(&self) -> Result<Expr> {
         let vwap = Vwap::fac(self.0);
         let fac = (ORDER_PRICE - vwap) / vwap * 10000;
-        Ok(fac.try_expr()?)
+        fac.try_expr()
     }
 }
 

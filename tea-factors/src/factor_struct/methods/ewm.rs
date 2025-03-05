@@ -38,7 +38,7 @@ where
         let expr = self.fac.try_expr()?;
         let n = self.param;
         if n == 1 {
-            return Ok(expr);
+            Ok(expr)
         } else {
             Ok(expr.ts_ewm(n, self.min_periods))
         }

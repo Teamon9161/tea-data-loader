@@ -103,7 +103,6 @@ pub trait GetName: std::fmt::Debug {
 impl<F: std::fmt::Debug + FactorBase> GetName for F {}
 
 /// Trait for factors that can be computed using Polars expressions.
-
 ///
 /// This trait is implemented by factors that can be expressed and calculated
 /// using Polars' lazy expressions. It provides methods to convert the factor
@@ -185,11 +184,7 @@ impl FactorBase for ExprFactor {
 
 impl std::fmt::Debug for ExprFactor {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            self.0.clone().meta().output_name().unwrap().to_string()
-        )
+        write!(f, "{}", self.0.clone().meta().output_name().unwrap())
     }
 }
 

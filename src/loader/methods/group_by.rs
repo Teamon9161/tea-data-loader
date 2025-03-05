@@ -320,7 +320,7 @@ impl DataLoaderGroupBy {
                     .into_iter()
                     .map(|lgb| {
                         lgb.agg(&aggs).drop([time_col]).rename(
-                            [(&last_time).to_string() + "_last"],
+                            [last_time.to_string() + "_last"],
                             [&last_time],
                             true,
                         )

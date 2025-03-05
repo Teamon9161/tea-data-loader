@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use anyhow::Result;
-use polars::lazy::dsl::{cols, ExprEvalExtension};
+use polars::lazy::dsl::{ExprEvalExtension, cols};
 use polars::prelude::*;
 
 use crate::prelude::*;
@@ -94,7 +94,7 @@ impl Frame {
     /// # Arguments
     ///
     /// * `eval_cols` - Optional slice of column names representing strategies to evaluate.
-    ///                 If None, all columns except the time column will be evaluated.
+    ///   If None, all columns except the time column will be evaluated.
     /// * `opt` - Evaluation options including time column, frequency, risk-free rate, and output preferences.
     ///
     /// # Returns

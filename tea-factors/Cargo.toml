@@ -5,8 +5,10 @@ edition = "2021"
 
 [features]
 default = ["tick-fac", "tick-future-fac", "map-fac"]
+# default = ["python", "tick-fac", "tick-future-fac", "map-fac"]
+python = ["pyo3", "pyo3-polars"]
 
-fac-ext = [] # 基础因子扩展方法
+fac-ext = []                                               # 基础因子扩展方法
 map-fac = ["fac-ext"]
 tick-fac = ["order-book-fac", "order-flow-fac", "fac-ext"]
 tick-future-fac = ["fac-ext"]
@@ -14,13 +16,18 @@ order-book-fac = ["fac-ext"]
 order-flow-fac = ["fac-ext"]
 
 [dependencies]
-anyhow = {workspace = true}
-paste = {workspace = true}
-ctor = {workspace = true}
-regex = {workspace = true}
-polars = {workspace = true}
+pyo3 = { version = "0.23", optional = true, features = ["anyhow"] }
+pyo3-polars = { version = "0.20", optional = true, features = [
+    "dtype-full",
+    "lazy",
+] }
+anyhow = { workspace = true }
+paste = { workspace = true }
+ctor = { workspace = true }
+regex = { workspace = true }
+polars = { workspace = true }
 tea-polars = { path = "../tea-polars" }
-parking_lot = {workspace = true}
+parking_lot = { workspace = true }
 factor-macro = { path = "../factor-macro" }
 tea_strategy = { workspace = true, features = ['polars-lazy', "time"] }
 derive_more = { workspace = true, features = [

@@ -7,7 +7,7 @@ use polars::prelude::*;
 // use tea_strategy::tevec::export::arrow::legacy::utils::CustomIterTools;
 use crate::prelude::DataLoader;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct Summary {
     pub facs: Vec<String>,
     pub labels: Vec<String>,
@@ -38,11 +38,11 @@ pub struct FacSummary {
 
 pub struct SummaryReport(Vec<FacSummary>);
 
-impl<'a> Index<&'a str> for SummaryReport {
+impl Index<&str> for SummaryReport {
     type Output = FacSummary;
 
     fn index(&self, index: &str) -> &Self::Output {
-        let idx = self.0.iter().position(|f| &f.fac == index).unwrap();
+        let idx = self.0.iter().position(|f| f.fac == index).unwrap();
         &self.0[idx]
     }
 }
@@ -70,23 +70,6 @@ impl Index<usize> for SummaryReport {
 
     fn index(&self, index: usize) -> &Self::Output {
         &self.0[index]
-    }
-}
-
-impl Default for Summary {
-    fn default() -> Self {
-        Self {
-            facs: vec![],
-            labels: vec![],
-            symbol_ic: vec![],
-            ic_overall: vec![],
-            ts_ic: vec![],
-            symbol_ts_group_rets: vec![],
-            ts_group_rets: vec![],
-            symbol_group_rets: vec![],
-            group_rets: vec![],
-            half_life: None,
-        }
     }
 }
 
@@ -186,8 +169,8 @@ fn plot_heatmap(
     square: bool,
 ) -> Result<()> {
     use anyhow::ensure;
-    use plotly::layout::{Axis, AxisConstrain, AxisType};
     use plotly::HeatMap;
+    use plotly::layout::{Axis, AxisConstrain, AxisType};
 
     use crate::prelude::SeriesExt;
     let x_axis = df

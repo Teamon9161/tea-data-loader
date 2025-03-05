@@ -5,7 +5,7 @@ use tea_strategy::tevec::prelude::{Cast, DateTime};
 const DDB_XBOND_MULTIPLIER: f64 = 10_000_000.0;
 
 /// Utility functions for preprocessing and filtering data in the DataLoader.
-
+///
 /// Returns preprocessing expressions based on the given data type.
 ///
 /// # Arguments
@@ -18,12 +18,14 @@ const DDB_XBOND_MULTIPLIER: f64 = 10_000_000.0;
 fn get_preprocess_exprs_impl(typ: &str, freq: &str) -> Vec<Expr> {
     match typ {
         "__base__" => {
-            vec![when(cols(["close", "open", "high", "low"]).eq(0))
-                .then(lit(NULL))
-                .otherwise(cols(["close", "open", "high", "low"]))
-                .forward_fill(None)
-                .name()
-                .keep()]
+            vec![
+                when(cols(["close", "open", "high", "low"]).eq(0))
+                    .then(lit(NULL))
+                    .otherwise(cols(["close", "open", "high", "low"]))
+                    .forward_fill(None)
+                    .name()
+                    .keep(),
+            ]
         },
         "future" => {
             if freq != "tick" {
@@ -134,16 +136,19 @@ pub fn get_preprocess_exprs<S: AsRef<str>, F: AsRef<str>>(typ: S, freq: F) -> Ve
 
 #[inline]
 pub fn column_to_expr(column: &Column) -> Expr {
-    match column {
-        Column::Series(s) => s.clone().lit(),
-        Column::Scalar(s) => s.scalar().clone().lit().alias(s.name().clone()),
-    }
+    column.as_materialized_series().clone().lit()
+    // match column {
+    //     Column::Series(s) => s.clone().lit(),
+    //     Column::Scalar(s) => s.scalar().clone().lit().alias(s.name().clone()),
+    //     Column::Partitioned(s) => s.clone().to_series().lit(),
+    // }
 }
 
 #[inline]
 pub fn column_into_expr(column: Column) -> Expr {
-    match column {
-        Column::Series(s) => s.lit(),
-        Column::Scalar(s) => s.scalar().clone().lit().alias(s.name().clone()),
-    }
+    column.take_materialized_series().lit()
+    // match column {
+    //     Column::Series(s) => s.lit(),
+    //     Column::Scalar(s) => s.scalar().clone().lit().alias(s.name().clone()),
+    // }
 }

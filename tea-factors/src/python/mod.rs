@@ -8,9 +8,9 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use pyo3::pybacked::PyBackedStr;
 use pyo3_polars::PyExpr;
-use tea_data_loader::factors::{Param, PlAggFactor, PlFactor};
-use tea_data_loader::prelude::Result;
-use crate::utils::Wrap;
+use crate::{Param, PlAggFactor, PlFactor};
+use crate::prelude::Result;
+// use crate::utils::Wrap;
 
 #[pyclass(name="Factor", subclass)]
 pub struct PyFactor(pub Arc<dyn PlFactor>);
@@ -82,19 +82,19 @@ impl PyAggFactor {
     }
 }
 
-impl FromPyObject<'_> for Wrap<Param> {
+impl FromPyObject<'_> for Param {
     fn extract_bound(ob: &Bound<'_, PyAny>) -> PyResult<Self> {
         if ob.is_none() {
-            return Ok(Wrap(Param::None));
+            return Ok(Param::None);
         }
         if let Ok(v) = ob.extract::<bool>() {
-            Ok(Wrap(Param::Bool(v)))
+            Ok(Param::Bool(v))
         } else if let Ok(v) = ob.extract::<i32>() {
-            Ok(Wrap(Param::I32(v)))
+            Ok(Param::I32(v))
         } else if let Ok(v) = ob.extract::<f64>() {
-            Ok(Wrap(Param::F64(v)))
+            Ok(Param::F64(v))
         } else if let Ok(v) = ob.extract::<PyBackedStr>() {
-            Ok(Wrap(Param::Str((&*v).into())))
+            Ok(Param::Str((&*v).into()))
         } else {
             Err(PyValueError::new_err("Invalid parameter type"))
         }

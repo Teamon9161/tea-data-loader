@@ -12,14 +12,9 @@ pub struct FrameCorrOpt<'a> {
 }
 
 impl Frame {
-    pub fn corr(self, opt: FrameCorrOpt) -> Result<Option<Vec<Vec<f64>>>> {
-        if opt.plot {
-            self.plot_corr(opt)?;
-            Ok(None)
-        } else {
-            let data = self.collect()?.into_frame().inner_corr(opt)?;
-            Ok(Some(data))
-        }
+    pub fn corr(self, opt: FrameCorrOpt) -> Result<Vec<Vec<f64>>> {
+        let data = self.collect()?.into_frame().inner_corr(opt)?;
+        Ok(data)
     }
 
     fn inner_corr(&self, opt: FrameCorrOpt) -> Result<Vec<Vec<f64>>> {
