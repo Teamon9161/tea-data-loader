@@ -14,7 +14,7 @@ pub use tea_data_loader::pyfactors;
 
 #[pymodule]
 fn loader(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
-    pyfactors::register_agg_facs(m)?;
+    pyfactors::register(m)?;
     m.add_class::<pyfactors::PyAggFactor>()?;
     m.add_class::<PyLoader>()?;
     m.add_class::<PyDataLoaderGroupBy>()?;

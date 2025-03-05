@@ -100,3 +100,10 @@ impl FromPyObject<'_> for Param {
         }
     }
 }
+
+pub fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    register_agg_facs(m)?;
+    m.add_class::<PyFactor>()?;
+    m.add_class::<PyAggFactor>()?;
+    Ok(())
+}
