@@ -9,10 +9,10 @@ use pyo3::prelude::*;
 use pyo3::pybacked::PyBackedStr;
 use pyo3_polars::PyExpr;
 
-use crate::prelude::Result;
-use crate::{ExprFactor, NamedExprFactor, Param, PlAggFactor, PlFactor, POLARS_FAC_MAP};
+use crate::prelude::*;
 
 #[pyclass(name = "Factor", subclass)]
+#[derive(Clone)]
 pub struct PyFactor(pub Arc<dyn PlFactor>);
 
 #[pymethods]

@@ -17,8 +17,8 @@ if TYPE_CHECKING:
 
     from polars._typing import ColumnNameOrSelector, IntoExpr
 
-    from .loader import AggFactor
     from .fac_analyse import FacAnalysis
+    from .loader import AggFactor
 
     # Type alias for DataFrame or LazyFrame
     PolarsFrame: TypeAlias = DataFrame | LazyFrame
@@ -67,6 +67,7 @@ class DataLoader:
             typ = [typ]
         if isinstance(typ, (list, tuple)):
             dl = _RS_Loader("", symbols)
+            print("ok", symbols)
             dl.dfs = typ
             self.dl: _RS_Loader = dl
         else:
@@ -649,10 +650,7 @@ class DataLoader:
         )
 
     def fac_analyse(
-        self,
-        facs: list[str],
-        labels: list[str],
-        drop_peak: bool = True
+        self, facs: list[str], labels: list[str], drop_peak: bool = True
     ) -> FacAnalysis:
         """
         Perform factor analysis on the data.

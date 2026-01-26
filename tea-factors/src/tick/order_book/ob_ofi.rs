@@ -7,13 +7,13 @@ fn get_ob_of_buy_sell() -> (impl FactorBase + PlFactor, impl FactorBase + PlFact
     let of_buy = iif(BID1.eq(BID1.shift(1)), BID1_VOL - BID1_VOL.shift(1), of_buy);
     let of_buy = iif(BID1.lt(BID1.shift(1)), -BID1_VOL, of_buy);
 
-    let of_sell = iif(ASK1.gt(ASK1.shift(1)), ASK1_VOL, NONE);
+    let of_sell = iif(ASK1.gt(ASK1.shift(1)), -ASK1_VOL, NONE);
     let of_sell = iif(
         ASK1.eq(ASK1.shift(1)),
         ASK1_VOL - ASK1_VOL.shift(1),
         of_sell,
     );
-    let of_sell = iif(ASK1.lt(ASK1.shift(1)), -ASK1_VOL, of_sell);
+    let of_sell = iif(ASK1.lt(ASK1.shift(1)), ASK1_VOL, of_sell);
     (of_buy, of_sell)
 }
 

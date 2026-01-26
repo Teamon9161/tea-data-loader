@@ -5,6 +5,7 @@ edition = "2021"
 
 [workspace]
 members = ["tea-factors", "tea-polars", "pyloader"]
+exclude = ["tea-factors", "tea-polars"]
 # exclude = ["pyloader"]
 
 [workspace.dependencies]
